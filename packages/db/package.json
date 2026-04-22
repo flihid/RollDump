@@ -1,0 +1,21 @@
+{
+  "name": "@propen/db",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "db:push": "drizzle-kit push:pg",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate:pg"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.30.9",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.5",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.20.17",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
