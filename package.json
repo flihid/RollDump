@@ -1,5 +1,5 @@
 {
-  "name": "rollaja-monorepo",
+  "name": "rolldump-monorepo",
   "private": true,
   "scripts": {
     "build": "turbo run build",

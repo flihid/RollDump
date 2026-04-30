@@ -1,13 +1,15 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Client } from 'pg';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from './schema';
 
 export function createDatabase(databaseUrl: string) {
-  const client = new Client({
-    connectionString: databaseUrl,
+  const client = postgres(databaseUrl, {
+    ssl: 'require',
+    max: 1,
+    prepare: false, 
+    connect_timeout: 20, // Lebih sabar (20 detik)
+    idle_timeout: 20,
   });
-  
-  client.connect();
   
   return drizzle(client, { schema });
 }

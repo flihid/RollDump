@@ -2,16 +2,19 @@
   "name": "api",
   "version": "1.0.0",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "tsx src/dev.ts",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@propen/auth": "workspace:*",
-    "@propen/db": "workspace:*",
+    "@hono/node-server": "^2.0.0",
+    "@rolldump/auth": "workspace:*",
+    "@rolldump/db": "workspace:*",
+    "@supabase/supabase-js": "^2.104.0",
     "hono": "^4.2.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240405.0",
+    "tsx": "^4.7.2",
     "typescript": "^5.4.5",
     "wrangler": "^4.84.1"
   }

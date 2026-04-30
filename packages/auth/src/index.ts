@@ -1,5 +1,5 @@
-import { createDatabase, users, sessions } from '@propen/db';
-import { eq } from 'drizzle-orm';
+import { createDatabase, users, user_sessions } from '@rolldump/db';
+import { eq, or } from 'drizzle-orm';
 
 export class AuthService {
   private db: ReturnType<typeof createDatabase>;
@@ -32,8 +32,11 @@ export class AuthService {
     return user;
   }
 
-  async login(email: string, password: string) {
-    const [user] = await this.db.select().from(users).where(eq(users.email, email));
+  async login(identifier: string, password: string) {
+    // identifier can be email or username
+    const [user] = await this.db.select().from(users).where(
+      or(eq(users.email, identifier), eq(users.username, identifier))
+    );
     
     if (!user) {
       throw new Error('User not found');
@@ -48,28 +51,28 @@ export class AuthService {
   }
 
   async createSession(userId: string) {
-    const token = this.generateToken();
+    const refreshToken = this.generateToken();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
 
-    const [session] = await this.db.insert(sessions).values({
+    const [session] = await this.db.insert(user_sessions).values({
       userId,
-      token,
+      refreshToken,
       expiresAt,
     }).returning();
 
     return session;
   }
 
-  async validateToken(token: string) {
-    const [session] = await this.db.select().from(sessions).where(eq(sessions.token, token));
+  async validateRefreshToken(token: string) {
+    const [session] = await this.db.select().from(user_sessions).where(eq(user_sessions.refreshToken, token));
     
     if (!session) {
       return null;
     }
 
     if (new Date() > session.expiresAt) {
-      await this.db.delete(sessions).where(eq(sessions.id, session.id));
+      await this.db.delete(user_sessions).where(eq(user_sessions.id, session.id));
       return null;
     }
 

@@ -2,23 +2,30 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { fetchApi } from '../lib/api';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      return fetchApi('/auth/login', {
+      return fetchApi('/api/v1/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: identifier, password }),
       });
     },
     onSuccess: (data) => {
-      localStorage.setItem('token', data.token);
-      navigate('/');
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      toast.success('Login berhasil!');
+      navigate('/dashboard');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Login gagal. Periksa kembali kredensial Anda.');
     },
   });
 
@@ -35,27 +42,27 @@ export default function Login() {
             <LogIn className="h-6 w-6 text-primary-600" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 tracking-tight">
-            Welcome back
+            Rolldump Login
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Please sign in to your account
+            Masuk untuk mengakses koleksi Anda
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700" htmlFor="email">
-                Email address
+              <label className="block text-sm font-medium text-gray-700" htmlFor="identifier">
+                Email atau Username
               </label>
               <input
-                id="email"
-                type="email"
+                id="identifier"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors sm:text-sm"
-                placeholder="you@example.com"
+                placeholder="you@example.com atau username"
               />
             </div>
             <div>
@@ -74,28 +81,30 @@ export default function Login() {
             </div>
           </div>
 
-          {loginMutation.isError && (
-            <div className="p-3 rounded-md bg-red-50 border border-red-200">
-              <p className="text-sm text-red-600">{loginMutation.error.message}</p>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loginMutation.isPending}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+            {loginMutation.isPending ? (
+              <>
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                Masuk...
+              </>
+            ) : (
+              'Masuk'
+            )}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          Belum punya akun?{' '}
           <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500 transition-colors">
-            Sign up now
+            Daftar sekarang
           </Link>
         </p>
       </div>
     </div>
   );
 }
+

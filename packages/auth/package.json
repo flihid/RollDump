@@ -1,12 +1,14 @@
 {
-  "name": "@propen/auth",
+  "name": "@rolldump/auth",
   "version": "1.0.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@propen/db": "workspace:*",
+    "@rolldump/db": "workspace:*",
+    "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.30.9"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "typescript": "^5.4.5"
   }
 }
