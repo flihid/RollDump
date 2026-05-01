@@ -1,148 +1,101 @@
-import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchApi } from '../lib/api';
-import Header from '../components/Header';
-
-interface Brand {
-  brand: string;
-  totalFilms: number;
-}
-
-interface DailyFeatured {
-  id: string;
-  name: string;
-  slug: string;
-  brand: string;
-  iso: number;
-  type: string;
-  imageUrl: string;
-  description: string;
-  topReview: {
-    content: string;
-    rating: number;
-    username: string;
-  } | null;
-}
+import { useQuery } from '@tanstack/react-query';
+import { Compass } from 'lucide-react';
+import { api } from '../lib/api';
+import { Loading, FormatBadge, StarRating } from '../components/common';
 
 export default function Discover() {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [featured, setFeatured] = useState<DailyFeatured | null>(null);
-  const [loading, setLoading] = useState(true);
+  const trending = useQuery({ queryKey: ['discover-trending'], queryFn: () => api.get('/films/trending') });
+  const lists = useQuery({ queryKey: ['discover-lists'], queryFn: () => api.get('/lists?tab=trending') });
+  const brands = useQuery({ queryKey: ['discover-brands'], queryFn: () => api.get('/brands') });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [brandsData, featuredData] = await Promise.all([
-          fetchApi('/api/v1/brands'),
-          fetchApi('/api/v1/discover/daily-featured')
-        ]);
-        setBrands(brandsData.brands || []);
-        setFeatured(featuredData.featured || null);
-      } catch (err) {
-        console.error('Failed to fetch discover data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="h-96 bg-gray-200 rounded-3xl animate-pulse mb-12" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-40 bg-gray-200 rounded-2xl animate-pulse" />)}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const featured = trending.data?.items?.[0];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <Header />
+    <div className="space-y-10">
+      <div className="flex items-center gap-2">
+        <Compass className="text-primary-600" />
+        <h1 className="text-2xl font-bold">Discover</h1>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-12 space-y-20">
-        
-        {/* Task 4: Film of the Day */}
-        {featured && (
-          <section className="relative overflow-hidden rounded-[40px] bg-gray-900 text-white shadow-2xl">
-            <div className="absolute inset-0 opacity-40">
-               {featured.imageUrl ? (
-                 <img src={featured.imageUrl} className="w-full h-full object-cover" />
-               ) : (
-                 <div className="w-full h-full bg-gradient-to-br from-indigo-900 to-purple-900" />
-               )}
+      {/* Spotlight */}
+      {featured && (
+        <Link to={`/films/${featured.slug}`} className="block">
+          <div className="rounded-2xl overflow-hidden bg-ink-900 text-white relative">
+            <div className="aspect-[16/6] sm:aspect-[16/5] relative">
+              {featured.coverUrl && <img src={featured.coverUrl} className="w-full h-full object-cover opacity-60" />}
+              <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/50 to-transparent" />
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="text-xs font-semibold text-primary-300 mb-1">RollDump Spotlight</div>
+                <h2 className="text-3xl font-bold">{featured.name}</h2>
+                <div className="text-sm text-white/70 mt-1">{featured.brand?.name} • ISO {featured.iso}</div>
+              </div>
             </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent" />
-            
-            <div className="relative z-10 p-8 md:p-16 max-w-2xl">
-               <span className="inline-block px-4 py-1 rounded-full bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.2em] mb-6 shadow-lg shadow-indigo-500/40 animate-bounce">
-                 ✨ RollDump Spotlight Hari Ini
-               </span>
-               <h2 className="text-5xl md:text-7xl font-black mb-4 tracking-tighter leading-none">
-                 {featured.name}
-               </h2>
-               <div className="flex items-center gap-4 mb-8">
-                 <span className="text-xl font-bold text-gray-400 uppercase tracking-widest">{featured.brand}</span>
-                 <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
-                 <span className="text-xl font-bold text-indigo-400">ISO {featured.iso}</span>
-               </div>
+          </div>
+        </Link>
+      )}
 
-               {featured.topReview && (
-                 <div className="mb-10 p-6 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 italic text-gray-200">
-                    <p className="text-lg leading-relaxed mb-4">"{featured.topReview.content}"</p>
-                    <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-xs not-italic">{featured.topReview.username.charAt(0).toUpperCase()}</div>
-                       <span className="text-sm font-bold not-italic text-gray-400">@{featured.topReview.username}</span>
-                    </div>
-                 </div>
-               )}
-
-               <Link 
-                 to={`/films/${featured.slug}`}
-                 className="inline-flex items-center gap-3 px-10 py-5 bg-white text-gray-900 rounded-2xl font-black text-lg hover:bg-gray-100 transition shadow-xl transform hover:-translate-y-1 active:translate-y-0"
-               >
-                 Jelajahi Film Ini
-                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-               </Link>
-            </div>
-          </section>
+      {/* Trending */}
+      <section>
+        <h2 className="text-xl font-bold mb-3">Trending</h2>
+        {trending.isLoading ? (
+          <Loading />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+            {(trending.data?.items || []).map((f: any) => (
+              <Link key={f.id} to={`/films/${f.slug}`} className="card overflow-hidden group">
+                <div className="aspect-[3/4] bg-ink-200">
+                  {f.coverUrl && <img src={f.coverUrl} className="w-full h-full object-cover" />}
+                </div>
+                <div className="p-3">
+                  <div className="font-semibold text-sm truncate">{f.name}</div>
+                  <StarRating value={f.ratingAvg || 0} size="sm" />
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
+      </section>
 
-        {/* Task 5: Brand Index */}
-        <section>
-           <div className="flex items-center justify-between mb-8">
-             <div>
-               <h2 className="text-3xl font-black text-gray-900 tracking-tight">Eksplorasi Brand 🏷️</h2>
-               <p className="text-gray-500">Cari film berdasarkan produsen favorit Anda</p>
-             </div>
-           </div>
+      {/* Lists */}
+      <section>
+        <h2 className="text-xl font-bold mb-3">Lists pilihan</h2>
+        {lists.isLoading ? (
+          <Loading />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(lists.data?.items || []).slice(0, 6).map((row: any) => (
+              <Link key={row.list.id} to={`/lists/${row.list.id}`} className="card p-4 hover:shadow-md transition">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-bold">{row.list.title}</div>
+                    <div className="text-xs text-ink-500 mt-0.5">oleh @{row.author?.username}</div>
+                  </div>
+                  <FormatBadge format={`${row.list.itemCount || 0} item`} />
+                </div>
+                {row.list.description && <p className="text-sm text-ink-600 mt-2 line-clamp-2">{row.list.description}</p>}
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
-           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              {brands.map((b) => (
-                <Link 
-                  key={b.brand}
-                  to={`/films?brand=${encodeURIComponent(b.brand)}`}
-                  className="group p-8 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all duration-300 text-center"
-                >
-                   <div className="w-20 h-20 mx-auto mb-6 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-500 shadow-inner">
-                      {b.brand.toLowerCase().includes('kodak') ? '💛' : 
-                       b.brand.toLowerCase().includes('fuji') ? '💚' : 
-                       b.brand.toLowerCase().includes('ilford') ? '🖤' : '🎞️'}
-                   </div>
-                   <h3 className="text-xl font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition">{b.brand}</h3>
-                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Terdapat {b.totalFilms} Roll</p>
-                </Link>
-              ))}
-           </div>
-        </section>
-
-      </main>
+      {/* Brands */}
+      <section>
+        <h2 className="text-xl font-bold mb-3">Pabrikan</h2>
+        {brands.isLoading ? (
+          <Loading />
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {(brands.data?.items || []).map((b: any) => (
+              <Link key={b.id} to={`/brands?slug=${b.slug}`} className="card p-3 text-center hover:shadow-md transition">
+                <div className="font-semibold text-sm">{b.name}</div>
+                <div className="text-xs text-ink-500">{b.filmCount} film</div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
