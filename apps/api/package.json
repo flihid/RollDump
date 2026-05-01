@@ -10,6 +10,7 @@
     "@rolldump/auth": "workspace:*",
     "@rolldump/db": "workspace:*",
     "@supabase/supabase-js": "^2.104.0",
+    "drizzle-orm": "^0.30.9",
     "hono": "^4.2.0"
   },
   "devDependencies": {
