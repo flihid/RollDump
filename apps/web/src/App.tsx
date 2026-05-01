@@ -1,34 +1,31 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useState, useEffect, useRef } from 'react';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import FilmCatalog from './pages/FilmCatalog';
+import FilmDetail from './pages/FilmDetail';
+import AdminAddFilm from './pages/AdminAddFilm';
+import AdminDashboard from './pages/AdminDashboard';
+import ListDetail from './pages/ListDetail';
+import ExploreLists from './pages/ExploreLists';
+import Discover from './pages/Discover';
+import Dashboard from './pages/Dashboard';
+import Header from './components/Header';
+import PrivateRoute from './components/PrivateRoute';
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('access_token');
-  return token ? <>{children}</> : <Navigate to="/login" />;
-};
 
-const Dashboard = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Dashboard Rolldump</h1>
-        <p className="text-lg text-gray-600 mb-2">Halo, <span className="font-semibold text-primary-600">{user.username}</span>!</p>
-        <p className="text-gray-500 mb-8">Selamat datang di koleksi film Anda.</p>
-        <button
-          onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }}
-          className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-md font-medium"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
+const ProfileRedirect = () => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (user?.username) {
+    return <Navigate to={`/profile/${user.username}`} replace />;
+  }
+  return <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -38,6 +35,39 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/profile" element={<ProfileRedirect />} />
+        <Route path="/profile/:username" element={<Profile />} />
+        <Route path="/films" element={<FilmCatalog />} />
+        <Route path="/films/:slug" element={<FilmDetail />} />
+        <Route path="/explore/lists" element={<ExploreLists />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/profile/:username/list/:slug" element={<ListDetail />} />
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <Settings />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/films/add"
+          element={
+            <PrivateRoute>
+              <AdminAddFilm />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/moderation"
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
@@ -53,3 +83,4 @@ function App() {
 }
 
 export default App;
+

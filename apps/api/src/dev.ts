@@ -19,7 +19,7 @@ const devVars = readFileSync(devVarsPath, 'utf-8')
 // Inject variables into process.env for the app to pick up
 Object.assign(process.env, devVars);
 
-const port = 8787;
+const port = 8788;
 console.log(`Server Rolldump (Node.js Mode) berjalan di http://localhost:${port}`);
 
 serve({

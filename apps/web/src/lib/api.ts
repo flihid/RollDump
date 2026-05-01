@@ -1,7 +1,7 @@
 const API_URL = '/api';
 
 export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
   
   const headers = new Headers(options.headers);
   headers.set('Content-Type', 'application/json');
