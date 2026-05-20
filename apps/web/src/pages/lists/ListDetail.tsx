@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
 import { Loading, FormatBadge } from '../../components/common';
+import FilmRoll3D from '../../components/FilmRoll3D';
 
 export default function ListDetail() {
   const { id } = useParams();
@@ -59,13 +60,18 @@ export default function ListDetail() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {items.map((row: any) => (
-            <Link key={row.item.id} to={`/films/${row.film.slug}`} className="card card-hover overflow-hidden">
-              <div className="aspect-[3/4] bg-ink-600">
-                {row.film.coverUrl && <img src={row.film.coverUrl} className="w-full h-full object-cover" />}
+            <Link key={row.item.id} to={`/films/${row.film.slug}`} className="card card-hover overflow-hidden group">
+              <div className="film-card__visual relative spotlight-card">
+                <div className="film-card__glow" aria-hidden />
+                <FilmRoll3D film={row.film} size="md" hoverSpin />
+                <div className="absolute top-2 right-2 z-10">
+                  <FormatBadge format={row.variant.format} />
+                </div>
               </div>
               <div className="p-3">
-                <div className="font-semibold text-sm text-ink-50 truncate">{row.film.name}</div>
-                <FormatBadge format={row.variant.format} />
+                <div className="font-semibold text-sm text-ink-50 truncate group-hover:text-primary-400 transition-colors">
+                  {row.film.name}
+                </div>
                 {row.item.personalNote && (
                   <div className="text-xs italic text-ink-300 mt-1.5 line-clamp-2">"{row.item.personalNote}"</div>
                 )}
