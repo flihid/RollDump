@@ -23,7 +23,7 @@ export default function ResetPassword() {
   const valid = pw.length >= 8 && pw === confirm;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ink-50 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="card p-8 max-w-md w-full">
         <KeyRound className="mx-auto w-10 h-10 text-primary-600" />
         <h2 className="mt-4 text-xl font-semibold text-center">Reset password</h2>
@@ -35,14 +35,14 @@ export default function ResetPassword() {
           className="mt-6 space-y-3"
         >
           <input type="password" className="input" placeholder="Password baru (min 8 char)" value={pw} onChange={(e) => setPw(e.target.value)} />
-          <input type="password" className="input" placeholder="Konfirmasi" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-          {confirm && pw !== confirm && <p className="text-xs text-red-600">Tidak cocok</p>}
+          <input type="password" className="input" placeholder="Confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          {confirm && pw !== confirm && <p className="text-xs text-red-400">Doesn't match</p>}
           <button className="btn-primary w-full" disabled={!valid || m.isPending}>
             Simpan
           </button>
         </form>
         <Link to="/login" className="block text-center text-xs text-ink-500 mt-4">
-          Kembali ke login
+          Back to sign in
         </Link>
       </div>
     </div>

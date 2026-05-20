@@ -47,17 +47,17 @@ export default function PhotoDetail() {
   const del = useMutation({
     mutationFn: () => api.delete(`/photos/${id}`),
     onSuccess: () => {
-      toast.success('Foto dihapus');
+      toast.success('Photo deleted');
       nav(-1);
     },
   });
   const report = useMutation({
     mutationFn: () => api.post(`/reports/photo/${id}`, { reason: 'offensive' }),
-    onSuccess: () => toast.success('Laporan diterima'),
+    onSuccess: () => toast.success('Report submitted'),
   });
 
   if (photo.isLoading) return <Loading />;
-  if (!photo.data) return <div>Foto tidak ditemukan</div>;
+  if (!photo.data) return <div>Photo not found</div>;
   const p = photo.data.photo;
   const author = photo.data.author;
   const film = photo.data.film;
@@ -67,7 +67,7 @@ export default function PhotoDetail() {
   return (
     <div className="max-w-5xl mx-auto">
       <button onClick={() => nav(-1)} className="btn-ghost mb-3">
-        <ArrowLeft className="w-4 h-4" /> Kembali
+        <ArrowLeft className="w-4 h-4" /> Back
       </button>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         <div className="bg-ink-900 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function PhotoDetail() {
             </Link>
             <div className="flex-1">
               <Link to={`/u/${author?.username}`} className="font-semibold text-sm hover:underline">@{author?.username}</Link>
-              <div className="text-xs text-ink-500">{new Date(p.createdAt).toLocaleString('id-ID')}</div>
+              <div className="text-xs text-ink-300">{new Date(p.createdAt).toLocaleString('en-US')}</div>
             </div>
           </div>
           {p.caption && <p className="text-sm">{p.caption}</p>}
@@ -107,7 +107,7 @@ export default function PhotoDetail() {
               )}
               {p.shootingConditions && (
                 <div className="card p-2">
-                  <div className="text-ink-500">Kondisi</div>
+                  <div className="text-ink-300">Conditions</div>
                   <div className="font-medium">{p.shootingConditions}</div>
                 </div>
               )}
@@ -145,18 +145,18 @@ export default function PhotoDetail() {
             </span>
           </div>
 
-          <div className="border-t pt-3">
-            <div className="text-xs font-semibold mb-2">Komentar</div>
+          <div className="border-t border-ink-600 pt-3">
+            <div className="text-xs font-semibold mb-2 text-ink-200 uppercase tracking-wider">Comments</div>
             {isLoggedIn() && (
               <div className="flex gap-2 mb-3">
                 <input
                   className="input"
-                  placeholder="Tulis komentar…"
+                  placeholder="Write a comment…"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
                 <button disabled={!comment.trim() || send.isPending} onClick={() => send.mutate()} className="btn-primary">
-                  Kirim
+                  Send
                 </button>
               </div>
             )}

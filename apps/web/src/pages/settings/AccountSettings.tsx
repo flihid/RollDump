@@ -28,7 +28,7 @@ export default function AccountSettings() {
   const save = useMutation({
     mutationFn: () => api.put('/users/me/profile', form),
     onSuccess: () => {
-      toast.success('Profil tersimpan');
+      toast.success('Profile saved');
       qc.invalidateQueries({ queryKey: ['me'] });
     },
   });
@@ -37,7 +37,7 @@ export default function AccountSettings() {
   const changePw = useMutation({
     mutationFn: () => api.put('/users/me/password', { current_password: pw.current, new_password: pw.next }),
     onSuccess: () => {
-      toast.success('Password diubah');
+      toast.success('Password updated');
       setPw({ current: '', next: '' });
     },
     onError: (e: any) => toast.error(e.message),
@@ -46,7 +46,7 @@ export default function AccountSettings() {
   const remove = useMutation({
     mutationFn: () => api.delete('/users/me'),
     onSuccess: () => {
-      toast.success('Akun dihapus');
+      toast.success('Account deleted');
       clearAuth();
       window.location.href = '/';
     },
@@ -57,44 +57,44 @@ export default function AccountSettings() {
   return (
     <div className="space-y-6">
       <section className="card p-6">
-        <h3 className="font-bold mb-4">Profil publik</h3>
+        <h3 className="font-bold mb-4">Public profile</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Nama lengkap" value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
-          <Field label="Lokasi" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
-          <Field label="URL avatar" value={form.avatarUrl} onChange={(v) => setForm({ ...form, avatarUrl: v })} />
-          <Field label="URL banner" value={form.bannerUrl} onChange={(v) => setForm({ ...form, bannerUrl: v })} />
+          <Field label="Full name" value={form.fullName} onChange={(v) => setForm({ ...form, fullName: v })} />
+          <Field label="Location" value={form.location} onChange={(v) => setForm({ ...form, location: v })} />
+          <Field label="Avatar URL" value={form.avatarUrl} onChange={(v) => setForm({ ...form, avatarUrl: v })} />
+          <Field label="Banner URL" value={form.bannerUrl} onChange={(v) => setForm({ ...form, bannerUrl: v })} />
           <Field label="Website" value={form.websiteUrl} onChange={(v) => setForm({ ...form, websiteUrl: v })} />
           <Field label="Instagram" value={form.instagramHandle} onChange={(v) => setForm({ ...form, instagramHandle: v })} />
         </div>
         <div className="mt-4">
           <label className="label">Bio</label>
           <textarea className="input" rows={3} maxLength={280} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-          <div className="text-xs text-ink-500 mt-0.5">{(form.bio || '').length}/280</div>
+          <div className="text-xs text-ink-300 mt-0.5">{(form.bio || '').length}/280</div>
         </div>
-        <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary mt-4">Simpan profil</button>
+        <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary mt-4">Save profile</button>
       </section>
 
       <section className="card p-6">
-        <h3 className="font-bold mb-4">Ubah password</h3>
+        <h3 className="font-bold mb-4">Change password</h3>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Password saat ini" type="password" value={pw.current} onChange={(v) => setPw((s) => ({ ...s, current: v }))} />
-          <Field label="Password baru" type="password" value={pw.next} onChange={(v) => setPw((s) => ({ ...s, next: v }))} />
+          <Field label="Current password" type="password" value={pw.current} onChange={(v) => setPw((s) => ({ ...s, current: v }))} />
+          <Field label="New password" type="password" value={pw.next} onChange={(v) => setPw((s) => ({ ...s, next: v }))} />
         </div>
         <button onClick={() => changePw.mutate()} disabled={!pw.current || pw.next.length < 8 || changePw.isPending} className="btn-primary mt-4">
-          Ubah password
+          Update password
         </button>
       </section>
 
-      <section className="card p-6 border-red-200 bg-red-50">
-        <h3 className="font-bold text-red-700 mb-2">Zona Bahaya</h3>
-        <p className="text-sm text-red-700">Hapus akun akan menghilangkan akses Anda. Data akan diarsipkan 30 hari.</p>
+      <section className="card p-6 border-red-500/30 bg-red-500/10">
+        <h3 className="font-bold text-red-300 mb-2">Danger Zone</h3>
+        <p className="text-sm text-red-200">Deleting your account will remove your access. Data is archived for 30 days.</p>
         <button
           onClick={() => {
-            if (confirm('Yakin ingin menghapus akun? Tindakan ini tidak bisa dibatalkan.')) remove.mutate();
+            if (confirm('Are you sure you want to delete your account? This cannot be undone.')) remove.mutate();
           }}
           className="btn-danger mt-3"
         >
-          Hapus akun saya
+          Delete my account
         </button>
       </section>
     </div>

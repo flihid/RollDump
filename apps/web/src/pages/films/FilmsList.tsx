@@ -49,21 +49,21 @@ export default function FilmsList() {
     <div className="space-y-4">
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink-50">Katalog Film</h1>
-          <p className="text-sm text-ink-200">Telusuri semua emulsi yang dikuratori komunitas.</p>
+          <h1 className="text-2xl font-bold text-ink-50">Film Catalog</h1>
+          <p className="text-sm text-ink-200">Browse every emulsion curated by the community.</p>
         </div>
         <div className="flex gap-2">
           <input
-            placeholder="Cari nama film…"
+            placeholder="Search film name…"
             className="input w-44 sm:w-64"
             value={q}
             onChange={(e) => setParam('q', e.target.value || null)}
           />
           <select className="input w-auto" value={sort} onChange={(e) => setParam('sort', e.target.value)}>
-            <option value="popular">Paling direview</option>
-            <option value="rating">Rating tertinggi</option>
-            <option value="recent">Terbaru</option>
-            <option value="name">A-Z</option>
+            <option value="popular">Most reviewed</option>
+            <option value="rating">Highest rated</option>
+            <option value="recent">Newest</option>
+            <option value="name">A–Z</option>
           </select>
           <button onClick={() => setShowFilter((s) => !s)} className="btn-secondary lg:hidden">
             <FilterIcon className="w-4 h-4" /> Filter
@@ -93,7 +93,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-200 mb-2">Tipe</div>
+              <div className="text-xs font-semibold text-ink-200 mb-2">Type</div>
               <div className="flex flex-wrap gap-1.5">
                 {COLOR_TYPES.map((c) => (
                   <button

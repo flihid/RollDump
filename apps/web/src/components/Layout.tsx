@@ -1,7 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Search,
-  Bell,
   User,
   LogOut,
   Settings,
@@ -13,6 +12,7 @@ import {
 import { clearAuth, getUser, isAdmin, isLoggedIn } from '../store/auth';
 import { useState } from 'react';
 import GlobalSearch from './GlobalSearch';
+import NotificationBell from './NotificationBell';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -94,13 +94,7 @@ export default function Layout() {
             </button>
             {loggedIn ? (
               <>
-                <Link
-                  to="/notifications"
-                  className="p-2 text-ink-100 hover:text-primary-400 transition"
-                  aria-label="Notifications"
-                >
-                  <Bell className="w-4 h-4" />
-                </Link>
+                <NotificationBell />
                 <Link to="/upload" className="btn-primary !py-1.5 !px-3 hidden sm:inline-flex">
                   <Plus className="w-3.5 h-3.5" />
                   <span>Log</span>

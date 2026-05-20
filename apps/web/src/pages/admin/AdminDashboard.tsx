@@ -17,29 +17,29 @@ export default function AdminDashboard() {
         <Loading />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          <Card icon={<Users />} label="Pengguna" value={stats.data?.users || 0} />
-          <Card icon={<Film />} label="Film" value={stats.data?.films || 0} />
-          <Card icon={<Star />} label="Review" value={stats.data?.reviews || 0} />
-          <Card icon={<Image />} label="Foto" value={stats.data?.photos || 0} />
-          <Card icon={<Flag />} label="Laporan" value={stats.data?.pendingReports || 0} highlight />
+          <Card icon={<Users />} label="Users" value={stats.data?.users || 0} />
+          <Card icon={<Film />} label="Films" value={stats.data?.films || 0} />
+          <Card icon={<Star />} label="Reviews" value={stats.data?.reviews || 0} />
+          <Card icon={<Image />} label="Photos" value={stats.data?.photos || 0} />
+          <Card icon={<Flag />} label="Reports" value={stats.data?.pendingReports || 0} highlight />
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Link to="/admin/films" className="card p-4 hover:shadow-md">
-          <div className="font-semibold">Kelola film</div>
-          <div className="text-xs text-ink-500">Tambah, edit, nonaktifkan</div>
+        <Link to="/admin/films" className="card card-hover p-4">
+          <div className="font-semibold text-ink-50">Manage films</div>
+          <div className="text-xs text-ink-300">Add, edit, deactivate</div>
         </Link>
-        <Link to="/admin/users" className="card p-4 hover:shadow-md">
-          <div className="font-semibold">Kelola pengguna</div>
-          <div className="text-xs text-ink-500">Suspend, ban, role</div>
+        <Link to="/admin/users" className="card card-hover p-4">
+          <div className="font-semibold text-ink-50">Manage users</div>
+          <div className="text-xs text-ink-300">Suspend, ban, roles</div>
         </Link>
-        <Link to="/admin/reports" className="card p-4 hover:shadow-md">
-          <div className="font-semibold">Antrian laporan</div>
-          <div className="text-xs text-ink-500">Konten yang dilaporkan</div>
+        <Link to="/admin/reports" className="card card-hover p-4">
+          <div className="font-semibold text-ink-50">Report queue</div>
+          <div className="text-xs text-ink-300">Flagged content</div>
         </Link>
-        <Link to="/admin/audit-logs" className="card p-4 hover:shadow-md">
-          <div className="font-semibold">Audit log</div>
-          <div className="text-xs text-ink-500">Trail tindakan admin</div>
+        <Link to="/admin/audit-logs" className="card card-hover p-4">
+          <div className="font-semibold text-ink-50">Audit log</div>
+          <div className="text-xs text-ink-300">Admin action trail</div>
         </Link>
       </div>
     </div>

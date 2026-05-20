@@ -36,7 +36,7 @@ export default function PreferencesSettings() {
         isoMin,
         isoMax,
       }),
-    onSuccess: () => toast.success('Preferensi tersimpan'),
+    onSuccess: () => toast.success('Preferences saved'),
   });
 
   const toggle = (arr: string[], setArr: any, k: string) =>
@@ -46,9 +46,9 @@ export default function PreferencesSettings() {
 
   return (
     <div className="card p-6 space-y-5">
-      <h3 className="font-bold">Preferensi selera</h3>
+      <h3 className="font-bold">Taste preferences</h3>
       <div>
-        <div className="label">Format favorit</div>
+        <div className="label">Favorite formats</div>
         <div className="flex flex-wrap gap-1.5">
           {FORMATS.map((f) => (
             <button key={f} onClick={() => toggle(formats, setFormats, f)} className={formats.includes(f) ? 'chip-active' : 'chip'}>
@@ -58,7 +58,7 @@ export default function PreferencesSettings() {
         </div>
       </div>
       <div>
-        <div className="label">Tipe emulsi favorit</div>
+        <div className="label">Favorite emulsion types</div>
         <div className="flex flex-wrap gap-1.5">
           {COLOR.map((c) => (
             <button key={c.key} onClick={() => toggle(colors, setColors, c.key)} className={colors.includes(c.key) ? 'chip-active' : 'chip'}>
@@ -77,7 +77,7 @@ export default function PreferencesSettings() {
           <input type="number" className="input" value={isoMax} onChange={(e) => setIsoMax(Number(e.target.value))} />
         </div>
       </div>
-      <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary">Simpan</button>
+      <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary">Save</button>
     </div>
   );
 }

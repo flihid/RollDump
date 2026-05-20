@@ -31,18 +31,18 @@ export default function NotificationSettings() {
         pushEnabled: push,
         digestFrequency: digest,
       }),
-    onSuccess: () => toast.success('Preferensi tersimpan'),
+    onSuccess: () => toast.success('Preferences saved'),
   });
 
   if (q.isLoading) return <Loading />;
 
   return (
     <div className="card p-6 space-y-4">
-      <h3 className="font-bold">Notifikasi</h3>
+      <h3 className="font-bold">Notifications</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-ink-500 text-xs">
+            <tr className="text-left text-ink-300 text-xs">
               <th>Event</th>
               <th>In-App</th>
               <th>Email</th>
@@ -51,7 +51,7 @@ export default function NotificationSettings() {
           </thead>
           <tbody>
             {TYPES.map((t) => (
-              <tr key={t} className="border-t">
+              <tr key={t} className="border-t border-ink-600">
                 <td className="py-2 pr-2">{t}</td>
                 <td><input type="checkbox" checked={!!inApp[t]} onChange={(e) => setInApp({ ...inApp, [t]: e.target.checked })} /></td>
                 <td><input type="checkbox" checked={!!email[t]} onChange={(e) => setEmail({ ...email, [t]: e.target.checked })} /></td>
@@ -65,11 +65,11 @@ export default function NotificationSettings() {
         <label className="label">Email digest</label>
         <select className="input w-auto" value={digest} onChange={(e) => setDigest(e.target.value)}>
           <option value="off">Off</option>
-          <option value="daily">Harian</option>
-          <option value="weekly">Mingguan</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
         </select>
       </div>
-      <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary">Simpan</button>
+      <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary">Save</button>
     </div>
   );
 }

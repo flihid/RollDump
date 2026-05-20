@@ -17,27 +17,27 @@ export default function ListDetail() {
   });
   const save = useMutation({
     mutationFn: () => api.post(`/lists/${id}/save`),
-    onSuccess: (data: any) => toast.success(data.saved ? 'Tersimpan' : 'Dihapus dari saved'),
+    onSuccess: (data: any) => toast.success(data.saved ? 'Saved' : 'Removed from saved'),
   });
 
   const share = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast.success('Tautan disalin');
+    toast.success('Link copied');
   };
 
   if (q.isLoading) return <Loading />;
-  if (!q.data) return <div>List tidak ditemukan</div>;
+  if (!q.data) return <div>List not found</div>;
   const list = q.data.list;
   const items = q.data.items || [];
 
   return (
     <div className="space-y-6">
       <div className="card p-6">
-        <h1 className="text-3xl font-bold">{list.title}</h1>
-        {q.data.author && <div className="text-sm text-ink-600 mt-1">oleh @{q.data.author.username}</div>}
-        {list.description && <p className="text-sm text-ink-700 mt-3 max-w-2xl">{list.description}</p>}
+        <h1 className="text-3xl font-bold text-ink-50">{list.title}</h1>
+        {q.data.author && <div className="text-sm text-ink-300 mt-1">by @{q.data.author.username}</div>}
+        {list.description && <p className="text-sm text-ink-100 mt-3 max-w-2xl">{list.description}</p>}
         <div className="flex items-center gap-3 mt-4">
-          <span className="badge">{list.itemCount} film</span>
+          <span className="badge">{list.itemCount} films</span>
           {isLoggedIn() && (
             <>
               <button onClick={() => like.mutate()} className="btn-secondary">
@@ -49,25 +49,25 @@ export default function ListDetail() {
             </>
           )}
           <button onClick={share} className="btn-ghost">
-            <Share2 className="w-4 h-4" /> Bagikan
+            <Share2 className="w-4 h-4" /> Share
           </button>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-ink-600">List masih kosong.</div>
+        <div className="card p-8 text-center text-sm text-ink-200">This list is empty.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {items.map((row: any) => (
-            <Link key={row.item.id} to={`/films/${row.film.slug}`} className="card overflow-hidden hover:shadow-md">
-              <div className="aspect-[3/4] bg-ink-200">
+            <Link key={row.item.id} to={`/films/${row.film.slug}`} className="card card-hover overflow-hidden">
+              <div className="aspect-[3/4] bg-ink-600">
                 {row.film.coverUrl && <img src={row.film.coverUrl} className="w-full h-full object-cover" />}
               </div>
               <div className="p-3">
-                <div className="font-semibold text-sm truncate">{row.film.name}</div>
+                <div className="font-semibold text-sm text-ink-50 truncate">{row.film.name}</div>
                 <FormatBadge format={row.variant.format} />
                 {row.item.personalNote && (
-                  <div className="text-xs italic text-ink-600 mt-1.5 line-clamp-2">"{row.item.personalNote}"</div>
+                  <div className="text-xs italic text-ink-300 mt-1.5 line-clamp-2">"{row.item.personalNote}"</div>
                 )}
               </div>
             </Link>

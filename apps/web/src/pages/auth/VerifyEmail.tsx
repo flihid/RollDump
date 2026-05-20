@@ -22,36 +22,36 @@ export default function VerifyEmail() {
   }, [token, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ink-50 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <div className="card p-8 max-w-md w-full text-center">
         {status === 'loading' && (
           <>
-            <Loader2 className="mx-auto w-10 h-10 text-primary-600 animate-spin" />
-            <h2 className="mt-4 text-xl font-semibold">Memverifikasi…</h2>
+            <Loader2 className="mx-auto w-10 h-10 text-primary-400 animate-spin" />
+            <h2 className="mt-4 text-xl font-semibold text-ink-50">Verifying…</h2>
           </>
         )}
         {status === 'success' && (
           <>
-            <CheckCircle2 className="mx-auto w-12 h-12 text-emerald-500" />
-            <h2 className="mt-4 text-xl font-semibold">Akun terverifikasi!</h2>
-            <p className="mt-2 text-sm text-ink-600">Mengarahkan ke halaman login…</p>
+            <CheckCircle2 className="mx-auto w-12 h-12 text-emerald-400" />
+            <h2 className="mt-4 text-xl font-semibold text-ink-50">Account verified!</h2>
+            <p className="mt-2 text-sm text-ink-200">Redirecting to sign in…</p>
           </>
         )}
         {status === 'error' && (
           <>
-            <h2 className="text-xl font-semibold">Tautan tidak valid</h2>
-            <p className="mt-2 text-sm text-ink-600">Tautan verifikasi mungkin sudah kedaluwarsa.</p>
-            <Link to="/login" className="btn-primary mt-4">Kembali ke login</Link>
+            <h2 className="text-xl font-semibold text-ink-50">Invalid link</h2>
+            <p className="mt-2 text-sm text-ink-200">The verification link may have expired.</p>
+            <Link to="/login" className="btn-primary mt-4">Back to sign in</Link>
           </>
         )}
         {status === 'idle' && (
           <>
-            <MailCheck className="mx-auto w-12 h-12 text-primary-600" />
-            <h2 className="mt-4 text-xl font-semibold">Cek email Anda</h2>
-            <p className="mt-2 text-sm text-ink-600">
-              Kami telah mengirim tautan verifikasi. Klik tautan di email tersebut untuk mengaktifkan akun.
+            <MailCheck className="mx-auto w-12 h-12 text-primary-400" />
+            <h2 className="mt-4 text-xl font-semibold text-ink-50">Check your email</h2>
+            <p className="mt-2 text-sm text-ink-200">
+              We've sent you a verification link. Click it to activate your account.
             </p>
-            <Link to="/login" className="btn-secondary mt-4">Kembali ke login</Link>
+            <Link to="/login" className="btn-secondary mt-4">Back to sign in</Link>
           </>
         )}
       </div>

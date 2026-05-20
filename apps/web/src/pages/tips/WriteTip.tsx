@@ -28,7 +28,7 @@ export default function WriteTip() {
         category,
       }),
     onSuccess: () => {
-      toast.success('Tips dipublikasikan!');
+      toast.success('Tip published!');
       nav(`/films/${slug}`);
     },
     onError: (e: any) => toast.error(e.message),
@@ -40,17 +40,17 @@ export default function WriteTip() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tulis Tips</h1>
-        <p className="text-sm text-ink-600">{film.data?.film.name}</p>
+        <h1 className="text-2xl font-bold">Write a tip</h1>
+        <p className="text-sm text-ink-200">{film.data?.film.name}</p>
       </div>
       <div className="card p-6 space-y-4">
         <div>
-          <label className="label">Judul</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Misal: Best development time for Tri-X 400" />
-          <div className="text-xs text-ink-500 mt-0.5">{title.length}/100</div>
+          <label className="label">Title</label>
+          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Best development time for Tri-X 400" />
+          <div className="text-xs text-ink-300 mt-0.5">{title.length}/100</div>
         </div>
         <div>
-          <label className="label">Format target</label>
+          <label className="label">Target format</label>
           <div className="flex flex-wrap gap-1.5">
             {FORMATS.map((f) => (
               <button key={f} type="button" onClick={() => setTargetFormat(f)} className={targetFormat === f ? 'chip-active' : 'chip'}>
@@ -60,7 +60,7 @@ export default function WriteTip() {
           </div>
         </div>
         <div>
-          <label className="label">Kategori</label>
+          <label className="label">Category</label>
           <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -68,13 +68,13 @@ export default function WriteTip() {
           </select>
         </div>
         <div>
-          <label className="label">Konten</label>
-          <textarea className="input" rows={10} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Markdown didukung. Tulis langkah-langkah, tips, dan caveat dengan jelas." />
-          <div className="text-xs text-ink-500 mt-0.5">{content.length}/10000 (min 50)</div>
+          <label className="label">Content</label>
+          <textarea className="input" rows={10} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Markdown supported. Walk through the steps, tips, and caveats clearly." />
+          <div className="text-xs text-ink-300 mt-0.5">{content.length}/10000 (min 50)</div>
         </div>
         <div className="flex justify-end gap-2">
-          <button onClick={() => nav(-1)} className="btn-ghost">Batal</button>
-          <button disabled={!valid || m.isPending} onClick={() => m.mutate()} className="btn-primary">Publikasikan</button>
+          <button onClick={() => nav(-1)} className="btn-ghost">Cancel</button>
+          <button disabled={!valid || m.isPending} onClick={() => m.mutate()} className="btn-primary">Publish</button>
         </div>
       </div>
     </div>

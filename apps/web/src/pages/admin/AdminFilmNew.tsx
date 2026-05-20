@@ -25,7 +25,7 @@ export default function AdminFilmNew() {
   const m = useMutation({
     mutationFn: () => api.post('/films', { ...form, variants }),
     onSuccess: () => {
-      toast.success('Film berhasil ditambahkan');
+      toast.success('Film added');
       nav('/admin/films');
     },
     onError: (e: any) => toast.error(e.message),
@@ -33,10 +33,10 @@ export default function AdminFilmNew() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Tambah film baru</h1>
+      <h1 className="text-2xl font-bold">Add a new film</h1>
       <div className="card p-6 space-y-4">
         <div className="grid sm:grid-cols-2 gap-3">
-          <Field label="Nama film" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+          <Field label="Film name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           <Field label="Brand" value={form.brandName} onChange={(v) => setForm({ ...form, brandName: v })} />
           <Field label="Cover URL" value={form.coverUrl} onChange={(v) => setForm({ ...form, coverUrl: v })} />
           <div>
@@ -44,26 +44,26 @@ export default function AdminFilmNew() {
             <input type="number" className="input" value={form.iso} onChange={(e) => setForm({ ...form, iso: Number(e.target.value) })} />
           </div>
           <div>
-            <label className="label">Tipe</label>
+            <label className="label">Type</label>
             <select className="input" value={form.colorType} onChange={(e) => setForm({ ...form, colorType: e.target.value })}>
               {COLOR.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <Field label="Negara asal" value={form.countryOfOrigin} onChange={(v) => setForm({ ...form, countryOfOrigin: v })} />
+          <Field label="Country of origin" value={form.countryOfOrigin} onChange={(v) => setForm({ ...form, countryOfOrigin: v })} />
           <div>
-            <label className="label">Tahun rilis</label>
+            <label className="label">Year introduced</label>
             <input type="number" className="input" value={form.yearIntroduced} onChange={(e) => setForm({ ...form, yearIntroduced: Number(e.target.value) })} />
           </div>
         </div>
         <div>
-          <label className="label">Deskripsi</label>
+          <label className="label">Description</label>
           <textarea className="input" rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="label !mb-0">Varian format</div>
-            <button onClick={() => setVariants([...variants, { format: '35mm', exposures: 36 }])} className="btn-ghost text-xs"><Plus className="w-3 h-3" />Tambah</button>
+            <div className="label !mb-0">Format variants</div>
+            <button onClick={() => setVariants([...variants, { format: '35mm', exposures: 36 }])} className="btn-ghost text-xs"><Plus className="w-3 h-3" />Add</button>
           </div>
           <div className="space-y-2">
             {variants.map((v, i) => (
@@ -86,8 +86,8 @@ export default function AdminFilmNew() {
         </div>
 
         <div className="flex justify-end gap-2">
-          <button onClick={() => nav(-1)} className="btn-ghost">Batal</button>
-          <button onClick={() => m.mutate()} disabled={!form.name || m.isPending} className="btn-primary">Simpan</button>
+          <button onClick={() => nav(-1)} className="btn-ghost">Cancel</button>
+          <button onClick={() => m.mutate()} disabled={!form.name || m.isPending} className="btn-primary">Save</button>
         </div>
       </div>
     </div>

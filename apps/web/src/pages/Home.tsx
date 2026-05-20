@@ -28,7 +28,7 @@ export default function Home() {
           <div className="max-w-2xl">
             {loggedIn && (
               <div className="text-xs uppercase tracking-[0.2em] text-primary-400 font-bold mb-3 animate-pulse">
-                Selamat datang, @{user?.username}
+                Welcome back, @{user?.username}
               </div>
             )}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] text-ink-50">
@@ -37,31 +37,32 @@ export default function Home() {
               <span className="text-primary-400 italic">Share every frame.</span>
             </h1>
             <p className="mt-5 text-ink-100 text-base sm:text-lg max-w-xl leading-relaxed">
-              Rumah sosial untuk fotografer analog. Katalog film, log roll, dan temukan
-              apa yang orang lain pakai di 35mm, 120, dan sheet film.
+              The social home for analog photographers. Catalog film stocks, log
+              your rolls, and discover what others are shooting on 35mm, 120,
+              and sheet film.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="stat-pill">🎞 35mm & 120</span>
-              <span className="stat-pill">⭐ Review komunitas</span>
-              <span className="stat-pill">📷 Log roll</span>
+              <span className="stat-pill">⭐ Community reviews</span>
+              <span className="stat-pill">📷 Roll journal</span>
             </div>
             <div className="mt-7 flex gap-3 flex-wrap">
               <Link to="/films" className="btn-primary">
-                Jelajahi katalog
+                Browse catalog
               </Link>
               {!loggedIn ? (
                 <Link
                   to="/register"
                   className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
                 >
-                  Buat akun
+                  Create account
                 </Link>
               ) : (
                 <Link
                   to="/upload"
                   className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
                 >
-                  Log roll
+                  Log a roll
                 </Link>
               )}
             </div>
@@ -98,9 +99,9 @@ export default function Home() {
       {loggedIn && feed.data && feed.data.items?.length > 0 && (
         <RevealSection>
           <h2 className="section-title">
-            <span>Dari jaringanmu</span>
+            <span>From your network</span>
             <Link to="/discover" className="link-amber text-[10px] normal-case tracking-normal">
-              Lihat lagi →
+              See more →
             </Link>
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -113,9 +114,9 @@ export default function Home() {
 
       <RevealSection>
         <h2 className="section-title">
-          <span>Trending minggu ini</span>
+          <span>Trending this week</span>
           <Link to="/films" className="link-amber text-[10px] normal-case tracking-normal">
-            Semua film →
+            All films →
           </Link>
         </h2>
         {trending.isLoading ? (
@@ -131,15 +132,15 @@ export default function Home() {
 
       <RevealSection>
         <h2 className="section-title">
-          <span>Baru di katalog</span>
+          <span>New in the catalog</span>
           <Link to="/films" className="link-amber text-[10px] normal-case tracking-normal">
-            Semua film →
+            All films →
           </Link>
         </h2>
         {recent.isLoading ? (
           <Loading />
         ) : recent.data?.items?.length === 0 ? (
-          <EmptyState title="Belum ada film" description="Tambahkan film pertama untuk memulai." />
+          <EmptyState title="No films yet" description="Add the first film to get started." />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
             {(recent.data?.items || []).map((f: any, i: number) => (
@@ -161,13 +162,13 @@ export default function Home() {
               />
             </div>
             <h3 className="text-2xl sm:text-3xl font-semibold text-ink-50 relative z-10">
-              Jurnal darkroom-mu, di saku.
+              Your darkroom journal, in your pocket.
             </h3>
             <p className="mt-2 text-ink-200 max-w-xl mx-auto relative z-10">
-              Gratis selamanya. Log roll tanpa batas, tulis review, dan follow shooter lain.
+              Free forever. Log unlimited rolls, write reviews, and follow other shooters.
             </p>
             <Link to="/register" className="btn-primary mt-5 inline-flex relative z-10">
-              Mulai sekarang
+              Get started
             </Link>
           </section>
         </RevealSection>
@@ -180,10 +181,10 @@ function ActivityCard({ item }: { item: any }) {
   const actor = item.author?.username || 'someone';
   const verb =
     item.type === 'photo'
-      ? 'mengunggah foto'
+      ? 'uploaded a photo'
       : item.type === 'review'
-        ? 'menulis review'
-        : 'membuat list';
+        ? 'wrote a review'
+        : 'curated a list';
   return (
     <div className="card p-4 flex gap-3 hover:border-primary-500/40 hover:scale-[1.01] transition-all duration-200">
       <div className="w-9 h-9 rounded-full bg-primary-500 text-ink-900 flex items-center justify-center font-bold overflow-hidden shrink-0 ring-2 ring-primary-500/30">

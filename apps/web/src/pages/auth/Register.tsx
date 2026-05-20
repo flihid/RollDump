@@ -37,10 +37,10 @@ export default function Register() {
         fullName: form.fullName || form.username,
       }),
     onSuccess: (data: any) => {
-      toast.success('Registrasi berhasil! Cek email Anda untuk verifikasi.');
+      toast.success('Registration successful! Check your email to verify.');
       navigate(`/verify?token=${data.verify_token || ''}`);
     },
-    onError: (e: any) => toast.error(e.message || 'Registrasi gagal'),
+    onError: (e: any) => toast.error(e.message || 'Registration failed'),
   });
 
   const strengthLabel = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'][strength] || 'Very weak';

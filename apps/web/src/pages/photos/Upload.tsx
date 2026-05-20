@@ -36,7 +36,7 @@ export default function Upload() {
         shootingConditions: conditions || null,
       }),
     onSuccess: (data: any) => {
-      toast.success('Foto berhasil diunggah!');
+      toast.success('Photo uploaded!');
       nav(`/photos/${data.photo.id}`);
     },
     onError: (e: any) => toast.error(e.message),
@@ -51,7 +51,7 @@ export default function Upload() {
         shootingConditions: conditions || null,
       }),
     onSuccess: (data: any) => {
-      toast.success('Roll berhasil diunggah!');
+      toast.success('Roll uploaded!');
       nav(`/rolls/${data.roll.id}`);
     },
     onError: (e: any) => toast.error(e.message),
@@ -60,17 +60,17 @@ export default function Upload() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Unggah foto</h1>
-        <div className="flex gap-1 bg-ink-100 p-1 rounded-lg">
+        <h1 className="text-2xl font-bold">Upload photos</h1>
+        <div className="flex gap-1 bg-ink-700 border border-ink-600 p-1 rounded-lg">
           <button
             onClick={() => setMode('single')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'single' ? 'bg-white shadow-sm' : ''}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'single' ? 'bg-ink-500 text-ink-50 shadow-sm' : 'text-ink-200'}`}
           >
-            <ImageIcon className="w-3.5 h-3.5 inline mr-1" /> Tunggal
+            <ImageIcon className="w-3.5 h-3.5 inline mr-1" /> Single
           </button>
           <button
             onClick={() => setMode('bulk')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'bulk' ? 'bg-white shadow-sm' : ''}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'bulk' ? 'bg-ink-500 text-ink-50 shadow-sm' : 'text-ink-200'}`}
           >
             <Layers className="w-3.5 h-3.5 inline mr-1" /> Bulk (Roll)
           </button>
@@ -79,9 +79,9 @@ export default function Upload() {
 
       <div className="card p-6 space-y-5">
         <div>
-          <div className="label">Cari & pilih film + format</div>
+          <div className="label">Search & pick film + format</div>
           <input
-            placeholder="Ketik nama film…"
+            placeholder="Type a film name…"
             className="input"
             value={filmFilter}
             onChange={(e) => setFilmFilter(e.target.value)}
@@ -119,11 +119,11 @@ export default function Upload() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="label">Kamera</label>
-            <input className="input" value={cameraText} onChange={(e) => setCameraText(e.target.value)} placeholder="Misal: Yashica Mat-124G" />
+            <label className="label">Camera</label>
+            <input className="input" value={cameraText} onChange={(e) => setCameraText(e.target.value)} placeholder="e.g. Yashica Mat-124G" />
             {cameras.data?.items?.length > 0 && cameraText && (
-              <div className="mt-1 text-xs text-ink-500">
-                Saran:{' '}
+              <div className="mt-1 text-xs text-ink-300">
+                Suggestions:{' '}
                 {cameras.data.items.slice(0, 3).map((c: any) => (
                   <button key={c.id} type="button" onClick={() => setCameraText(`${c.brand} ${c.model}`)} className="underline mr-2">
                     {c.brand} {c.model}
@@ -133,7 +133,7 @@ export default function Upload() {
             )}
           </div>
           <div>
-            <label className="label">Kondisi pencahayaan</label>
+            <label className="label">Lighting conditions</label>
             <select className="input" value={conditions} onChange={(e) => setConditions(e.target.value)}>
               <option value="">—</option>
               <option value="daylight">Daylight</option>
@@ -149,10 +149,10 @@ export default function Upload() {
         {mode === 'single' ? (
           <>
             <div>
-              <label className="label">URL gambar *</label>
+              <label className="label">Image URL *</label>
               <input className="input" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" />
               {imageUrl && (
-                <div className="mt-2 aspect-[4/3] bg-ink-200 rounded-lg overflow-hidden">
+                <div className="mt-2 aspect-[4/3] bg-ink-600 rounded-lg overflow-hidden">
                   <img src={imageUrl} className="w-full h-full object-cover" />
                 </div>
               )}
@@ -163,14 +163,14 @@ export default function Upload() {
             </div>
             <div className="flex justify-end">
               <button disabled={!imageUrl || single.isPending} onClick={() => single.mutate()} className="btn-primary">
-                Unggah
+                Upload
               </button>
             </div>
           </>
         ) : (
           <>
             <div>
-              <label className="label">Daftar foto roll (URL gambar)</label>
+              <label className="label">Roll photo list (image URLs)</label>
               <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
                 {bulkItems.map((it, i) => (
                   <div key={i} className="flex gap-2">
@@ -197,12 +197,12 @@ export default function Upload() {
                 onClick={() => setBulkItems((arr) => [...arr, { imageUrl: '' }])}
                 className="btn-ghost mt-2"
               >
-                <Plus className="w-4 h-4" /> Tambah frame
+                <Plus className="w-4 h-4" /> Add frame
               </button>
             </div>
             <div className="flex justify-end">
               <button disabled={bulk.isPending || bulkItems.filter((b) => b.imageUrl).length === 0} onClick={() => bulk.mutate()} className="btn-primary">
-                Unggah Roll ({bulkItems.filter((b) => b.imageUrl).length})
+                Upload Roll ({bulkItems.filter((b) => b.imageUrl).length})
               </button>
             </div>
           </>

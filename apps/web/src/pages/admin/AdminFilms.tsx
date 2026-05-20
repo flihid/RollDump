@@ -9,9 +9,9 @@ export default function AdminFilms() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Kelola Film</h1>
+        <h1 className="text-2xl font-bold">Manage Films</h1>
         <Link to="/admin/films/new" className="btn-primary">
-          <Plus className="w-4 h-4" /> Tambah film
+          <Plus className="w-4 h-4" /> Add film
         </Link>
       </div>
       {q.isLoading ? (
@@ -19,9 +19,9 @@ export default function AdminFilms() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-ink-50 text-ink-600">
+            <thead className="bg-ink-600 text-ink-200">
               <tr>
-                <th className="text-left p-3">Nama</th>
+                <th className="text-left p-3">Name</th>
                 <th className="text-left p-3">Brand</th>
                 <th className="text-left p-3">ISO</th>
                 <th className="text-left p-3">Status</th>
@@ -30,7 +30,7 @@ export default function AdminFilms() {
             </thead>
             <tbody>
               {(q.data?.items || []).map((f: any) => (
-                <tr key={f.id} className="border-t hover:bg-ink-50">
+                <tr key={f.id} className="border-t border-ink-600 hover:bg-ink-600/50">
                   <td className="p-3">
                     <Link to={`/films/${f.slug}`} className="font-medium hover:underline">{f.name}</Link>
                   </td>

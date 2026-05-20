@@ -48,7 +48,7 @@ export default function WriteReview() {
         scanMethod: scan || null,
       }),
     onSuccess: () => {
-      toast.success('Review berhasil dipublikasikan!');
+      toast.success('Review published!');
       nav(`/films/${slug}`);
     },
     onError: (e: any) => toast.error(e.message),
@@ -61,13 +61,13 @@ export default function WriteReview() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tulis review</h1>
-        <p className="text-sm text-ink-600">{f.name} oleh {f.brand?.name}</p>
+        <h1 className="text-2xl font-bold">Write a review</h1>
+        <p className="text-sm text-ink-200">{f.name} by {f.brand?.name}</p>
       </div>
 
       <div className="card p-6 space-y-6">
         <div>
-          <div className="label">Format yang Anda gunakan</div>
+          <div className="label">Format you shot</div>
           <div className="flex flex-wrap gap-2">
             {f.variants.map((v: any) => (
               <button
@@ -83,13 +83,13 @@ export default function WriteReview() {
         </div>
 
         <div>
-          <div className="label">Rating keseluruhan *</div>
+          <div className="label">Overall rating *</div>
           <StarRating value={rating} size="lg" onChange={setRating} />
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <div className="text-xs label">Warna</div>
+            <div className="text-xs label">Color</div>
             <StarRating value={color} onChange={setColor} />
           </div>
           <div>
@@ -97,32 +97,32 @@ export default function WriteReview() {
             <StarRating value={grain} onChange={setGrain} />
           </div>
           <div>
-            <div className="text-xs label">Ketajaman</div>
+            <div className="text-xs label">Sharpness</div>
             <StarRating value={sharp} onChange={setSharp} />
           </div>
         </div>
 
         <div>
-          <div className="label">Pengalaman Anda *</div>
+          <div className="label">Your experience *</div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={6}
-            placeholder="Bagaimana karakter warna, grain, dan latitudenya? Cocok untuk situasi apa?"
+            placeholder="What's the color, grain, and latitude like? Where does it shine?"
             className="input"
           />
-          <div className="text-xs text-ink-500 mt-1">{content.length}/5000 karakter (min 20)</div>
+          <div className="text-xs text-ink-300 mt-1">{content.length}/5000 characters (min 20)</div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="label flex items-center gap-1">
-              <CameraIcon className="w-3.5 h-3.5" /> Kamera
+              <CameraIcon className="w-3.5 h-3.5" /> Camera
             </label>
             <input className="input" value={cameraText} onChange={(e) => setCameraText(e.target.value)} placeholder="Yashica Mat-124G" />
           </div>
           <div>
-            <label className="label">Lensa</label>
+            <label className="label">Lens</label>
             <input className="input" value={lensText} onChange={(e) => setLensText(e.target.value)} />
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function WriteReview() {
         </div>
 
         <div>
-          <div className="label">Kondisi pemotretan</div>
+          <div className="label">Shooting conditions</div>
           <div className="flex flex-wrap gap-1.5">
             {CONDITIONS.map((c) => (
               <button key={c} type="button" onClick={() => setConditions(c === conditions ? '' : c)} className={c === conditions ? 'chip-active' : 'chip'}>
@@ -148,7 +148,7 @@ export default function WriteReview() {
         </div>
 
         <div>
-          <div className="label">Metode scan</div>
+          <div className="label">Scan method</div>
           <div className="flex flex-wrap gap-1.5">
             {SCAN.map((c) => (
               <button key={c} type="button" onClick={() => setScan(c === scan ? '' : c)} className={c === scan ? 'chip-active' : 'chip'}>
@@ -159,9 +159,9 @@ export default function WriteReview() {
         </div>
 
         <div className="flex gap-2 justify-end">
-          <button onClick={() => nav(-1)} className="btn-ghost">Batal</button>
+          <button onClick={() => nav(-1)} className="btn-ghost">Cancel</button>
           <button onClick={() => m.mutate()} disabled={!valid || m.isPending} className="btn-primary">
-            <Star className="w-4 h-4" /> Publikasikan
+            <Star className="w-4 h-4" /> Publish
           </button>
         </div>
       </div>

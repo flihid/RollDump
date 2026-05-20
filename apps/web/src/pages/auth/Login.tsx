@@ -17,7 +17,7 @@ export default function Login() {
     mutationFn: () => api.post('/auth/login', { identifier, password }),
     onSuccess: (data: any) => {
       setAuth(data.access_token, data.refresh_token, data.user);
-      toast.success('Selamat datang kembali!');
+      toast.success('Welcome back!');
       const next = params.get('next') || '/';
       navigate(next);
     },
@@ -25,7 +25,7 @@ export default function Login() {
       if (e.data?.code === 'VERIFY_REQUIRED') {
         setVerifyHint(true);
       }
-      toast.error(e.message || 'Login gagal');
+      toast.error(e.message || 'Sign-in failed');
     },
   });
 

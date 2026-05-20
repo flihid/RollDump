@@ -12,7 +12,7 @@ export default function Wishlist() {
   const remove = useMutation({
     mutationFn: (variantId: string) => api.delete(`/films/wishlists/${variantId}`),
     onSuccess: () => {
-      toast.success('Dihapus dari wishlist');
+      toast.success('Removed from wishlist');
       qc.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
@@ -24,9 +24,9 @@ export default function Wishlist() {
         <Loading />
       ) : q.data?.items?.length === 0 ? (
         <EmptyState
-          title="Wishlist kosong"
-          description="Tambahkan film ke wishlist untuk mengingatnya."
-          cta={<Link to="/films" className="btn-primary">Jelajahi katalog</Link>}
+          title="Your wishlist is empty"
+          description="Save films to revisit them later."
+          cta={<Link to="/films" className="btn-primary">Browse catalog</Link>}
         />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

@@ -59,7 +59,7 @@ export default function Discover() {
 
       <RevealSection>
         <h2 className="section-title">
-          <span>Lists pilihan</span>
+          <span>Featured lists</span>
         </h2>
         {lists.isLoading ? (
           <Loading />
@@ -72,7 +72,7 @@ export default function Discover() {
                 className="card p-4 hover:border-primary-500/50 hover:scale-[1.01] transition-all duration-200"
               >
                 <div className="font-bold text-ink-50">{row.list.title}</div>
-                <div className="text-xs text-ink-300 mt-0.5">oleh @{row.author?.username}</div>
+                <div className="text-xs text-ink-300 mt-0.5">by @{row.author?.username}</div>
                 {row.list.description && (
                   <p className="text-sm text-ink-200 mt-2 line-clamp-2">{row.list.description}</p>
                 )}
@@ -84,7 +84,7 @@ export default function Discover() {
 
       <RevealSection>
         <h2 className="section-title">
-          <span>Pabrikan</span>
+          <span>Brands</span>
         </h2>
         {brands.isLoading ? (
           <Loading />
@@ -97,7 +97,7 @@ export default function Discover() {
                 className="card p-4 text-center hover:border-primary-500/50 hover:bg-ink-600/50 transition-all"
               >
                 <div className="font-semibold text-sm text-ink-50">{b.name}</div>
-                <div className="text-xs text-ink-300">{b.filmCount} film</div>
+                <div className="text-xs text-ink-300">{b.filmCount} films</div>
               </Link>
             ))}
           </div>

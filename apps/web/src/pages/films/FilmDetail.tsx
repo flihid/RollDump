@@ -44,7 +44,7 @@ export default function FilmDetail() {
 
   const wishlist = useMutation({
     mutationFn: (variantId: string) => api.post('/films/wishlists', { film_variant_id: variantId }),
-    onSuccess: () => toast.success('Ditambahkan ke wishlist'),
+    onSuccess: () => toast.success('Added to wishlist'),
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -55,7 +55,7 @@ export default function FilmDetail() {
 
   const report = useMutation({
     mutationFn: ({ type, id, reason }: any) => api.post(`/reports/${type}/${id}`, { reason }),
-    onSuccess: () => toast.success('Laporan diterima'),
+    onSuccess: () => toast.success('Report submitted'),
   });
 
   const tipVote = useMutation({
@@ -64,7 +64,7 @@ export default function FilmDetail() {
   });
 
   if (film.isLoading) return <Loading />;
-  if (!film.data) return <div>Film tidak ditemukan</div>;
+  if (!film.data) return <div>Film not found</div>;
 
   const f = film.data.film;
 
@@ -87,10 +87,6 @@ export default function FilmDetail() {
               {f.countryOfOrigin && <span className="stat-pill">{f.countryOfOrigin}</span>}
               {f.yearIntroduced && <span className="stat-pill">Since {f.yearIntroduced}</span>}
             </div>
-            <p className="mt-5 text-xs text-ink-300 uppercase tracking-[0.18em] hidden sm:flex items-center gap-2">
-              <span className="inline-block w-6 h-px bg-ink-300" />
-              Hover the roll to spin · drag for free rotation
-            </p>
           </div>
           <div className="flex justify-center md:justify-end relative">
             <FilmRoll3D film={f} size="hero" autoSpin interactive hoverSpin />
@@ -103,7 +99,7 @@ export default function FilmDetail() {
             onClick={() => setActiveFormat(null)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!activeFormat ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
           >
-            Semua format
+            All formats
           </button>
           {variants.map((v: any) => (
             <button
@@ -121,10 +117,10 @@ export default function FilmDetail() {
             <p className="text-sm text-ink-100 leading-relaxed">{f.description}</p>
             {currentVariant && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <Spec label="Eksposur" value={currentVariant.exposures} />
+                <Spec label="Exposures" value={currentVariant.exposures} />
                 <Spec label="Frame size" value={currentVariant.frameSize} />
                 <Spec label="Push/Pull" value={currentVariant.pushPullRange} />
-                <Spec label="DX coded" value={currentVariant.dxCoded === true ? 'Ya' : currentVariant.dxCoded === false ? 'Tidak' : '—'} />
+                <Spec label="DX coded" value={currentVariant.dxCoded === true ? 'Yes' : currentVariant.dxCoded === false ? 'No' : '—'} />
                 {currentVariant.msrpUsd && <Spec label="MSRP" value={`$${currentVariant.msrpUsd}`} />}
               </div>
             )}
@@ -136,12 +132,12 @@ export default function FilmDetail() {
                 onClick={() => wishlist.mutate(currentVariant.id)}
                 className="btn-secondary w-full"
               >
-                <Bookmark className="w-4 h-4" /> Tambah ke wishlist
+                <Bookmark className="w-4 h-4" /> Add to wishlist
               </button>
             )}
             {isLoggedIn() && (
               <Link to={`/films/${f.slug}/review/new`} className="btn-primary w-full">
-                <Star className="w-4 h-4" /> Tulis review
+                <Star className="w-4 h-4" /> Write a review
               </Link>
             )}
           </div>
@@ -151,7 +147,7 @@ export default function FilmDetail() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-ink-600">
         <TabBtn active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} icon={<Star className="w-4 h-4" />} label={`Reviews (${f.stats?.reviewCount || 0})`} />
-        <TabBtn active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label={`Foto (${f.stats?.photoCount || 0})`} />
+        <TabBtn active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label={`Photos (${f.stats?.photoCount || 0})`} />
         <TabBtn active={activeTab === 'tips'} onClick={() => setActiveTab('tips')} icon={<BookOpen className="w-4 h-4" />} label={`Tips (${f.stats?.tipsCount || 0})`} />
       </div>
 
@@ -161,10 +157,10 @@ export default function FilmDetail() {
           {reviews.isLoading ? (
             <Loading />
           ) : reviews.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">
-              Belum ada review untuk format ini.{' '}
+            <div className="card p-8 text-center text-sm text-ink-200">
+              No reviews for this format yet.{' '}
               {isLoggedIn() && (
-                <Link to={`/films/${f.slug}/review/new`} className="text-primary-600 font-medium">Jadilah yang pertama!</Link>
+                <Link to={`/films/${f.slug}/review/new`} className="link-amber font-semibold">Be the first!</Link>
               )}
             </div>
           ) : (
@@ -190,12 +186,12 @@ export default function FilmDetail() {
                       </div>
                     )}
                     <p className="text-sm mt-2 whitespace-pre-wrap">{r.review.content}</p>
-                    <div className="flex items-center gap-4 mt-3 text-xs text-ink-600">
-                      <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-primary-600">
-                        <ThumbsUp className="w-3.5 h-3.5" /> Bermanfaat ({r.review.helpfulCount})
+                    <div className="flex items-center gap-4 mt-3 text-xs text-ink-200">
+                      <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-primary-400">
+                        <ThumbsUp className="w-3.5 h-3.5" /> Helpful ({r.review.helpfulCount})
                       </button>
-                      <button onClick={() => report.mutate({ type: 'review', id: r.review.id, reason: 'spam' })} className="flex items-center gap-1 hover:text-red-600">
-                        <Flag className="w-3.5 h-3.5" /> Laporkan
+                      <button onClick={() => report.mutate({ type: 'review', id: r.review.id, reason: 'spam' })} className="flex items-center gap-1 hover:text-red-400">
+                        <Flag className="w-3.5 h-3.5" /> Report
                       </button>
                     </div>
                   </div>
@@ -211,7 +207,7 @@ export default function FilmDetail() {
           {photos.isLoading ? (
             <Loading />
           ) : photos.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">Belum ada foto untuk format ini.</div>
+            <div className="card p-8 text-center text-sm text-ink-200">No photos for this format yet.</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {photos.data!.items.map((row: any) => (
@@ -229,14 +225,14 @@ export default function FilmDetail() {
           <div className="flex justify-end">
             {isLoggedIn() && (
               <Link to={`/films/${f.slug}/tips/new`} className="btn-secondary">
-                <BookOpen className="w-4 h-4" /> Tulis tips
+                <BookOpen className="w-4 h-4" /> Write a tip
               </Link>
             )}
           </div>
           {tips.isLoading ? (
             <Loading />
           ) : tips.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">Belum ada tips. Bagikan pengetahuanmu!</div>
+            <div className="card p-8 text-center text-sm text-ink-200">No tips yet. Share your knowledge!</div>
           ) : (
             tips.data!.items.map((row: any) => (
               <div key={row.tip.id} className="card p-4 flex gap-3">
@@ -255,8 +251,8 @@ export default function FilmDetail() {
                     <FormatBadge format={row.tip.targetFormat} />
                     <span className="badge">{row.tip.category}</span>
                   </div>
-                  <p className="text-sm text-ink-700 mt-1 line-clamp-3">{row.tip.content}</p>
-                  <div className="text-xs text-ink-500 mt-2">oleh @{row.author?.username}</div>
+                  <p className="text-sm text-ink-100 mt-1 line-clamp-3">{row.tip.content}</p>
+                  <div className="text-xs text-ink-300 mt-2">by @{row.author?.username}</div>
                 </div>
               </div>
             ))

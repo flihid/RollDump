@@ -45,7 +45,7 @@ export default function Onboarding() {
     setArr(arr.includes(k) ? arr.filter((x) => x !== k) : [...arr, k]);
 
   return (
-    <div className="min-h-screen bg-ink-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="card p-8 max-w-xl w-full">
         <div className="flex items-center gap-1 mb-6">
           {[1, 2, 3].map((s) => (
@@ -54,8 +54,8 @@ export default function Onboarding() {
         </div>
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-bold">Format film favorit?</h2>
-            <p className="text-sm text-ink-600 mt-1">Bisa pilih lebih dari satu.</p>
+            <h2 className="text-2xl font-bold text-ink-50">Favorite film formats?</h2>
+            <p className="text-sm text-ink-200 mt-1">Pick one or more.</p>
             <div className="flex flex-wrap gap-2 mt-6">
               {FORMATS.map((f) => (
                 <button
@@ -69,13 +69,13 @@ export default function Onboarding() {
               ))}
             </div>
             <div className="mt-8 flex justify-end">
-              <button onClick={() => setStep(2)} className="btn-primary">Lanjut</button>
+              <button onClick={() => setStep(2)} className="btn-primary">Next</button>
             </div>
           </div>
         )}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-bold">Tipe emulsi favorit?</h2>
+            <h2 className="text-2xl font-bold text-ink-50">Favorite emulsion types?</h2>
             <div className="flex flex-wrap gap-2 mt-6">
               {COLOR.map((f) => (
                 <button
@@ -89,14 +89,14 @@ export default function Onboarding() {
               ))}
             </div>
             <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(1)} className="btn-ghost">Kembali</button>
-              <button onClick={() => setStep(3)} className="btn-primary">Lanjut</button>
+              <button onClick={() => setStep(1)} className="btn-ghost">Back</button>
+              <button onClick={() => setStep(3)} className="btn-primary">Next</button>
             </div>
           </div>
         )}
         {step === 3 && (
           <div>
-            <h2 className="text-2xl font-bold">Ikuti fotografer</h2>
+            <h2 className="text-2xl font-bold text-ink-50">Follow some photographers</h2>
             <p className="text-sm text-ink-600 mt-1">Mulai isi feed Anda.</p>
             <div className="grid grid-cols-2 gap-2 mt-6">
               {(suggested.data?.items || []).slice(0, 6).map((u: any) => {
@@ -119,8 +119,8 @@ export default function Onboarding() {
               })}
             </div>
             <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(2)} className="btn-ghost">Kembali</button>
-              <button disabled={save.isPending} onClick={() => save.mutate()} className="btn-primary">Selesai</button>
+              <button onClick={() => setStep(2)} className="btn-ghost">Back</button>
+              <button disabled={save.isPending} onClick={() => save.mutate()} className="btn-primary">Finish</button>
             </div>
           </div>
         )}
