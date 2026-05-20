@@ -31,10 +31,10 @@ export default function Home() {
                 Welcome back, @{user?.username}
               </div>
             )}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] text-ink-50">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.02] text-ink-50">
               Track every roll.
               <br />
-              <span className="text-primary-400 italic">Share every frame.</span>
+              <span className="text-primary-400 font-display-italic">Share every frame.</span>
             </h1>
             <p className="mt-5 text-ink-100 text-base sm:text-lg max-w-xl leading-relaxed">
               The social home for analog photographers. Catalog film stocks, log

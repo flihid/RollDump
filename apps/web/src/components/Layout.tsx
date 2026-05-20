@@ -125,7 +125,7 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs text-ink-200">
           <div className="flex items-center gap-3">
             <Logo size={32} showWordmark linkTo={null} />
-            <span className="text-ink-300 italic font-display text-base">— shoot more film.</span>
+            <span className="text-ink-300 font-display-italic text-base">— shoot more film.</span>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 uppercase tracking-wider">
             <Link to="/films" className="hover:text-primary-400">Catalog</Link>

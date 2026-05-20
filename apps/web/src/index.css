@@ -44,17 +44,24 @@
   }
   body { @apply flex flex-col; }
   h1, h2, h3, h4 {
-    font-family: "Instrument Serif", "DM Serif Display", Georgia, serif;
-    font-weight: 400;
-    @apply tracking-tight;
+    font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    font-variation-settings: "wdth" 96;
   }
-  h1 { @apply text-4xl md:text-5xl; letter-spacing: -0.015em; }
-  h2 { @apply text-2xl md:text-3xl; }
-  h3 { @apply text-xl md:text-2xl; }
+  h1 {
+    @apply text-4xl md:text-5xl;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-variation-settings: "wdth" 92;
+  }
+  h2 { @apply text-2xl md:text-3xl; font-weight: 700; }
+  h3 { @apply text-xl md:text-2xl; font-weight: 700; }
+  h4 { font-weight: 600; }
   a { @apply transition-colors; }
   ::selection { background: rgba(240, 138, 0, 0.4); color: white; }
 
-  /* Brand wordmark font — expressive grotesque */
+  /* Brand wordmark font — same family, used at display sizes */
   .font-brand {
     font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
     font-weight: 800;
@@ -62,15 +69,17 @@
     font-variation-settings: "wdth" 95;
   }
 
-  /* Utility shorthand for the display font (used by Logo + brand mark) */
+  /* Display variant (used by Logo helper and hero subtitles) */
   .font-display {
-    font-family: "Instrument Serif", "DM Serif Display", Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variation-settings: "wdth" 95;
   }
-  .font-mono-display {
-    font-family: "Space Grotesk", "DM Sans", sans-serif;
-    letter-spacing: -0.01em;
+  .font-display-italic {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
   }
 }
 
