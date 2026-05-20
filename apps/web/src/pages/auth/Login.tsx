@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { setAuth } from '../../store/auth';
+import Logo from '../../components/Logo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -32,12 +33,9 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-baseline justify-center gap-2 mb-8">
-          <span className="text-3xl font-semibold text-ink-50" style={{ fontFamily: 'Playfair Display, Georgia, serif' }}>
-            RollDump
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary-400 font-bold">· 35mm</span>
-        </Link>
+        <div className="flex justify-center mb-8">
+          <Logo size={42} showTagline />
+        </div>
         <div className="card p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-ink-50">Sign in</h2>

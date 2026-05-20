@@ -13,6 +13,7 @@ import { clearAuth, getUser, isAdmin, isLoggedIn } from '../store/auth';
 import { useState } from 'react';
 import GlobalSearch from './GlobalSearch';
 import NotificationBell from './NotificationBell';
+import Logo from './Logo';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -39,17 +40,7 @@ export default function Layout() {
       {/* Top nav — horizontal text links, Letterboxd-style */}
       <header className="sticky top-0 z-30 bg-ink-900/80 backdrop-blur-md border-b border-ink-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-6">
-          <Link to="/" className="flex items-baseline gap-2 shrink-0">
-            <span
-              className="text-2xl font-semibold tracking-tight text-ink-50"
-              style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
-            >
-              RollDump
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-primary-400 font-bold hidden sm:inline">
-              · 35mm
-            </span>
-          </Link>
+          <Logo size={34} showTagline className="shrink-0" />
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
@@ -132,14 +123,9 @@ export default function Layout() {
       {/* Footer */}
       <footer className="border-t border-ink-700 bg-ink-900/60 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs text-ink-200">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-base font-semibold"
-              style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
-            >
-              RollDump
-            </span>
-            <span className="text-ink-300">— shoot more film.</span>
+          <div className="flex items-center gap-3">
+            <Logo size={28} showWordmark linkTo={null} />
+            <span className="text-ink-300 italic font-display">— shoot more film.</span>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 uppercase tracking-wider">
             <Link to="/films" className="hover:text-primary-400">Catalog</Link>
