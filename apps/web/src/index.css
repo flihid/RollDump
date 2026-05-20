@@ -54,6 +54,13 @@
   a { @apply transition-colors; }
   ::selection { background: rgba(240, 138, 0, 0.4); color: white; }
 
+  /* Handwritten brand font — wordmark only */
+  .font-brand {
+    font-family: "Caveat", "Patrick Hand", cursive;
+    font-weight: 700;
+    letter-spacing: 0.005em;
+  }
+
   /* Utility shorthand for the display font (used by Logo + brand mark) */
   .font-display {
     font-family: "Instrument Serif", "DM Serif Display", Georgia, serif;
