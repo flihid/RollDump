@@ -1,19 +1,14 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Search,
-  Home,
-  Film,
-  Image,
-  BookOpen,
-  Compass,
-  ListChecks,
   Bell,
   User,
-  LogIn,
   LogOut,
   Settings,
   Shield,
   Plus,
+  Menu,
+  X,
 } from 'lucide-react';
 import { clearAuth, getUser, isAdmin, isLoggedIn } from '../store/auth';
 import { useState } from 'react';
@@ -24,134 +19,219 @@ export default function Layout() {
   const user = getUser();
   const loggedIn = isLoggedIn();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleLogout = () => {
     clearAuth();
     navigate('/login');
   };
 
-  const navItem = (to: string, icon: React.ReactNode, label: string) => (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${
-          isActive ? 'bg-primary-50 text-primary-700' : 'text-ink-700 hover:bg-ink-100'
-        }`
-      }
-    >
-      {icon}
-      <span>{label}</span>
-    </NavLink>
-  );
+  const navLinks: { to: string; label: string }[] = [
+    { to: '/films', label: 'Films' },
+    { to: '/photos', label: 'Gallery' },
+    { to: '/lists', label: 'Lists' },
+    { to: '/tips', label: 'Tips' },
+    { to: '/discover', label: 'Discover' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-ink-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="text-primary-600">●</span>
-            <span>RollDump</span>
+      {/* Top nav — horizontal text links, Letterboxd-style */}
+      <header className="sticky top-0 z-30 bg-ink-900/80 backdrop-blur-md border-b border-ink-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-6">
+          <Link to="/" className="flex items-baseline gap-2 shrink-0">
+            <span
+              className="text-2xl font-semibold tracking-tight text-ink-50"
+              style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+            >
+              RollDump
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-primary-400 font-bold hidden sm:inline">
+              · 35mm
+            </span>
           </Link>
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-auto px-3 py-1.5 rounded-lg border border-ink-200 text-ink-500 text-sm hover:border-primary-500 transition"
-          >
-            <Search className="w-4 h-4" />
-            <span>Cari film, kreator, list…</span>
-            <span className="ml-auto text-xs bg-ink-100 rounded px-1.5 py-0.5">⌘K</span>
-          </button>
-          <div className="ml-auto flex items-center gap-1">
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                className={({ isActive }) =>
+                  `px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                    isActive
+                      ? 'text-primary-400'
+                      : 'text-ink-100 hover:text-primary-400'
+                  }`
+                }
+              >
+                {l.label}
+              </NavLink>
+            ))}
+            {loggedIn && (
+              <NavLink
+                to="/wishlist"
+                className={({ isActive }) =>
+                  `px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                    isActive
+                      ? 'text-primary-400'
+                      : 'text-ink-100 hover:text-primary-400'
+                  }`
+                }
+              >
+                Wishlist
+              </NavLink>
+            )}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setSearchOpen(true)}
-              className="md:hidden p-2 hover:bg-ink-100 rounded-lg"
-              aria-label="Cari"
+              className="p-2 text-ink-100 hover:text-primary-400 transition"
+              aria-label="Search"
             >
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4" />
             </button>
             {loggedIn ? (
               <>
-                <Link to="/notifications" className="p-2 hover:bg-ink-100 rounded-lg" aria-label="Notifikasi">
-                  <Bell className="w-5 h-5" />
+                <Link
+                  to="/notifications"
+                  className="p-2 text-ink-100 hover:text-primary-400 transition"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
                 </Link>
                 <Link to="/upload" className="btn-primary !py-1.5 !px-3 hidden sm:inline-flex">
-                  <Plus className="w-4 h-4" />
-                  <span>Unggah</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Log</span>
                 </Link>
-                <UserMenu user={user!} onLogout={handleLogout} />
+                <UserMenu user={user!} onLogout={handleLogout} isAdmin={!!isAdmin()} />
               </>
             ) : (
               <>
-                <Link to="/login" className="btn-ghost">
-                  <LogIn className="w-4 h-4" />
-                  Masuk
+                <Link to="/login" className="btn-ghost !py-1.5 !px-3 hidden sm:inline-flex">
+                  Sign in
                 </Link>
-                <Link to="/register" className="btn-primary">
-                  Daftar
+                <Link to="/register" className="btn-primary !py-1.5 !px-3">
+                  Join
                 </Link>
               </>
             )}
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="md:hidden p-2 text-ink-100"
+              aria-label="Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 py-6">
-        {/* Sidebar */}
-        <aside className="hidden lg:block">
-          <nav className="sticky top-20 space-y-1">
-            {navItem('/', <Home className="w-4 h-4" />, 'Beranda')}
-            {navItem('/films', <Film className="w-4 h-4" />, 'Katalog Film')}
-            {navItem('/photos', <Image className="w-4 h-4" />, 'Galeri')}
-            {navItem('/tips', <BookOpen className="w-4 h-4" />, 'Tips & Guide')}
-            {navItem('/lists', <ListChecks className="w-4 h-4" />, 'Lists')}
-            {navItem('/discover', <Compass className="w-4 h-4" />, 'Discover')}
-            {loggedIn && navItem('/wishlist', <ListChecks className="w-4 h-4" />, 'Wishlist')}
-            {loggedIn && navItem('/settings', <Settings className="w-4 h-4" />, 'Pengaturan')}
-            {isAdmin() && navItem('/admin', <Shield className="w-4 h-4" />, 'Admin')}
-          </nav>
-        </aside>
+      {/* Subtle filmstrip flourish below header */}
+      <div className="filmstrip-divider" />
 
-        <main className="min-w-0">
-          <Outlet />
-        </main>
-      </div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
+        <Outlet />
+      </main>
 
-      {/* Mobile bottom nav */}
-      <nav className="lg:hidden sticky bottom-0 bg-white border-t border-ink-200 grid grid-cols-5 z-30">
-        <NavLink to="/" className={({ isActive }) => `py-2 flex flex-col items-center text-xs ${isActive ? 'text-primary-600' : 'text-ink-600'}`}>
-          <Home className="w-5 h-5" />
-          <span>Beranda</span>
-        </NavLink>
-        <NavLink to="/films" className={({ isActive }) => `py-2 flex flex-col items-center text-xs ${isActive ? 'text-primary-600' : 'text-ink-600'}`}>
-          <Film className="w-5 h-5" />
-          <span>Film</span>
-        </NavLink>
-        <NavLink to="/upload" className={({ isActive }) => `py-2 flex flex-col items-center text-xs ${isActive ? 'text-primary-600' : 'text-ink-600'}`}>
-          <Plus className="w-5 h-5" />
-          <span>Unggah</span>
-        </NavLink>
-        <NavLink to="/discover" className={({ isActive }) => `py-2 flex flex-col items-center text-xs ${isActive ? 'text-primary-600' : 'text-ink-600'}`}>
-          <Compass className="w-5 h-5" />
-          <span>Cari</span>
-        </NavLink>
-        <NavLink to={user ? `/u/${user.username}` : '/login'} className={({ isActive }) => `py-2 flex flex-col items-center text-xs ${isActive ? 'text-primary-600' : 'text-ink-600'}`}>
-          <User className="w-5 h-5" />
-          <span>Profil</span>
-        </NavLink>
-      </nav>
+      {/* Footer */}
+      <footer className="border-t border-ink-700 bg-ink-900/60 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs text-ink-200">
+          <div className="flex items-center gap-2">
+            <span
+              className="text-base font-semibold"
+              style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+            >
+              RollDump
+            </span>
+            <span className="text-ink-300">— shoot more film.</span>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 uppercase tracking-wider">
+            <Link to="/films" className="hover:text-primary-400">Catalog</Link>
+            <Link to="/discover" className="hover:text-primary-400">Discover</Link>
+            <Link to="/tips" className="hover:text-primary-400">Tips</Link>
+            <Link to="/lists" className="hover:text-primary-400">Lists</Link>
+          </div>
+        </div>
+      </footer>
+
+      {/* Mobile drawer */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/70" onClick={() => setMobileNavOpen(false)} />
+          <aside className="absolute right-0 top-0 bottom-0 w-72 bg-ink-800 border-l border-ink-700 p-6 flex flex-col gap-1">
+            <button
+              onClick={() => setMobileNavOpen(false)}
+              className="self-end p-2 text-ink-100 mb-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {navLinks.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                onClick={() => setMobileNavOpen(false)}
+                className={({ isActive }) =>
+                  `px-3 py-3 text-sm font-bold uppercase tracking-wider border-b border-ink-700 ${
+                    isActive ? 'text-primary-400' : 'text-ink-50'
+                  }`
+                }
+              >
+                {l.label}
+              </NavLink>
+            ))}
+            {loggedIn && (
+              <>
+                <NavLink
+                  to="/wishlist"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="px-3 py-3 text-sm font-bold uppercase tracking-wider border-b border-ink-700 text-ink-50"
+                >
+                  Wishlist
+                </NavLink>
+                <NavLink
+                  to="/settings"
+                  onClick={() => setMobileNavOpen(false)}
+                  className="px-3 py-3 text-sm font-bold uppercase tracking-wider border-b border-ink-700 text-ink-50"
+                >
+                  Settings
+                </NavLink>
+                {isAdmin() && (
+                  <NavLink
+                    to="/admin"
+                    onClick={() => setMobileNavOpen(false)}
+                    className="px-3 py-3 text-sm font-bold uppercase tracking-wider border-b border-ink-700 text-primary-400"
+                  >
+                    Admin
+                  </NavLink>
+                )}
+              </>
+            )}
+          </aside>
+        </div>
+      )}
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }
 
-function UserMenu({ user, onLogout }: { user: { username: string; avatarUrl?: string | null }; onLogout: () => void }) {
+function UserMenu({
+  user,
+  onLogout,
+  isAdmin,
+}: {
+  user: { username: string; avatarUrl?: string | null };
+  onLogout: () => void;
+  isAdmin: boolean;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((s) => !s)}
-        className="w-9 h-9 rounded-full bg-primary-600 text-white font-medium flex items-center justify-center overflow-hidden"
+        className="w-8 h-8 rounded-full bg-primary-500 text-ink-900 text-sm font-bold flex items-center justify-center overflow-hidden ring-1 ring-primary-400/50 hover:ring-primary-400"
       >
         {user.avatarUrl ? (
           <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
@@ -161,19 +241,40 @@ function UserMenu({ user, onLogout }: { user: { username: string; avatarUrl?: st
       </button>
       {open && (
         <>
-          <div className="fixed inset-0" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-11 w-56 bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden z-50">
-            <div className="px-3 py-2 border-b border-ink-100 text-sm">
-              <div className="font-medium">@{user.username}</div>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-10 w-56 bg-ink-700 border border-ink-600 rounded-md shadow-xl shadow-black/50 overflow-hidden z-50">
+            <div className="px-3 py-2 border-b border-ink-600 text-sm">
+              <div className="font-semibold text-ink-50">@{user.username}</div>
+              <div className="text-xs text-ink-200">View profile</div>
             </div>
-            <Link to={`/u/${user.username}`} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-ink-50" onClick={() => setOpen(false)}>
-              <User className="w-4 h-4" /> Profil saya
+            <Link
+              to={`/u/${user.username}`}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-ink-50 hover:bg-ink-600"
+              onClick={() => setOpen(false)}
+            >
+              <User className="w-4 h-4" /> Profile
             </Link>
-            <Link to="/settings" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-ink-50" onClick={() => setOpen(false)}>
-              <Settings className="w-4 h-4" /> Pengaturan
+            <Link
+              to="/settings"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-ink-50 hover:bg-ink-600"
+              onClick={() => setOpen(false)}
+            >
+              <Settings className="w-4 h-4" /> Settings
             </Link>
-            <button onClick={onLogout} className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-              <LogOut className="w-4 h-4" /> Keluar
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-primary-400 hover:bg-ink-600"
+                onClick={() => setOpen(false)}
+              >
+                <Shield className="w-4 h-4" /> Admin
+              </Link>
+            )}
+            <button
+              onClick={onLogout}
+              className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-ink-600 border-t border-ink-600"
+            >
+              <LogOut className="w-4 h-4" /> Sign out
             </button>
           </div>
         </>
