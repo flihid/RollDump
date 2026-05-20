@@ -34,7 +34,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <Logo size={42} showTagline />
+          <Logo size={64} showTagline />
         </div>
         <div className="card p-8">
           <div className="mb-6">

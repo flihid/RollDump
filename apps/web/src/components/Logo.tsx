@@ -40,14 +40,14 @@ export default function Logo({
         <span
           className="text-ink-50 leading-none whitespace-nowrap"
           style={{
-            fontFamily: '"Caveat", "Patrick Hand", cursive',
-            fontWeight: 700,
-            fontSize: size * 0.95,
-            // bump baseline so the descender of 'p' aligns visually with the mark
-            transform: 'translateY(2px)',
+            fontFamily: '"Bricolage Grotesque", "DM Sans", system-ui, sans-serif',
+            fontWeight: 800,
+            fontSize: size * 0.62,
+            letterSpacing: '-0.02em',
+            fontVariationSettings: '"wdth" 95',
           }}
         >
-          Roll<span className="text-primary-400">Dump</span>
+          Roll<span className="text-primary-400 italic" style={{ fontStyle: 'italic' }}>dump</span>
         </span>
       )}
       {showTagline && (

@@ -64,19 +64,56 @@ const knocked = await sharp(px, { raw: { width: info.width, height: info.height,
   .png()
   .toBuffer();
 
-// 4. Add a small breathing-room padding (4% on each side)
-const kmeta = await sharp(knocked).metadata();
-const pad = Math.round(Math.max(kmeta.width, kmeta.height) * 0.04);
-const padded = await sharp(knocked)
+// 4. Re-trim now that bg is alpha (gives a tight bbox of just the logo's opaque pixels)
+const tight = await sharp(knocked).trim({ threshold: 5 }).png().toBuffer();
+const tmeta2 = await sharp(tight).metadata();
+console.log('Tight bbox:', tmeta2.width, 'x', tmeta2.height);
+
+// 5. Find the alpha-weighted center of mass — for true visual centering
+const tightRaw = await sharp(tight).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const td = tightRaw.data;
+const tw = tightRaw.info.width;
+const th = tightRaw.info.height;
+let sumX = 0, sumY = 0, sumA = 0;
+for (let y = 0; y < th; y++) {
+  for (let x = 0; x < tw; x++) {
+    const a = td[(y * tw + x) * 4 + 3];
+    if (a < 12) continue;
+    sumX += x * a;
+    sumY += y * a;
+    sumA += a;
+  }
+}
+const cx = sumX / sumA;
+const cy = sumY / sumA;
+console.log(`Center of mass: (${cx.toFixed(0)}, ${cy.toFixed(0)})  vs bbox center (${(tw/2)|0}, ${(th/2)|0})`);
+
+// 6. Build a square canvas where the center-of-mass lands dead center.
+// Canvas side = 2 * max distance from CoM to any bbox corner + small padding.
+const distLeft = cx;
+const distRight = tw - cx;
+const distTop = cy;
+const distBottom = th - cy;
+const halfSide = Math.max(distLeft, distRight, distTop, distBottom);
+const breathing = halfSide * 0.06; // ~6% breathing room
+const side = Math.round((halfSide + breathing) * 2);
+
+// Offsets so CoM lands at side/2
+const padLeft = Math.round(side / 2 - cx);
+const padTop = Math.round(side / 2 - cy);
+const padRight = side - tw - padLeft;
+const padBottom = side - th - padTop;
+
+const padded = await sharp(tight)
   .extend({
-    top: pad, bottom: pad, left: pad, right: pad,
+    top: padTop, bottom: padBottom, left: padLeft, right: padRight,
     background: { r: 0, g: 0, b: 0, alpha: 0 },
   })
   .png()
   .toBuffer();
 
 const pmeta = await sharp(padded).metadata();
-console.log('Padded:', pmeta.width, 'x', pmeta.height);
+console.log(`Padded square: ${pmeta.width} x ${pmeta.height} (offsets t${padTop} r${padRight} b${padBottom} l${padLeft})`);
 
 writeFileSync(out, padded);
 console.log('Wrote', out);

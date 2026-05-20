@@ -40,7 +40,7 @@ export default function Layout() {
       {/* Top nav — horizontal text links, Letterboxd-style */}
       <header className="sticky top-0 z-30 bg-ink-900/80 backdrop-blur-md border-b border-ink-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-6">
-          <Logo size={34} showTagline className="shrink-0" />
+          <Logo size={52} showTagline className="shrink-0" />
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
