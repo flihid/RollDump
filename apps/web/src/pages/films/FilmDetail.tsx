@@ -6,6 +6,9 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
 import { Loading, FormatBadge, ColorTypeBadge, StarRating } from '../../components/common';
+import FilmRoll3D from '../../components/FilmRoll3D';
+import { useCountUp } from '../../hooks/useCountUp';
+import { useInView } from '../../hooks/useInView';
 
 export default function FilmDetail() {
   const { slug } = useParams();
@@ -67,33 +70,38 @@ export default function FilmDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <div className="card overflow-hidden">
-        <div className="relative aspect-[16/6] bg-ink-200">
-          {f.coverUrl && <img src={f.coverUrl} className="w-full h-full object-cover" />}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              {f.brand && <span className="text-sm">{f.brand.name}</span>}
+      {/* Hero — big interactive 3D roll on the right, meta on left */}
+      <div className="card overflow-hidden page-enter">
+        <div className="relative grid md:grid-cols-[1fr_auto] gap-8 items-center p-6 sm:p-10 bg-gradient-to-br from-ink-700 via-ink-800 to-ink-900">
+          {/* ambient backlight matching roll palette */}
+          <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 70% at 80% 50%, var(--roll-glow, rgba(240,138,0,0.18)), transparent 70%)' }} />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              {f.brand && <span className="text-xs text-primary-400 uppercase tracking-[0.2em] font-bold">{f.brand.name}</span>}
               <ColorTypeBadge value={f.colorType} />
-              {f.status === 'discontinued' && <span className="badge bg-red-500/20 text-red-200">Discontinued</span>}
+              {f.status === 'discontinued' && <span className="badge bg-red-500/20 text-red-200 border border-red-500/30">Discontinued</span>}
             </div>
-            <h1 className="text-3xl font-bold">{f.name}</h1>
-            <div className="flex items-center gap-3 mt-1.5 text-sm text-white/80">
-              <span>ISO {f.iso}</span>
-              <span>•</span>
-              <span>{f.countryOfOrigin}</span>
-              <span>•</span>
-              <span>Sejak {f.yearIntroduced}</span>
+            <h1 className="text-4xl sm:text-5xl font-semibold text-ink-50 leading-[1.05]">{f.name}</h1>
+            <div className="flex items-center gap-3 mt-4 text-sm text-ink-100 flex-wrap">
+              <span className="stat-pill">ISO {f.iso}</span>
+              {f.countryOfOrigin && <span className="stat-pill">{f.countryOfOrigin}</span>}
+              {f.yearIntroduced && <span className="stat-pill">Since {f.yearIntroduced}</span>}
             </div>
+            <p className="mt-5 text-xs text-ink-300 uppercase tracking-[0.18em] hidden sm:flex items-center gap-2">
+              <span className="inline-block w-6 h-px bg-ink-300" />
+              Hover the roll to spin · drag for free rotation
+            </p>
+          </div>
+          <div className="flex justify-center md:justify-end relative">
+            <FilmRoll3D film={f} size="hero" autoSpin interactive hoverSpin />
           </div>
         </div>
 
         {/* Variant tabs */}
-        <div className="px-4 sm:px-6 border-b border-ink-200 flex flex-wrap gap-1 -mb-px">
+        <div className="px-4 sm:px-6 border-b border-ink-600 flex flex-wrap gap-1 -mb-px">
           <button
             onClick={() => setActiveFormat(null)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 ${!activeFormat ? 'border-primary-600 text-primary-700' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!activeFormat ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
           >
             Semua format
           </button>
@@ -101,7 +109,7 @@ export default function FilmDetail() {
             <button
               key={v.id}
               onClick={() => setActiveFormat(v.format)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 ${activeFormat === v.format ? 'border-primary-600 text-primary-700' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeFormat === v.format ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
             >
               {v.format}
             </button>
@@ -110,7 +118,7 @@ export default function FilmDetail() {
 
         <div className="p-4 sm:p-6 grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
-            <p className="text-sm text-ink-700 leading-relaxed">{f.description}</p>
+            <p className="text-sm text-ink-100 leading-relaxed">{f.description}</p>
             {currentVariant && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <Spec label="Eksposur" value={currentVariant.exposures} />
@@ -122,14 +130,7 @@ export default function FilmDetail() {
             )}
           </div>
           <div className="space-y-2">
-            <div className="card p-3">
-              <div className="text-xs text-ink-500">Rating komunitas</div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-2xl font-bold">{(f.ratingAvg || 0).toFixed(1)}</span>
-                <StarRating value={f.ratingAvg || 0} size="sm" />
-              </div>
-              <div className="text-xs text-ink-500 mt-0.5">dari {f.reviewCount || 0} review</div>
-            </div>
+            <RatingCard ratingAvg={f.ratingAvg || 0} reviewCount={f.reviewCount || 0} />
             {isLoggedIn() && currentVariant && (
               <button
                 onClick={() => wishlist.mutate(currentVariant.id)}
@@ -148,7 +149,7 @@ export default function FilmDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-ink-200">
+      <div className="flex gap-1 border-b border-ink-600">
         <TabBtn active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} icon={<Star className="w-4 h-4" />} label={`Reviews (${f.stats?.reviewCount || 0})`} />
         <TabBtn active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label={`Foto (${f.stats?.photoCount || 0})`} />
         <TabBtn active={activeTab === 'tips'} onClick={() => setActiveTab('tips')} icon={<BookOpen className="w-4 h-4" />} label={`Tips (${f.stats?.tipsCount || 0})`} />
@@ -270,7 +271,7 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 ${active ? 'border-primary-600 text-primary-700' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${active ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
     >
       {icon} {label}
     </button>
@@ -278,9 +279,38 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
 }
 function Spec({ label, value }: { label: string; value: any }) {
   return (
-    <div>
-      <div className="text-xs text-ink-500">{label}</div>
-      <div className="font-medium">{value || '—'}</div>
+    <div className="rounded-md border border-ink-600 bg-ink-700/40 p-3 transition hover:border-primary-500/40">
+      <div className="text-[10px] uppercase tracking-wider text-ink-300">{label}</div>
+      <div className="font-semibold text-ink-50 mt-0.5">{value || '—'}</div>
+    </div>
+  );
+}
+
+function RatingCard({ ratingAvg, reviewCount }: { ratingAvg: number; reviewCount: number }) {
+  const { ref, visible } = useInView();
+  const countedReviews = useCountUp(reviewCount, visible, 900);
+  const countedRating = useCountUp(Math.round(ratingAvg * 10), visible, 1100);
+  return (
+    <div
+      ref={ref as React.Ref<HTMLDivElement>}
+      className="card p-4 spotlight-card"
+      onMouseMove={(e) => {
+        const t = e.currentTarget;
+        const r = t.getBoundingClientRect();
+        t.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        t.style.setProperty('--my', `${e.clientY - r.top}px`);
+      }}
+    >
+      <div className="text-[10px] uppercase tracking-wider text-ink-300">Community rating</div>
+      <div className="flex items-baseline gap-2 mt-1">
+        <span className="text-3xl font-bold text-ink-50 counter-num">
+          {(countedRating / 10).toFixed(1)}
+        </span>
+        <StarRating value={ratingAvg} size="sm" />
+      </div>
+      <div className="text-xs text-ink-200 mt-1">
+        from <span className="counter-num font-semibold text-ink-100">{countedReviews}</span> reviews
+      </div>
     </div>
   );
 }

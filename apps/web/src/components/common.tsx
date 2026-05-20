@@ -6,7 +6,7 @@ export function Spinner({ className = '' }: { className?: string }) {
 
 export function Loading({ label = 'Memuat…' }: { label?: string }) {
   return (
-    <div className="py-12 flex items-center justify-center gap-2 text-ink-500 text-sm">
+    <div className="py-12 flex items-center justify-center gap-2 text-ink-300 text-sm">
       <Spinner /> {label}
     </div>
   );
@@ -23,11 +23,11 @@ export function EmptyState({
 }) {
   return (
     <div className="py-12 text-center">
-      <div className="mx-auto w-14 h-14 rounded-full bg-ink-100 flex items-center justify-center text-ink-400 mb-3">
+      <div className="mx-auto w-14 h-14 rounded-full bg-ink-600 flex items-center justify-center text-ink-300 mb-3">
         <ImageIcon className="w-6 h-6" />
       </div>
-      <h3 className="font-semibold text-ink-900">{title}</h3>
-      {description && <p className="text-sm text-ink-500 mt-1 max-w-sm mx-auto">{description}</p>}
+      <h3 className="font-semibold text-ink-50">{title}</h3>
+      {description && <p className="text-sm text-ink-200 mt-1 max-w-sm mx-auto">{description}</p>}
       {cta && <div className="mt-4">{cta}</div>}
     </div>
   );
@@ -74,11 +74,11 @@ export function FormatBadge({ format }: { format: string }) {
 export function ColorTypeBadge({ value }: { value?: string | null }) {
   if (!value) return null;
   const m: Record<string, [string, string]> = {
-    color_negative: ['Color Neg', 'bg-amber-100 text-amber-800'],
-    color_positive: ['Color Pos', 'bg-amber-100 text-amber-800'],
-    bw: ['B&W', 'bg-ink-200 text-ink-800'],
-    slide_e6: ['Slide E6', 'bg-fuchsia-100 text-fuchsia-800'],
+    color_negative: ['Color Neg', 'bg-primary-500/20 text-primary-300 border border-primary-500/30'],
+    color_positive: ['Color Pos', 'bg-primary-500/20 text-primary-300 border border-primary-500/30'],
+    bw: ['B&W', 'bg-ink-500/50 text-ink-100 border border-ink-400'],
+    slide_e6: ['Slide E6', 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30'],
   };
-  const [label, cls] = m[value] || [value, 'bg-ink-100 text-ink-700'];
+  const [label, cls] = m[value] || [value, 'bg-ink-600 text-ink-100 border border-ink-500'];
   return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>{label}</span>;
 }

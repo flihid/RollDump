@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Filter as FilterIcon, X } from 'lucide-react';
 import { api } from '../../lib/api';
-import { Loading, EmptyState, FormatBadge, ColorTypeBadge, StarRating } from '../../components/common';
+import { Loading, EmptyState } from '../../components/common';
+import FilmCard from '../../components/FilmCard';
 
 const FORMATS = ['35mm', '120', 'large_format', 'instant', '110', 'half_frame'];
 const COLOR_TYPES = [
@@ -48,8 +49,8 @@ export default function FilmsList() {
     <div className="space-y-4">
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Katalog Film</h1>
-          <p className="text-sm text-ink-600">Telusuri semua emulsi yang dikuratori komunitas.</p>
+          <h1 className="text-2xl font-bold text-ink-50">Katalog Film</h1>
+          <p className="text-sm text-ink-200">Telusuri semua emulsi yang dikuratori komunitas.</p>
         </div>
         <div className="flex gap-2">
           <input
@@ -74,15 +75,15 @@ export default function FilmsList() {
         <aside className={`${showFilter ? '' : 'hidden lg:block'}`}>
           <div className="card p-4 space-y-4 sticky top-20">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Filter</h3>
+              <h3 className="font-semibold text-sm text-ink-50">Filter</h3>
               {Array.from(params.keys()).length > 0 && (
-                <button onClick={reset} className="text-xs text-primary-600 hover:underline flex items-center">
+                <button onClick={reset} className="text-xs text-primary-400 hover:underline flex items-center">
                   <X className="w-3 h-3" /> Reset
                 </button>
               )}
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-700 mb-2">Format</div>
+              <div className="text-xs font-semibold text-ink-200 mb-2">Format</div>
               <div className="flex flex-wrap gap-1.5">
                 {FORMATS.map((f) => (
                   <button key={f} onClick={() => toggleFormat(f)} className={formats.includes(f) ? 'chip-active' : 'chip'}>
@@ -92,7 +93,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-700 mb-2">Tipe</div>
+              <div className="text-xs font-semibold text-ink-200 mb-2">Tipe</div>
               <div className="flex flex-wrap gap-1.5">
                 {COLOR_TYPES.map((c) => (
                   <button
@@ -106,7 +107,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-700 mb-2">ISO</div>
+              <div className="text-xs font-semibold text-ink-200 mb-2">ISO</div>
               <div className="flex gap-2">
                 <input
                   placeholder="Min"
@@ -125,7 +126,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-700 mb-2">Brand</div>
+              <div className="text-xs font-semibold text-ink-200 mb-2">Brand</div>
               <div className="flex flex-wrap gap-1.5">
                 {(brands.data?.items || []).slice(0, 10).map((b: any) => (
                   <button
@@ -147,33 +148,9 @@ export default function FilmsList() {
           ) : (films.data?.items || []).length === 0 ? (
             <EmptyState title="Tidak ada film ditemukan" description="Coba longgarkan filter Anda." />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-              {films.data!.items.map((f: any) => (
-                <Link key={f.id} to={`/films/${f.slug}`} className="card overflow-hidden group hover:shadow-md transition">
-                  <div className="aspect-[3/4] bg-ink-200 relative overflow-hidden">
-                    {f.coverUrl && (
-                      <img src={f.coverUrl} alt={f.name} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                    )}
-                    <div className="absolute top-2 left-2">
-                      <ColorTypeBadge value={f.colorType} />
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-sm leading-tight truncate">{f.name}</div>
-                    <div className="text-xs text-ink-500">{f.brand?.name} • ISO {f.iso}</div>
-                    <div className="flex items-center gap-1 mt-1.5">
-                      <StarRating value={f.ratingAvg || 0} size="sm" />
-                      <span className="text-xs text-ink-500">({f.reviewCount || 0})</span>
-                    </div>
-                    {f.availableFormats?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {f.availableFormats.slice(0, 3).map((x: string) => (
-                          <FormatBadge key={x} format={x} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Link>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
+              {films.data!.items.map((f: any, i: number) => (
+                <FilmCard key={f.id} film={f} showColorBadge delay={i * 40} />
               ))}
             </div>
           )}

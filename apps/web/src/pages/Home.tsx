@@ -2,7 +2,10 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { isLoggedIn, getUser } from '../store/auth';
-import { Loading, EmptyState, FormatBadge, StarRating } from '../components/common';
+import { Loading, EmptyState } from '../components/common';
+import FilmCard from '../components/FilmCard';
+import FilmRoll3D from '../components/FilmRoll3D';
+import RevealSection from '../components/RevealSection';
 
 export default function Home() {
   const trending = useQuery({ queryKey: ['trending'], queryFn: () => api.get('/films/trending') });
@@ -19,67 +22,85 @@ export default function Home() {
 
   return (
     <div className="space-y-14">
-      {/* Hero — Letterboxd-style: big serif headline over moody backdrop */}
-      <section className="relative overflow-hidden rounded-xl -mt-2">
-        <div className="absolute inset-0">
-          {heroFilm?.coverUrl ? (
-            <img
-              src={heroFilm.coverUrl}
-              alt=""
-              className="w-full h-full object-cover opacity-40"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-ink-700 via-ink-800 to-primary-900/40" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-800 via-ink-800/60 to-ink-800/20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-800/95 via-ink-800/50 to-transparent" />
-        </div>
-        <div className="relative z-10 px-6 sm:px-10 py-14 sm:py-20 max-w-2xl">
-          {loggedIn && (
-            <div className="text-xs uppercase tracking-[0.2em] text-primary-400 font-bold mb-3">
-              Welcome back, @{user?.username}
+      {/* Hero */}
+      <section className="hero-split -mt-2">
+        <div className="relative z-10 grid lg:grid-cols-[1fr_auto] gap-8 items-center px-6 sm:px-10 py-12 sm:py-16">
+          <div className="max-w-2xl">
+            {loggedIn && (
+              <div className="text-xs uppercase tracking-[0.2em] text-primary-400 font-bold mb-3 animate-pulse">
+                Selamat datang, @{user?.username}
+              </div>
+            )}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] text-ink-50">
+              Track every roll.
+              <br />
+              <span className="text-primary-400 italic">Share every frame.</span>
+            </h1>
+            <p className="mt-5 text-ink-100 text-base sm:text-lg max-w-xl leading-relaxed">
+              Rumah sosial untuk fotografer analog. Katalog film, log roll, dan temukan
+              apa yang orang lain pakai di 35mm, 120, dan sheet film.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="stat-pill">🎞 35mm & 120</span>
+              <span className="stat-pill">⭐ Review komunitas</span>
+              <span className="stat-pill">📷 Log roll</span>
             </div>
-          )}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.05] text-ink-50">
-            Track every roll.
-            <br />
-            <span className="text-primary-400 italic">Share every frame.</span>
-          </h1>
-          <p className="mt-5 text-ink-100 text-base sm:text-lg max-w-xl leading-relaxed">
-            The social home for analog photographers. Catalog film stocks, log
-            your rolls, and discover what others are shooting on 35mm, 120, and
-            sheet film.
-          </p>
-          <div className="mt-7 flex gap-3 flex-wrap">
-            <Link to="/films" className="btn-primary">
-              Browse catalog
-            </Link>
-            {!loggedIn ? (
-              <Link
-                to="/register"
-                className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
-              >
-                Create account
+            <div className="mt-7 flex gap-3 flex-wrap">
+              <Link to="/films" className="btn-primary">
+                Jelajahi katalog
               </Link>
+              {!loggedIn ? (
+                <Link
+                  to="/register"
+                  className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
+                >
+                  Buat akun
+                </Link>
+              ) : (
+                <Link
+                  to="/upload"
+                  className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
+                >
+                  Log roll
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-center lg:justify-end">
+            {heroFilm ? (
+              <div className="relative">
+                <FilmRoll3D
+                  film={heroFilm}
+                  size="hero"
+                  autoSpin
+                  interactive
+                />
+                <Link
+                  to={`/films/${heroFilm.slug}`}
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-primary-400 hover:text-primary-300 font-semibold uppercase tracking-wider"
+                >
+                  {heroFilm.name} →
+                </Link>
+              </div>
             ) : (
-              <Link
-                to="/upload"
-                className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
-              >
-                Log a roll
-              </Link>
+              <FilmRoll3D
+                film={{ name: 'Portra 400', iso: 400, colorType: 'color_negative', brand: { name: 'Kodak' } }}
+                size="hero"
+                autoSpin
+              />
             )}
           </div>
         </div>
+        <div className="filmstrip-divider" />
       </section>
 
-      {/* Activity from people you follow */}
       {loggedIn && feed.data && feed.data.items?.length > 0 && (
-        <section>
+        <RevealSection>
           <h2 className="section-title">
-            <span>From your network</span>
+            <span>Dari jaringanmu</span>
             <Link to="/discover" className="link-amber text-[10px] normal-case tracking-normal">
-              See more →
+              Lihat lagi →
             </Link>
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -87,102 +108,71 @@ export default function Home() {
               <ActivityCard key={`${it.type}-${it.id}`} item={it} />
             ))}
           </div>
-        </section>
+        </RevealSection>
       )}
 
-      {/* Trending */}
-      <section>
+      <RevealSection>
         <h2 className="section-title">
-          <span>Trending this week</span>
+          <span>Trending minggu ini</span>
           <Link to="/films" className="link-amber text-[10px] normal-case tracking-normal">
-            All films →
+            Semua film →
           </Link>
         </h2>
         {trending.isLoading ? (
           <Loading />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6 gap-4">
-            {(trending.data?.items || []).map((f: any) => (
-              <FilmCard key={f.id} film={f} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
+            {(trending.data?.items || []).map((f: any, i: number) => (
+              <FilmCard key={f.id} film={f} delay={i * 60} />
             ))}
           </div>
         )}
-      </section>
+      </RevealSection>
 
-      {/* Recent */}
-      <section>
+      <RevealSection>
         <h2 className="section-title">
-          <span>New in the catalog</span>
+          <span>Baru di katalog</span>
           <Link to="/films" className="link-amber text-[10px] normal-case tracking-normal">
-            All films →
+            Semua film →
           </Link>
         </h2>
         {recent.isLoading ? (
           <Loading />
         ) : recent.data?.items?.length === 0 ? (
-          <EmptyState title="No films yet" description="Add the first film to get started." />
+          <EmptyState title="Belum ada film" description="Tambahkan film pertama untuk memulai." />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-6 gap-4">
-            {(recent.data?.items || []).map((f: any) => (
-              <FilmCard key={f.id} film={f} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
+            {(recent.data?.items || []).map((f: any, i: number) => (
+              <FilmCard key={f.id} film={f} delay={i * 60} />
             ))}
           </div>
         )}
-      </section>
+      </RevealSection>
 
-      {/* CTA strip */}
       {!loggedIn && (
-        <section className="relative overflow-hidden rounded-xl border border-ink-600 bg-gradient-to-r from-ink-700 to-ink-800 px-6 sm:px-10 py-10 text-center">
-          <h3 className="text-2xl sm:text-3xl font-semibold text-ink-50">
-            Your darkroom journal, in your pocket.
-          </h3>
-          <p className="mt-2 text-ink-200 max-w-xl mx-auto">
-            Free forever. Log unlimited rolls, write reviews, and follow other
-            shooters.
-          </p>
-          <Link to="/register" className="btn-primary mt-5 inline-flex">
-            Get started
-          </Link>
-        </section>
+        <RevealSection>
+          <section className="relative overflow-hidden rounded-xl border border-ink-600 bg-gradient-to-r from-ink-700 to-ink-800 px-6 sm:px-10 py-10 text-center">
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-30 hidden sm:block pointer-events-none">
+              <FilmRoll3D
+                film={{ name: 'Tri-X', iso: 400, colorType: 'bw', brand: { name: 'Kodak' } }}
+                size="lg"
+                autoSpin
+                interactive={false}
+              />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-semibold text-ink-50 relative z-10">
+              Jurnal darkroom-mu, di saku.
+            </h3>
+            <p className="mt-2 text-ink-200 max-w-xl mx-auto relative z-10">
+              Gratis selamanya. Log roll tanpa batas, tulis review, dan follow shooter lain.
+            </p>
+            <Link to="/register" className="btn-primary mt-5 inline-flex relative z-10">
+              Mulai sekarang
+            </Link>
+          </section>
+        </RevealSection>
       )}
     </div>
-  );
-}
-
-function FilmCard({ film }: { film: any }) {
-  return (
-    <Link to={`/films/${film.slug}`} className="group block">
-      <div className="stock-card mb-2">
-        {film.coverUrl ? (
-          <img
-            src={film.coverUrl}
-            alt={film.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-ink-300 text-xs uppercase tracking-wider p-3 text-center">
-            {film.name}
-          </div>
-        )}
-        {film.availableFormats?.[0] && (
-          <div className="absolute top-2 left-2">
-            <FormatBadge format={film.availableFormats[0]} />
-          </div>
-        )}
-      </div>
-      <div className="px-0.5">
-        <div className="text-[10px] uppercase tracking-wider text-ink-200 mb-0.5">
-          {film.brand?.name}
-        </div>
-        <div className="font-semibold text-sm text-ink-50 leading-tight line-clamp-2 group-hover:text-primary-400 transition-colors">
-          {film.name}
-        </div>
-        <div className="flex items-center gap-1.5 mt-1">
-          <StarRating value={film.ratingAvg || 0} size="sm" />
-          <span className="text-[11px] text-ink-300">({film.reviewCount || 0})</span>
-        </div>
-      </div>
-    </Link>
   );
 }
 
@@ -190,15 +180,15 @@ function ActivityCard({ item }: { item: any }) {
   const actor = item.author?.username || 'someone';
   const verb =
     item.type === 'photo'
-      ? 'uploaded a photo'
+      ? 'mengunggah foto'
       : item.type === 'review'
-      ? 'wrote a review'
-      : 'curated a list';
+        ? 'menulis review'
+        : 'membuat list';
   return (
-    <div className="card p-4 flex gap-3 hover:border-primary-500/40 transition">
-      <div className="w-9 h-9 rounded-full bg-primary-500 text-ink-900 flex items-center justify-center font-bold overflow-hidden shrink-0">
+    <div className="card p-4 flex gap-3 hover:border-primary-500/40 hover:scale-[1.01] transition-all duration-200">
+      <div className="w-9 h-9 rounded-full bg-primary-500 text-ink-900 flex items-center justify-center font-bold overflow-hidden shrink-0 ring-2 ring-primary-500/30">
         {item.author?.avatarUrl ? (
-          <img src={item.author.avatarUrl} className="w-full h-full object-cover" />
+          <img src={item.author.avatarUrl} className="w-full h-full object-cover" alt="" />
         ) : (
           actor[0]?.toUpperCase()
         )}
@@ -210,12 +200,14 @@ function ActivityCard({ item }: { item: any }) {
           </Link>{' '}
           <span className="text-ink-200">{verb}</span>
         </div>
-        {item.title && (
-          <div className="text-sm mt-0.5 truncate text-ink-100">{item.title}</div>
-        )}
+        {item.title && <div className="text-sm mt-0.5 truncate text-ink-100">{item.title}</div>}
         {item.imageUrl && (
-          <div className="mt-2 rounded-md overflow-hidden h-32 bg-ink-600">
-            <img src={item.imageUrl} className="w-full h-full object-cover" />
+          <div className="mt-2 rounded-md overflow-hidden h-32 bg-ink-600 group">
+            <img
+              src={item.imageUrl}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              alt=""
+            />
           </div>
         )}
       </div>

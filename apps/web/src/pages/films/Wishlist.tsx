@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Loading, EmptyState, FormatBadge } from '../../components/common';
+import FilmRoll3D from '../../components/FilmRoll3D';
 
 export default function Wishlist() {
   const qc = useQueryClient();
@@ -18,7 +19,7 @@ export default function Wishlist() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Wishlist</h1>
+      <h1 className="text-2xl font-bold text-ink-50">Wishlist</h1>
       {q.isLoading ? (
         <Loading />
       ) : q.data?.items?.length === 0 ? (
@@ -31,10 +32,8 @@ export default function Wishlist() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {q.data!.items.map((row: any) => (
             <div key={row.variant.id} className="card overflow-hidden">
-              <Link to={`/films/${row.film.slug}`} className="block">
-                <div className="aspect-[3/4] bg-ink-200">
-                  {row.film.coverUrl && <img src={row.film.coverUrl} className="w-full h-full object-cover" />}
-                </div>
+              <Link to={`/films/${row.film.slug}`} className="block film-card__visual relative min-h-[130px]">
+                <FilmRoll3D film={row.film} size="sm" interactive />
               </Link>
               <div className="p-3">
                 <div className="flex items-start justify-between gap-2">

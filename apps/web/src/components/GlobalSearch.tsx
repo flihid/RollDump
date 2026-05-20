@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, X, Film, User, ListChecks, Camera } from 'lucide-react';
 import { api } from '../lib/api';
+import FilmRoll3D from './FilmRoll3D';
 
 export default function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('');
@@ -70,8 +71,8 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                   onClick={onClose}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-ink-50"
                 >
-                  <div className="w-10 h-10 bg-ink-200 rounded overflow-hidden">
-                    {f.coverUrl && <img src={f.coverUrl} className="w-full h-full object-cover" />}
+                  <div className="w-12 h-14 flex items-center justify-center shrink-0">
+                    <FilmRoll3D film={f} size="sm" interactive={false} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{f.name}</div>

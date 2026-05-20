@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "predev": "node scripts/free-dev-ports.mjs",
     "dev": "turbo run dev",
+    "dev:clean": "node scripts/free-dev-ports.mjs",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },

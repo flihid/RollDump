@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/api';
 import { Loading, FormatBadge } from '../../components/common';
+import FilmCard from '../../components/FilmCard';
 
 export default function BrandsList() {
   const [params] = useSearchParams();
@@ -28,15 +29,7 @@ export default function BrandsList() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
           {films.map((f: any) => (
-            <Link key={f.id} to={`/films/${f.slug}`} className="card overflow-hidden">
-              <div className="aspect-[3/4] bg-ink-200">
-                {f.coverUrl && <img src={f.coverUrl} className="w-full h-full object-cover" />}
-              </div>
-              <div className="p-3">
-                <div className="font-semibold text-sm truncate">{f.name}</div>
-                <div className="text-xs text-ink-500">ISO {f.iso}</div>
-              </div>
-            </Link>
+            <FilmCard key={f.id} film={f} />
           ))}
         </div>
         <Link to="/brands" className="text-sm text-primary-600 hover:underline">← Lihat semua brand</Link>
