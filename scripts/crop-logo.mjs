@@ -1,75 +1,77 @@
+/**
+ * Crop the source logo render (apps/web/public/logo_asli.png) into:
+ *   - apps/web/public/logo.png      (tight transparent-bg, used in header)
+ *   - apps/web/public/logo-mark.png (512x512 square, used as favicon / app icon)
+ *
+ * Steps:
+ *   1. Extract the main hero region (drops the small "01" badge at top and the
+ *      two thumbnail variants + watermark at the bottom).
+ *   2. Sample background color from a known dark area, then knock it out
+ *      (alpha=0) with a soft feathered edge.
+ *   3. Trim transparent border, compute alpha-weighted center of mass,
+ *      then build a square canvas where the CoM is dead center.
+ *
+ * Run with:  pnpm dlx tsx scripts/crop-logo.mjs   (or: node scripts/crop-logo.mjs)
+ */
 import sharp from 'sharp';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 
-const src = 'apps/web/public/logo.png';
+const src = 'apps/web/public/logo_asli.png';
 const out = 'apps/web/public/logo.png';
 const outMark = 'apps/web/public/logo-mark.png';
 
-// Background color from the original render (sampled rgb(49,50,54) corner)
-const r = 49, g = 50, b = 54;
-console.log('Target background color:', `rgb(${r},${g},${b})`);
-
-// 1. Cover the AI sparkle watermark (bottom-right corner) with background-color rectangle
 const meta = await sharp(src).metadata();
-console.log('Original:', meta.width, 'x', meta.height);
+console.log('Source:', meta.width, 'x', meta.height);
 
-const coverW = Math.round(meta.width * 0.1);   // ~10% of width
-const coverH = Math.round(meta.height * 0.12); // ~12% of height
-const coverLeft = meta.width - coverW;
-const coverTop = meta.height - coverH;
-
-const cleaned = await sharp(src)
-  .composite([{
-    input: {
-      create: {
-        width: coverW,
-        height: coverH,
-        channels: 3,
-        background: { r, g, b },
-      },
-    },
-    left: coverLeft,
-    top: coverTop,
-  }])
+// 1. Manual hero crop — exclude top "01" pill, bottom thumbnails, watermark
+//    Tuned for the 1254x1254 source; ratios make it robust if size changes.
+const heroTop = Math.round(meta.height * 0.14);    // skip "01" badge
+const heroBottom = Math.round(meta.height * 0.69); // skip thumbnails + watermark
+const heroLeft = Math.round(meta.width * 0.05);
+const heroRight = Math.round(meta.width * 0.95);
+const hero = await sharp(src)
+  .extract({
+    left: heroLeft,
+    top: heroTop,
+    width: heroRight - heroLeft,
+    height: heroBottom - heroTop,
+  })
   .png()
   .toBuffer();
+const hmeta = await sharp(hero).metadata();
+console.log('Hero region:', hmeta.width, 'x', hmeta.height);
 
-// 2. Tight-trim the dark padding around the logo
-// Threshold needs to be loose enough to ignore the gradient background variation
-const trimmed = await sharp(cleaned).trim({ threshold: 25 }).png().toBuffer();
+// 2. Sample background color from a top-left corner pixel of the hero crop
+const probe = await sharp(hero).extract({ left: 4, top: 4, width: 1, height: 1 }).raw().toBuffer();
+const [r, g, b] = probe;
+console.log(`Background sample: rgb(${r},${g},${b})`);
 
-const tmeta = await sharp(trimmed).metadata();
-console.log('Trimmed:', tmeta.width, 'x', tmeta.height);
-
-// 3. Knock out background — convert the dark grey bg pixels to alpha.
-// Build alpha mask: opaque where pixel distance from bg color > 35, transparent otherwise.
-const raw = await sharp(trimmed).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-const { data, info } = raw;
-const px = Buffer.from(data); // RGBA
-const FUZZ = 60; // distance threshold; bg + grain knocked out below this
-const FEATHER = 22; // soft alpha fade over this many distance units
+// 3. Knock out background — pure black-ish bg goes to alpha 0, soft feather on edges
+const heroRaw = await sharp(hero).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+const px = Buffer.from(heroRaw.data);
+const FUZZ = 24;     // distance threshold
+const FEATHER = 18;  // soft alpha edge band
 for (let i = 0; i < px.length; i += 4) {
   const dr = px[i] - r;
   const dg = px[i + 1] - g;
   const db = px[i + 2] - b;
   const dist = Math.sqrt(dr * dr + dg * dg + db * db);
   if (dist <= FUZZ) {
-    px[i + 3] = 0; // fully transparent
+    px[i + 3] = 0;
   } else if (dist < FUZZ + FEATHER) {
-    // soft alpha edge for anti-aliasing
     px[i + 3] = Math.round(((dist - FUZZ) / FEATHER) * 255);
   }
 }
-const knocked = await sharp(px, { raw: { width: info.width, height: info.height, channels: 4 } })
-  .png()
-  .toBuffer();
+const knocked = await sharp(px, {
+  raw: { width: heroRaw.info.width, height: heroRaw.info.height, channels: 4 },
+}).png().toBuffer();
 
-// 4. Re-trim now that bg is alpha (gives a tight bbox of just the logo's opaque pixels)
+// 4. Trim alpha border
 const tight = await sharp(knocked).trim({ threshold: 5 }).png().toBuffer();
-const tmeta2 = await sharp(tight).metadata();
-console.log('Tight bbox:', tmeta2.width, 'x', tmeta2.height);
+const tmeta = await sharp(tight).metadata();
+console.log('Tight bbox:', tmeta.width, 'x', tmeta.height);
 
-// 5. Find the alpha-weighted center of mass — for true visual centering
+// 5. Compute alpha-weighted center of mass
 const tightRaw = await sharp(tight).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 const td = tightRaw.data;
 const tw = tightRaw.info.width;
@@ -86,19 +88,12 @@ for (let y = 0; y < th; y++) {
 }
 const cx = sumX / sumA;
 const cy = sumY / sumA;
-console.log(`Center of mass: (${cx.toFixed(0)}, ${cy.toFixed(0)})  vs bbox center (${(tw/2)|0}, ${(th/2)|0})`);
+console.log(`Center of mass: (${cx.toFixed(0)}, ${cy.toFixed(0)})  bbox center: (${(tw / 2) | 0}, ${(th / 2) | 0})`);
 
-// 6. Build a square canvas where the center-of-mass lands dead center.
-// Canvas side = 2 * max distance from CoM to any bbox corner + small padding.
-const distLeft = cx;
-const distRight = tw - cx;
-const distTop = cy;
-const distBottom = th - cy;
-const halfSide = Math.max(distLeft, distRight, distTop, distBottom);
-const breathing = halfSide * 0.06; // ~6% breathing room
+// 6. Build square canvas with CoM at center + small breathing-room padding
+const halfSide = Math.max(cx, tw - cx, cy, th - cy);
+const breathing = halfSide * 0.06;
 const side = Math.round((halfSide + breathing) * 2);
-
-// Offsets so CoM lands at side/2
 const padLeft = Math.round(side / 2 - cx);
 const padTop = Math.round(side / 2 - cy);
 const padRight = side - tw - padLeft;
@@ -113,23 +108,16 @@ const padded = await sharp(tight)
   .toBuffer();
 
 const pmeta = await sharp(padded).metadata();
-console.log(`Padded square: ${pmeta.width} x ${pmeta.height} (offsets t${padTop} r${padRight} b${padBottom} l${padLeft})`);
+console.log(`Padded square: ${pmeta.width}x${pmeta.height} (offsets t${padTop} r${padRight} b${padBottom} l${padLeft})`);
 
+// 7. Write outputs
 writeFileSync(out, padded);
 console.log('Wrote', out);
 
-// 5. Also export a small square "mark" version (200x200) for favicon-ish use
-const size = Math.max(pmeta.width, pmeta.height);
-const square = await sharp(padded)
-  .extend({
-    top: Math.floor((size - pmeta.height) / 2),
-    bottom: Math.ceil((size - pmeta.height) / 2),
-    left: Math.floor((size - pmeta.width) / 2),
-    right: Math.ceil((size - pmeta.width) / 2),
-    background: { r: 0, g: 0, b: 0, alpha: 0 },
-  })
+// 8. Also export a 512x512 mark for favicon/app-icon use
+const mark = await sharp(padded)
   .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .png()
   .toBuffer();
-writeFileSync(outMark, square);
-console.log('Wrote', outMark, '(512x512 transparent square)');
+writeFileSync(outMark, mark);
+console.log('Wrote', outMark, '(512x512)');
