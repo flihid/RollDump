@@ -172,6 +172,30 @@ r.get('/by-username/:username', optionalAuth, async (c) => {
   if (!u) return c.json({ error: 'User not found' }, 404);
   const { password, totpSecret, email, lastLoginIp, ...safe } = u as any;
   const stats = await computeUserStats(db, u.id);
+
+  // Compute relationship flags for the viewer
+  const me = c.get('user')?.id;
+  let isBlocked = false;
+  let isBlockedBy = false;
+  let isFollowing = false;
+  if (me && me !== u.id) {
+    const b1 = await db
+      .select()
+      .from(userBlocks)
+      .where(and(eq(userBlocks.blockerId, me), eq(userBlocks.blockedId, u.id)));
+    isBlocked = b1.length > 0;
+    const b2 = await db
+      .select()
+      .from(userBlocks)
+      .where(and(eq(userBlocks.blockerId, u.id), eq(userBlocks.blockedId, me)));
+    isBlockedBy = b2.length > 0;
+    const f = await db
+      .select()
+      .from(follows)
+      .where(and(eq(follows.followerId, me), eq(follows.followingId, u.id)));
+    isFollowing = f.length > 0;
+  }
+
   return c.json({
     user: {
       ...safe,
@@ -180,6 +204,9 @@ r.get('/by-username/:username', optionalAuth, async (c) => {
         followersCount: u.followersCount ?? 0,
         followingCount: u.followingCount ?? 0,
       },
+      isBlocked,
+      isBlockedBy,
+      isFollowing,
     },
   });
 });

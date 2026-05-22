@@ -15,6 +15,7 @@ import social from './routes/social';
 import equipment from './routes/equipment';
 import search from './routes/search';
 import admin from './routes/admin';
+import achievements from './routes/achievements';
 import { seed } from './seed';
 
 const app = new Hono<AppEnv>();
@@ -44,6 +45,7 @@ v1.route('/lists', lists);
 v1.route('/equipment', equipment);
 v1.route('/search', search);
 v1.route('/admin', admin);
+v1.route('/achievements', achievements);
 v1.route('/', social); // /likes /comments /reports /feed /notifications
 
 app.route('/api/v1', v1);

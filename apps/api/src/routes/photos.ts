@@ -7,6 +7,8 @@ import {
   users,
   cameras,
   lenses,
+  likes,
+  comments,
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth } from '../lib/context';
 
@@ -44,11 +46,32 @@ r.get('/', optionalAuth, async (c) => {
     .where(and(...conds))
     .orderBy(desc(photos.createdAt))
     .limit(limit);
-  return c.json({ items: rows });
+
+  // Enrich with viewerHasLiked flags so the gallery shows filled hearts where appropriate
+  const me = c.get('user')?.id;
+  const photoIds = rows.map((r: any) => r.photo.id);
+  const likedIds = new Set<string>();
+  if (me && photoIds.length) {
+    const liked = await db
+      .select({ id: likes.likeableId })
+      .from(likes)
+      .where(
+        and(
+          eq(likes.userId, me),
+          eq(likes.likeableType, 'photo'),
+          inArray(likes.likeableId, photoIds),
+        ),
+      );
+    for (const l of liked) likedIds.add(l.id as string);
+  }
+  return c.json({
+    items: rows.map((r: any) => ({ ...r, viewerHasLiked: likedIds.has(r.photo.id) })),
+  });
 });
 
 r.get('/:id', optionalAuth, async (c) => {
   const db = c.get('db');
+  const photoId = c.req.param('id');
   const [row] = await db
     .select({
       photo: photos,
@@ -69,13 +92,47 @@ r.get('/:id', optionalAuth, async (c) => {
     .leftJoin(filmVariants, eq(filmVariants.id, photos.filmVariantId))
     .leftJoin(cameras, eq(cameras.id, photos.cameraId))
     .leftJoin(lenses, eq(lenses.id, photos.lensId))
-    .where(eq(photos.id, c.req.param('id')));
-  if (!row) return c.json({ error: 'Foto tidak ditemukan' }, 404);
+    .where(eq(photos.id, photoId));
+  if (!row) return c.json({ error: 'Photo not found' }, 404);
+
+  // Like & comment counts so the FE doesn't need extra round-trips
+  const [{ c: likeC }] = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(likes)
+    .where(and(eq(likes.likeableId, photoId), eq(likes.likeableType, 'photo')));
+  const [{ c: commentC }] = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(comments)
+    .where(and(eq(comments.commentableId, photoId), eq(comments.commentableType, 'photo')));
+
+  // Did the current user already like this photo?
+  let viewerHasLiked = false;
+  const me = c.get('user')?.id;
+  if (me) {
+    const existing = await db
+      .select()
+      .from(likes)
+      .where(
+        and(
+          eq(likes.userId, me),
+          eq(likes.likeableId, photoId),
+          eq(likes.likeableType, 'photo'),
+        ),
+      );
+    viewerHasLiked = existing.length > 0;
+  }
+
   await db
     .update(photos)
     .set({ viewCount: sql`${photos.viewCount} + 1` })
     .where(eq(photos.id, row.photo.id));
-  return c.json(row);
+
+  return c.json({
+    ...row,
+    likeCount: Number(likeC || 0),
+    commentCount: Number(commentC || 0),
+    viewerHasLiked,
+  });
 });
 
 r.post('/', authMiddleware, async (c) => {

@@ -26,9 +26,10 @@ export default function PhotoDetail() {
   const [comment, setComment] = useState('');
   const [liked, setLiked] = useState(false);
 
+  // Initialize liked state from server (viewerHasLiked included in photo response)
   useEffect(() => {
-    setLiked(false);
-  }, [id]);
+    if (photo.data) setLiked(!!photo.data.viewerHasLiked);
+  }, [photo.data, id]);
 
   const like = useMutation({
     mutationFn: () => api.post(`/likes/photo/${id}`),
