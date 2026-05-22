@@ -1,10 +1,11 @@
-import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
 import {
   comments,
   likes,
   notifications,
   reports,
   users,
+  userBlocks,
   follows,
   reviews,
   photos,
@@ -13,6 +14,50 @@ import {
   filmVariants,
 } from '@rolldump/db';
 import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
+
+/** Resolve the user that owns a likeable/commentable resource. */
+async function getResourceOwner(db: any, type: string, id: string): Promise<string | null> {
+  const tbl =
+    type === 'photo' ? photos :
+    type === 'review' ? reviews :
+    type === 'list' ? userLists : null;
+  if (!tbl) return null;
+  const [row] = await db.select({ userId: (tbl as any).userId }).from(tbl as any).where(eq((tbl as any).id, id));
+  return row?.userId ?? null;
+}
+
+/** Insert a notification, idempotent-ish (skip if same actor+type+target already unread). */
+async function notify(
+  db: any,
+  recipientId: string,
+  actorId: string,
+  type: string,
+  notifiableType?: string,
+  notifiableId?: string,
+  message?: string,
+) {
+  if (recipientId === actorId) return; // don't notify yourself
+  // Block check both ways
+  const blocks = await db
+    .select()
+    .from(userBlocks)
+    .where(
+      or(
+        and(eq(userBlocks.blockerId, recipientId), eq(userBlocks.blockedId, actorId)),
+        and(eq(userBlocks.blockerId, actorId), eq(userBlocks.blockedId, recipientId)),
+      ),
+    );
+  if (blocks.length) return;
+  await db.insert(notifications).values({
+    recipientId,
+    actorId,
+    type,
+    notifiableType,
+    notifiableId,
+    payload: message ? { message } : null,
+    isRead: false,
+  });
+}
 
 const r = createApp();
 
@@ -45,18 +90,34 @@ r.post('/likes/:type/:id', authMiddleware, async (c) => {
     return c.json({ liked: false });
   } else {
     await db.insert(likes).values({ userId, likeableId: id, likeableType: type });
+    // Fire-and-forget notification to resource owner
+    try {
+      const ownerId = await getResourceOwner(db, type, id);
+      const [actor] = await db
+        .select({ username: users.username })
+        .from(users)
+        .where(eq(users.id, userId));
+      if (ownerId && actor) {
+        const verb = type === 'photo' ? 'photo' : type === 'review' ? 'review' : type === 'list' ? 'list' : 'content';
+        await notify(db, ownerId, userId, 'like', type, id, `@${actor.username} liked your ${verb}`);
+      }
+    } catch {}
     return c.json({ liked: true });
   }
 });
 
-r.get('/likes/:type/:id/count', async (c) => {
+r.get('/likes/:type/:id/count', optionalAuth, async (c) => {
   const db = c.get('db');
+  const hidden = await getHiddenUserIds(c);
+  const conds: any[] = [
+    eq(likes.likeableId, c.req.param('id')),
+    eq(likes.likeableType, c.req.param('type')),
+  ];
+  if (hidden.length) conds.push(notInArray(likes.userId, hidden));
   const [r0] = await db
     .select({ c: sql<number>`count(*)` })
     .from(likes)
-    .where(
-      and(eq(likes.likeableId, c.req.param('id')), eq(likes.likeableType, c.req.param('type'))),
-    );
+    .where(and(...conds));
   return c.json({ count: Number(r0?.c || 0) });
 });
 
@@ -83,18 +144,33 @@ r.get('/comments/:type/:id', optionalAuth, async (c) => {
 
 r.post('/comments/:type/:id', authMiddleware, async (c) => {
   const { content, parent_id } = await c.req.json();
-  if (!content || !content.trim()) return c.json({ error: 'content wajib' }, 400);
-  const [row] = await c
-    .get('db')
+  if (!content || !content.trim()) return c.json({ error: 'content is required' }, 400);
+  const db = c.get('db');
+  const userId = c.get('user')!.id;
+  const type = c.req.param('type');
+  const id = c.req.param('id');
+  const [row] = await db
     .insert(comments)
     .values({
-      userId: c.get('user')!.id,
-      commentableId: c.req.param('id'),
-      commentableType: c.req.param('type'),
+      userId,
+      commentableId: id,
+      commentableType: type,
       parentId: parent_id || null,
       content,
     })
     .returning();
+  // Notify resource owner
+  try {
+    const ownerId = await getResourceOwner(db, type, id);
+    const [actor] = await db
+      .select({ username: users.username })
+      .from(users)
+      .where(eq(users.id, userId));
+    if (ownerId && actor) {
+      const verb = type === 'photo' ? 'photo' : type === 'review' ? 'review' : type === 'list' ? 'list' : 'content';
+      await notify(db, ownerId, userId, 'comment', type, id, `@${actor.username} commented on your ${verb}`);
+    }
+  } catch {}
   return c.json({ comment: row }, 201);
 });
 

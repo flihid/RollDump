@@ -102,14 +102,19 @@ r.get('/:id', optionalAuth, async (c) => {
   if (hidden.includes(row.author?.id)) return c.json({ error: 'Photo not found' }, 404);
 
   // Like & comment counts so the FE doesn't need extra round-trips
+  // Both filter out interactions from users blocked-by-or-blocking the viewer
+  const likeConds: any[] = [eq(likes.likeableId, photoId), eq(likes.likeableType, 'photo')];
+  if (hidden.length) likeConds.push(notInArray(likes.userId, hidden));
+  const commentConds: any[] = [eq(comments.commentableId, photoId), eq(comments.commentableType, 'photo')];
+  if (hidden.length) commentConds.push(notInArray(comments.userId, hidden));
   const [{ c: likeC }] = await db
     .select({ c: sql<number>`count(*)` })
     .from(likes)
-    .where(and(eq(likes.likeableId, photoId), eq(likes.likeableType, 'photo')));
+    .where(and(...likeConds));
   const [{ c: commentC }] = await db
     .select({ c: sql<number>`count(*)` })
     .from(comments)
-    .where(and(eq(comments.commentableId, photoId), eq(comments.commentableType, 'photo')));
+    .where(and(...commentConds));
 
   // Did the current user already like this photo?
   let viewerHasLiked = false;

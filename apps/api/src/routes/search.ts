@@ -1,13 +1,21 @@
-import { ilike, or } from 'drizzle-orm';
+import { and, ilike, notInArray, or } from 'drizzle-orm';
 import { films, users, userLists, brands, cameras } from '@rolldump/db';
-import { createApp } from '../lib/context';
+import { createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
 
 const r = createApp();
 
-r.get('/autocomplete', async (c) => {
+r.get('/autocomplete', optionalAuth, async (c) => {
   const q = (c.req.query('q') || '').trim();
-  if (!q) return c.json({ films: [], users: [], lists: [], brands: [] });
+  if (!q) return c.json({ films: [], users: [], lists: [], brands: [], cameras: [] });
   const db = c.get('db');
+  const hidden = await getHiddenUserIds(c);
+
+  const userConds: any[] = [or(ilike(users.username, `%${q}%`), ilike(users.fullName, `%${q}%`))];
+  if (hidden.length) userConds.push(notInArray(users.id, hidden));
+
+  const listConds: any[] = [ilike(userLists.title, `%${q}%`)];
+  if (hidden.length) listConds.push(notInArray(userLists.userId, hidden));
+
   const [filmsR, usersR, listsR, brandsR, camerasR] = await Promise.all([
     db
       .select()
@@ -17,13 +25,9 @@ r.get('/autocomplete', async (c) => {
     db
       .select({ id: users.id, username: users.username, avatarUrl: users.avatarUrl, fullName: users.fullName })
       .from(users)
-      .where(or(ilike(users.username, `%${q}%`), ilike(users.fullName, `%${q}%`)))
+      .where(and(...userConds))
       .limit(5),
-    db
-      .select()
-      .from(userLists)
-      .where(ilike(userLists.title, `%${q}%`))
-      .limit(5),
+    db.select().from(userLists).where(and(...listConds)).limit(5),
     db.select().from(brands).where(ilike(brands.name, `%${q}%`)).limit(5),
     db
       .select()

@@ -6,6 +6,7 @@ import {
   userPreferences,
   privacySettings,
   notificationPreferences,
+  notifications,
   reviews,
   photos,
   rolls,
@@ -245,6 +246,19 @@ r.post('/by-username/:username/follow', authMiddleware, async (c) => {
       .update(users)
       .set({ followingCount: sql`${users.followingCount} + 1` })
       .where(eq(users.id, me));
+    // Notify the target that they have a new follower
+    try {
+      const [meUser] = await db.select({ username: users.username }).from(users).where(eq(users.id, me));
+      await db.insert(notifications).values({
+        recipientId: target.id,
+        actorId: me,
+        type: 'follow',
+        notifiableType: 'user',
+        notifiableId: me,
+        payload: { message: `@${meUser?.username} started following you` },
+        isRead: false,
+      });
+    } catch {}
     return c.json({ following: true });
   }
 });
