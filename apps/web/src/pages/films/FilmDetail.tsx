@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
 import { Loading, FormatBadge } from '../../components/common';
 import ReportModal from '../../components/ReportModal';
+import PhotoLightbox from '../../components/PhotoLightbox';
 
 type Tab = 'overview' | 'reviews' | 'photos' | 'tips';
 
@@ -14,6 +15,7 @@ export default function FilmDetail() {
   const { slug } = useParams();
   const [tab, setTab] = useState<Tab>('overview');
   const [reportTarget, setReportTarget] = useState<{ type: 'review'; id: string; label?: string } | null>(null);
+  const [lightboxId, setLightboxId] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const film = useQuery({
@@ -219,14 +221,14 @@ export default function FilmDetail() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {overviewPhotos.data!.items.slice(0, 8).map((row: any) => (
-                <Link
+                <button
                   key={row.photo.id}
-                  to={`/photos/${row.photo.id}`}
-                  className="aspect-square rounded-[10px] overflow-hidden block"
+                  onClick={() => setLightboxId(row.photo.id)}
+                  className="aspect-square rounded-[10px] overflow-hidden block cursor-pointer"
                   style={{ background: '#1a1a1a' }}
                 >
-                  <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" />
-                </Link>
+                  <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" alt="" />
+                </button>
               ))}
             </div>
           )}
@@ -314,14 +316,14 @@ export default function FilmDetail() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {photos.data!.items.map((row: any) => (
-                <Link
+                <button
                   key={row.photo.id}
-                  to={`/photos/${row.photo.id}`}
-                  className="aspect-square rounded-[10px] overflow-hidden block"
+                  onClick={() => setLightboxId(row.photo.id)}
+                  className="aspect-square rounded-[10px] overflow-hidden block cursor-pointer"
                   style={{ background: '#1a1a1a' }}
                 >
-                  <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" />
-                </Link>
+                  <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" alt="" />
+                </button>
               ))}
             </div>
           )}
@@ -372,6 +374,7 @@ export default function FilmDetail() {
       {reportTarget && (
         <ReportModal target={reportTarget} onClose={() => setReportTarget(null)} />
       )}
+      {lightboxId && <PhotoLightbox photoId={lightboxId} onClose={() => setLightboxId(null)} />}
     </div>
   );
 }

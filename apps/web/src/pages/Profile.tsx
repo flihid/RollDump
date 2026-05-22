@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { api } from '../lib/api';
 import { getUser, isLoggedIn } from '../store/auth';
 import { Loading, StarRating } from '../components/common';
+import PhotoLightbox from '../components/PhotoLightbox';
 
 type Tab = 'gallery' | 'rolls' | 'reviews' | 'lists' | 'achievements';
 
@@ -16,6 +17,7 @@ export default function Profile() {
   const [tab, setTab] = useState<Tab>('gallery');
   const [blockConfirm, setBlockConfirm] = useState<null | 'block' | 'unblock'>(null);
   const [selectedAchv, setSelectedAchv] = useState<any | null>(null);
+  const [lightboxId, setLightboxId] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const profile = useQuery({
@@ -233,10 +235,10 @@ export default function Profile() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {photos.data!.items.map((row: any) => (
-                  <Link
+                  <button
                     key={row.photo.id}
-                    to={`/photos/${row.photo.id}`}
-                    className="aspect-square rounded-[10px] overflow-hidden block relative group"
+                    onClick={() => setLightboxId(row.photo.id)}
+                    className="aspect-square rounded-[10px] overflow-hidden block relative group cursor-pointer"
                     style={{ background: '#1a1a1a' }}
                   >
                     <img
@@ -252,7 +254,7 @@ export default function Profile() {
                         ♥
                       </span>
                     )}
-                  </Link>
+                  </button>
                 ))}
               </div>
             ))}
@@ -408,6 +410,9 @@ export default function Profile() {
           onClose={() => setSelectedAchv(null)}
         />
       )}
+
+      {/* === PHOTO LIGHTBOX === */}
+      {lightboxId && <PhotoLightbox photoId={lightboxId} onClose={() => setLightboxId(null)} />}
     </div>
   );
 }

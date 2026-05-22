@@ -16,10 +16,18 @@ export default function Login() {
 
   const m = useMutation({
     mutationFn: () => api.post('/auth/login', { identifier, password }),
-    onSuccess: (data: any) => {
+    onSuccess: async (data: any) => {
       setAuth(data.access_token, data.refresh_token, data.user);
       toast.success('Welcome back!');
-      navigate(params.get('next') || '/');
+      // Check whether the user has completed onboarding (any prefs saved).
+      // If not, redirect there so first-time logins land on the wizard.
+      let next = params.get('next') || '/';
+      try {
+        const prefs = await api.get('/users/me/preferences');
+        const fp = prefs?.preferences?.formatPreferences;
+        if (!fp || (Array.isArray(fp) && fp.length === 0)) next = '/onboarding';
+      } catch {}
+      navigate(next);
     },
     onError: (e: any) => {
       if (e.data?.code === 'VERIFY_REQUIRED') setVerifyHint(true);

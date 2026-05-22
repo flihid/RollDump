@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import { setAuth } from '../../store/auth';
 import Logo from '../../components/Logo';
 
 export default function Register() {
@@ -38,8 +39,17 @@ export default function Register() {
         fullName: form.fullName || form.username,
       }),
     onSuccess: (data: any) => {
-      toast.success('Account created! Check your email to verify.');
-      navigate(`/verify?token=${data.verify_token || ''}`);
+      // If the dev environment auto-verifies (returns access_token directly),
+      // log the user in and send them straight to onboarding. Otherwise show
+      // the verify-email screen.
+      if (data.access_token) {
+        setAuth(data.access_token, data.refresh_token, data.user);
+        toast.success('Account created! Let\'s set up your taste.');
+        navigate('/onboarding');
+      } else {
+        toast.success('Account created! Check your email to verify.');
+        navigate(`/verify?token=${data.verify_token || ''}`);
+      }
     },
     onError: (e: any) => toast.error(e.message || 'Registration failed'),
   });

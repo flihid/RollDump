@@ -23,15 +23,39 @@ auth.post('/register', async (c) => {
         password,
         fullName: fullName || username,
         role: 'user',
-        status: 'pending',
+        status: 'active', // auto-active for demo so onboarding starts immediately
       });
       const verifyToken = await authService.createEmailVerification(user.id);
+
+      // Auto-issue access token so the FE can land the user directly on
+      // /onboarding without an extra login step. The verify token is still
+      // returned so they can verify their email later.
+      const session = await authService.createSession(user.id, {
+        userAgent: c.req.header('User-Agent') || '',
+        ip: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || '',
+      });
+      const accessToken = await sign(
+        {
+          sub: user.id,
+          role: user.role,
+          exp: Math.floor(Date.now() / 1000) + 60 * 60,
+        },
+        getJwtSecret(c),
+      );
       return c.json(
         {
-          message: 'Registrasi berhasil',
-          user: { id: user.id, email: user.email, username: user.username },
+          message: 'Registration successful',
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            fullName: user.fullName,
+            role: user.role,
+          },
           verification_required: true,
-          verify_token: verifyToken, // exposed in dev for demo flow
+          verify_token: verifyToken,
+          access_token: accessToken,
+          refresh_token: session.refreshToken,
         },
         201,
       );
