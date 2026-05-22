@@ -64,12 +64,12 @@ export default function FilmCard({
             {film.brand.name}
           </div>
         )}
-        <div className="font-semibold text-sm text-ink-50 leading-tight line-clamp-2 group-hover:text-primary-400 transition-colors">
+        <div className="font-semibold text-sm text-ink-900 leading-tight line-clamp-2 group-hover:text-primary-400 transition-colors">
           {film.name}
         </div>
         <div className="flex items-center gap-1.5 mt-1.5 rating-shimmer">
           <StarRating value={film.ratingAvg || 0} size="sm" />
-          <span className="text-[11px] text-ink-300 counter-num">({film.reviewCount || 0})</span>
+          <span className="text-[11px] text-ink-500 counter-num">({film.reviewCount || 0})</span>
         </div>
       </div>
     </Link>

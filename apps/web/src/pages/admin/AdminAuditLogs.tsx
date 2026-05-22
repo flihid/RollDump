@@ -13,14 +13,14 @@ export default function AdminAuditLogs() {
           <div key={row.id} className="p-3 text-sm">
             <div className="flex items-center gap-2">
               <span className="badge">{row.action}</span>
-              <span className="text-ink-300 text-xs">{new Date(row.createdAt).toLocaleString('en-US')}</span>
+              <span className="text-ink-500 text-xs">{new Date(row.createdAt).toLocaleString('en-US')}</span>
             </div>
-            <div className="text-xs text-ink-300 mt-1">
+            <div className="text-xs text-ink-500 mt-1">
               {row.resourceType} {row.resourceId} · actor {row.actorId}
             </div>
           </div>
         ))}
-        {q.data?.items?.length === 0 && <div className="p-6 text-center text-sm text-ink-300">No logs yet.</div>}
+        {q.data?.items?.length === 0 && <div className="p-6 text-center text-sm text-ink-500">No logs yet.</div>}
       </div>
     </div>
   );

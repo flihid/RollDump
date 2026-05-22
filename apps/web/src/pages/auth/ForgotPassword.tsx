@@ -19,8 +19,8 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="card p-8 max-w-md w-full">
         <Mail className="mx-auto w-10 h-10 text-primary-400" />
-        <h2 className="mt-4 text-xl font-semibold text-center text-ink-50">Forgot password</h2>
-        <p className="mt-1 text-sm text-ink-200 text-center">
+        <h2 className="mt-4 text-xl font-semibold text-center text-ink-900">Forgot password</h2>
+        <p className="mt-1 text-sm text-ink-600 text-center">
           Enter your email. If it's registered, we'll send you a reset link.
         </p>
         <form
@@ -36,14 +36,14 @@ export default function ForgotPassword() {
           </button>
         </form>
         {resetLink && (
-          <div className="mt-4 p-3 rounded-md bg-ink-600 border border-ink-500 text-xs">
-            <div className="font-semibold mb-1 text-ink-50">Demo: reset link</div>
+          <div className="mt-4 p-3 rounded-md bg-ink-200 border border-ink-300 text-xs">
+            <div className="font-semibold mb-1 text-ink-900">Demo: reset link</div>
             <Link to={resetLink} className="link-amber break-all">
               {resetLink}
             </Link>
           </div>
         )}
-        <Link to="/login" className="block text-center text-xs text-ink-300 mt-4 hover:text-primary-400">
+        <Link to="/login" className="block text-center text-xs text-ink-500 mt-4 hover:text-primary-400">
           Back to sign in
         </Link>
       </div>

@@ -26,20 +26,20 @@ export default function AdminDashboard() {
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Link to="/admin/films" className="card card-hover p-4">
-          <div className="font-semibold text-ink-50">Manage films</div>
-          <div className="text-xs text-ink-300">Add, edit, deactivate</div>
+          <div className="font-semibold text-ink-900">Manage films</div>
+          <div className="text-xs text-ink-500">Add, edit, deactivate</div>
         </Link>
         <Link to="/admin/users" className="card card-hover p-4">
-          <div className="font-semibold text-ink-50">Manage users</div>
-          <div className="text-xs text-ink-300">Suspend, ban, roles</div>
+          <div className="font-semibold text-ink-900">Manage users</div>
+          <div className="text-xs text-ink-500">Suspend, ban, roles</div>
         </Link>
         <Link to="/admin/reports" className="card card-hover p-4">
-          <div className="font-semibold text-ink-50">Report queue</div>
-          <div className="text-xs text-ink-300">Flagged content</div>
+          <div className="font-semibold text-ink-900">Report queue</div>
+          <div className="text-xs text-ink-500">Flagged content</div>
         </Link>
         <Link to="/admin/audit-logs" className="card card-hover p-4">
-          <div className="font-semibold text-ink-50">Audit log</div>
-          <div className="text-xs text-ink-300">Admin action trail</div>
+          <div className="font-semibold text-ink-900">Audit log</div>
+          <div className="text-xs text-ink-500">Admin action trail</div>
         </Link>
       </div>
     </div>

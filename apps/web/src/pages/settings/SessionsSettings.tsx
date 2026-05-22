@@ -26,15 +26,15 @@ export default function SessionsSettings() {
         <h3 className="font-bold">Active sessions</h3>
         <button onClick={() => all.mutate()} className="btn-danger">Sign out everywhere</button>
       </div>
-      <div className="divide-y divide-ink-600">
+      <div className="divide-y divide-ink-300">
         {(q.data?.sessions || []).map((s: any) => {
           const isMobile = (s.userAgent || '').toLowerCase().includes('mobile');
           return (
             <div key={s.id} className="py-3 flex items-center gap-3">
-              {isMobile ? <Smartphone className="w-5 h-5 text-ink-300" /> : <Monitor className="w-5 h-5 text-ink-300" />}
+              {isMobile ? <Smartphone className="w-5 h-5 text-ink-500" /> : <Monitor className="w-5 h-5 text-ink-500" />}
               <div className="flex-1 text-sm">
-                <div className="font-medium text-ink-50">{s.userAgent || 'Unknown device'}</div>
-                <div className="text-xs text-ink-300">{s.ip || '—'} · Since {new Date(s.createdAt).toLocaleString('en-US')}</div>
+                <div className="font-medium text-ink-900">{s.userAgent || 'Unknown device'}</div>
+                <div className="text-xs text-ink-500">{s.ip || '—'} · Since {new Date(s.createdAt).toLocaleString('en-US')}</div>
               </div>
               <button onClick={() => revoke.mutate(s.id)} className="btn-ghost text-red-400 text-xs">Revoke</button>
             </div>

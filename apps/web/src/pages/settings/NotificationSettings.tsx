@@ -42,7 +42,7 @@ export default function NotificationSettings() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-ink-300 text-xs">
+            <tr className="text-left text-ink-500 text-xs">
               <th>Event</th>
               <th>In-App</th>
               <th>Email</th>
@@ -51,7 +51,7 @@ export default function NotificationSettings() {
           </thead>
           <tbody>
             {TYPES.map((t) => (
-              <tr key={t} className="border-t border-ink-600">
+              <tr key={t} className="border-t border-ink-300">
                 <td className="py-2 pr-2">{t}</td>
                 <td><input type="checkbox" checked={!!inApp[t]} onChange={(e) => setInApp({ ...inApp, [t]: e.target.checked })} /></td>
                 <td><input type="checkbox" checked={!!email[t]} onChange={(e) => setEmail({ ...email, [t]: e.target.checked })} /></td>

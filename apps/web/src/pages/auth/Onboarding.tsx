@@ -54,8 +54,8 @@ export default function Onboarding() {
         </div>
         {step === 1 && (
           <div>
-            <h2 className="text-2xl font-bold text-ink-50">Favorite film formats?</h2>
-            <p className="text-sm text-ink-200 mt-1">Pick one or more.</p>
+            <h2 className="text-2xl font-bold text-ink-900">Favorite film formats?</h2>
+            <p className="text-sm text-ink-600 mt-1">Pick one or more.</p>
             <div className="flex flex-wrap gap-2 mt-6">
               {FORMATS.map((f) => (
                 <button
@@ -75,7 +75,7 @@ export default function Onboarding() {
         )}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-bold text-ink-50">Favorite emulsion types?</h2>
+            <h2 className="text-2xl font-bold text-ink-900">Favorite emulsion types?</h2>
             <div className="flex flex-wrap gap-2 mt-6">
               {COLOR.map((f) => (
                 <button
@@ -96,7 +96,7 @@ export default function Onboarding() {
         )}
         {step === 3 && (
           <div>
-            <h2 className="text-2xl font-bold text-ink-50">Follow some photographers</h2>
+            <h2 className="text-2xl font-bold text-ink-900">Follow some photographers</h2>
             <p className="text-sm text-ink-600 mt-1">Mulai isi feed Anda.</p>
             <div className="grid grid-cols-2 gap-2 mt-6">
               {(suggested.data?.items || []).slice(0, 6).map((u: any) => {

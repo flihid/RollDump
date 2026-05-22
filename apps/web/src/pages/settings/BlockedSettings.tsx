@@ -18,15 +18,15 @@ export default function BlockedSettings() {
     <div className="card p-6 space-y-3">
       <h3 className="font-bold">Blocked users</h3>
       {(q.data?.items || []).length === 0 ? (
-        <p className="text-sm text-ink-300">You haven't blocked anyone yet.</p>
+        <p className="text-sm text-ink-500">You haven't blocked anyone yet.</p>
       ) : (
-        <div className="divide-y divide-ink-600">
+        <div className="divide-y divide-ink-300">
           {q.data!.items.map((u: any) => (
             <div key={u.id} className="py-2 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-ink-600 flex items-center justify-center text-xs font-semibold text-ink-50">
+              <div className="w-8 h-8 rounded-full bg-ink-200 flex items-center justify-center text-xs font-semibold text-ink-900">
                 {u.username[0].toUpperCase()}
               </div>
-              <div className="flex-1 text-sm text-ink-50">@{u.username}</div>
+              <div className="flex-1 text-sm text-ink-900">@{u.username}</div>
               <button onClick={() => unblock.mutate(u.username)} className="btn-ghost text-xs">Unblock</button>
             </div>
           ))}

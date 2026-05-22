@@ -81,8 +81,8 @@ export default function FilmDetail() {
               <ColorTypeBadge value={f.colorType} />
               {f.status === 'discontinued' && <span className="badge bg-red-500/20 text-red-200 border border-red-500/30">Discontinued</span>}
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold text-ink-50 leading-[1.05]">{f.name}</h1>
-            <div className="flex items-center gap-3 mt-4 text-sm text-ink-100 flex-wrap">
+            <h1 className="text-4xl sm:text-5xl font-semibold text-ink-900 leading-[1.05]">{f.name}</h1>
+            <div className="flex items-center gap-3 mt-4 text-sm text-ink-700 flex-wrap">
               <span className="stat-pill">ISO {f.iso}</span>
               {f.countryOfOrigin && <span className="stat-pill">{f.countryOfOrigin}</span>}
               {f.yearIntroduced && <span className="stat-pill">Since {f.yearIntroduced}</span>}
@@ -94,10 +94,10 @@ export default function FilmDetail() {
         </div>
 
         {/* Variant tabs */}
-        <div className="px-4 sm:px-6 border-b border-ink-600 flex flex-wrap gap-1 -mb-px">
+        <div className="px-4 sm:px-6 border-b border-ink-300 flex flex-wrap gap-1 -mb-px">
           <button
             onClick={() => setActiveFormat(null)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!activeFormat ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!activeFormat ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
           >
             All formats
           </button>
@@ -105,7 +105,7 @@ export default function FilmDetail() {
             <button
               key={v.id}
               onClick={() => setActiveFormat(v.format)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeFormat === v.format ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeFormat === v.format ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
             >
               {v.format}
             </button>
@@ -114,7 +114,7 @@ export default function FilmDetail() {
 
         <div className="p-4 sm:p-6 grid sm:grid-cols-3 gap-4">
           <div className="sm:col-span-2">
-            <p className="text-sm text-ink-100 leading-relaxed">{f.description}</p>
+            <p className="text-sm text-ink-700 leading-relaxed">{f.description}</p>
             {currentVariant && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <Spec label="Exposures" value={currentVariant.exposures} />
@@ -145,7 +145,7 @@ export default function FilmDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-ink-600">
+      <div className="flex gap-1 border-b border-ink-300">
         <TabBtn active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} icon={<Star className="w-4 h-4" />} label={`Reviews (${f.stats?.reviewCount || 0})`} />
         <TabBtn active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label={`Photos (${f.stats?.photoCount || 0})`} />
         <TabBtn active={activeTab === 'tips'} onClick={() => setActiveTab('tips')} icon={<BookOpen className="w-4 h-4" />} label={`Tips (${f.stats?.tipsCount || 0})`} />
@@ -157,7 +157,7 @@ export default function FilmDetail() {
           {reviews.isLoading ? (
             <Loading />
           ) : reviews.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-200">
+            <div className="card p-8 text-center text-sm text-ink-600">
               No reviews for this format yet.{' '}
               {isLoggedIn() && (
                 <Link to={`/films/${f.slug}/review/new`} className="link-amber font-semibold">Be the first!</Link>
@@ -186,7 +186,7 @@ export default function FilmDetail() {
                       </div>
                     )}
                     <p className="text-sm mt-2 whitespace-pre-wrap">{r.review.content}</p>
-                    <div className="flex items-center gap-4 mt-3 text-xs text-ink-200">
+                    <div className="flex items-center gap-4 mt-3 text-xs text-ink-600">
                       <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-primary-400">
                         <ThumbsUp className="w-3.5 h-3.5" /> Helpful ({r.review.helpfulCount})
                       </button>
@@ -207,7 +207,7 @@ export default function FilmDetail() {
           {photos.isLoading ? (
             <Loading />
           ) : photos.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-200">No photos for this format yet.</div>
+            <div className="card p-8 text-center text-sm text-ink-600">No photos for this format yet.</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {photos.data!.items.map((row: any) => (
@@ -232,7 +232,7 @@ export default function FilmDetail() {
           {tips.isLoading ? (
             <Loading />
           ) : tips.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-200">No tips yet. Share your knowledge!</div>
+            <div className="card p-8 text-center text-sm text-ink-600">No tips yet. Share your knowledge!</div>
           ) : (
             tips.data!.items.map((row: any) => (
               <div key={row.tip.id} className="card p-4 flex gap-3">
@@ -251,8 +251,8 @@ export default function FilmDetail() {
                     <FormatBadge format={row.tip.targetFormat} />
                     <span className="badge">{row.tip.category}</span>
                   </div>
-                  <p className="text-sm text-ink-100 mt-1 line-clamp-3">{row.tip.content}</p>
-                  <div className="text-xs text-ink-300 mt-2">by @{row.author?.username}</div>
+                  <p className="text-sm text-ink-700 mt-1 line-clamp-3">{row.tip.content}</p>
+                  <div className="text-xs text-ink-500 mt-2">by @{row.author?.username}</div>
                 </div>
               </div>
             ))
@@ -267,7 +267,7 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${active ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-200 hover:text-ink-50'}`}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${active ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
     >
       {icon} {label}
     </button>
@@ -275,9 +275,9 @@ function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: ()
 }
 function Spec({ label, value }: { label: string; value: any }) {
   return (
-    <div className="rounded-md border border-ink-600 bg-ink-700/40 p-3 transition hover:border-primary-500/40">
-      <div className="text-[10px] uppercase tracking-wider text-ink-300">{label}</div>
-      <div className="font-semibold text-ink-50 mt-0.5">{value || '—'}</div>
+    <div className="rounded-md border border-ink-300 bg-ink-50/40 p-3 transition hover:border-primary-500/40">
+      <div className="text-[10px] uppercase tracking-wider text-ink-500">{label}</div>
+      <div className="font-semibold text-ink-900 mt-0.5">{value || '—'}</div>
     </div>
   );
 }
@@ -297,15 +297,15 @@ function RatingCard({ ratingAvg, reviewCount }: { ratingAvg: number; reviewCount
         t.style.setProperty('--my', `${e.clientY - r.top}px`);
       }}
     >
-      <div className="text-[10px] uppercase tracking-wider text-ink-300">Community rating</div>
+      <div className="text-[10px] uppercase tracking-wider text-ink-500">Community rating</div>
       <div className="flex items-baseline gap-2 mt-1">
-        <span className="text-3xl font-bold text-ink-50 counter-num">
+        <span className="text-3xl font-bold text-ink-900 counter-num">
           {(countedRating / 10).toFixed(1)}
         </span>
         <StarRating value={ratingAvg} size="sm" />
       </div>
-      <div className="text-xs text-ink-200 mt-1">
-        from <span className="counter-num font-semibold text-ink-100">{countedReviews}</span> reviews
+      <div className="text-xs text-ink-600 mt-1">
+        from <span className="counter-num font-semibold text-ink-700">{countedReviews}</span> reviews
       </div>
     </div>
   );

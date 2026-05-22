@@ -34,9 +34,9 @@ export default function ListDetail() {
   return (
     <div className="space-y-6">
       <div className="card p-6">
-        <h1 className="text-3xl font-bold text-ink-50">{list.title}</h1>
-        {q.data.author && <div className="text-sm text-ink-300 mt-1">by @{q.data.author.username}</div>}
-        {list.description && <p className="text-sm text-ink-100 mt-3 max-w-2xl">{list.description}</p>}
+        <h1 className="text-3xl font-bold text-ink-900">{list.title}</h1>
+        {q.data.author && <div className="text-sm text-ink-500 mt-1">by @{q.data.author.username}</div>}
+        {list.description && <p className="text-sm text-ink-700 mt-3 max-w-2xl">{list.description}</p>}
         <div className="flex items-center gap-3 mt-4">
           <span className="badge">{list.itemCount} films</span>
           {isLoggedIn() && (
@@ -56,7 +56,7 @@ export default function ListDetail() {
       </div>
 
       {items.length === 0 ? (
-        <div className="card p-8 text-center text-sm text-ink-200">This list is empty.</div>
+        <div className="card p-8 text-center text-sm text-ink-600">This list is empty.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {items.map((row: any) => (
@@ -69,11 +69,11 @@ export default function ListDetail() {
                 </div>
               </div>
               <div className="p-3">
-                <div className="font-semibold text-sm text-ink-50 truncate group-hover:text-primary-400 transition-colors">
+                <div className="font-semibold text-sm text-ink-900 truncate group-hover:text-primary-400 transition-colors">
                   {row.film.name}
                 </div>
                 {row.item.personalNote && (
-                  <div className="text-xs italic text-ink-300 mt-1.5 line-clamp-2">"{row.item.personalNote}"</div>
+                  <div className="text-xs italic text-ink-500 mt-1.5 line-clamp-2">"{row.item.personalNote}"</div>
                 )}
               </div>
             </Link>

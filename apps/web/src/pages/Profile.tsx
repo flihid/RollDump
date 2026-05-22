@@ -98,7 +98,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-ink-600">
+      <div className="flex gap-1 border-b border-ink-300">
         <TabBtn active={tab === 'photos'} onClick={() => setTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label="Photos" />
         <TabBtn active={tab === 'rolls'} onClick={() => setTab('rolls')} icon={<ImageIcon className="w-4 h-4" />} label="Rolls" />
         <TabBtn active={tab === 'reviews'} onClick={() => setTab('reviews')} icon={<Star className="w-4 h-4" />} label="Reviews" />
@@ -107,11 +107,11 @@ export default function Profile() {
 
       {tab === 'photos' && (
         photos.isLoading ? <Loading /> : (photos.data?.items?.length || 0) === 0 ? (
-          <div className="card p-8 text-center text-sm text-ink-200">No photos yet.</div>
+          <div className="card p-8 text-center text-sm text-ink-600">No photos yet.</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {photos.data!.items.map((row: any) => (
-              <Link key={row.photo.id} to={`/photos/${row.photo.id}`} className="aspect-square bg-ink-600 rounded-lg overflow-hidden">
+              <Link key={row.photo.id} to={`/photos/${row.photo.id}`} className="aspect-square bg-ink-200 rounded-lg overflow-hidden">
                 <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" />
               </Link>
             ))}
@@ -121,13 +121,13 @@ export default function Profile() {
 
       {tab === 'rolls' && (
         rolls.isLoading ? <Loading /> : (rolls.data?.items?.length || 0) === 0 ? (
-          <div className="card p-8 text-center text-sm text-ink-200">No roll albums yet.</div>
+          <div className="card p-8 text-center text-sm text-ink-600">No roll albums yet.</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {rolls.data!.items.map((r: any) => (
               <Link key={r.id} to={`/rolls/${r.id}`} className="card p-3">
-                <div className="font-semibold text-sm text-ink-50">{r.title}</div>
-                <div className="text-xs text-ink-300">{r.photoCount} frames</div>
+                <div className="font-semibold text-sm text-ink-900">{r.title}</div>
+                <div className="text-xs text-ink-500">{r.photoCount} frames</div>
               </Link>
             ))}
           </div>
@@ -136,16 +136,16 @@ export default function Profile() {
 
       {tab === 'reviews' && (
         reviews.isLoading ? <Loading /> : (reviews.data?.items?.length || 0) === 0 ? (
-          <div className="card p-8 text-center text-sm text-ink-200">No reviews yet.</div>
+          <div className="card p-8 text-center text-sm text-ink-600">No reviews yet.</div>
         ) : (
           <div className="space-y-3">
             {reviews.data!.items.map((row: any) => (
               <Link key={row.review.id} to={`/films/${row.film.slug}`} className="card p-4 block card-hover">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-ink-50">{row.film.name}</span>
+                  <span className="font-semibold text-ink-900">{row.film.name}</span>
                   <StarRating value={row.review.ratingOverall} size="sm" />
                 </div>
-                <p className="text-sm text-ink-100 mt-2 line-clamp-2">{row.review.content}</p>
+                <p className="text-sm text-ink-700 mt-2 line-clamp-2">{row.review.content}</p>
               </Link>
             ))}
           </div>
@@ -154,13 +154,13 @@ export default function Profile() {
 
       {tab === 'lists' && (
         lists.isLoading ? <Loading /> : (lists.data?.items?.length || 0) === 0 ? (
-          <div className="card p-8 text-center text-sm text-ink-200">No lists yet.</div>
+          <div className="card p-8 text-center text-sm text-ink-600">No lists yet.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {lists.data!.items.map((l: any) => (
               <Link key={l.id} to={`/lists/${l.id}`} className="card p-4 card-hover">
-                <h3 className="font-bold text-ink-50">{l.title}</h3>
-                <div className="text-xs text-ink-300 mt-1">{l.itemCount} films · ❤ {l.likeCount}</div>
+                <h3 className="font-bold text-ink-900">{l.title}</h3>
+                <div className="text-xs text-ink-500 mt-1">{l.itemCount} films · ❤ {l.likeCount}</div>
               </Link>
             ))}
           </div>

@@ -19,7 +19,7 @@ export default function AdminFilms() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-ink-600 text-ink-200">
+            <thead className="bg-ink-200 text-ink-600">
               <tr>
                 <th className="text-left p-3">Name</th>
                 <th className="text-left p-3">Brand</th>
@@ -30,7 +30,7 @@ export default function AdminFilms() {
             </thead>
             <tbody>
               {(q.data?.items || []).map((f: any) => (
-                <tr key={f.id} className="border-t border-ink-600 hover:bg-ink-600/50">
+                <tr key={f.id} className="border-t border-ink-300 hover:bg-ink-200/50">
                   <td className="p-3">
                     <Link to={`/films/${f.slug}`} className="font-medium hover:underline">{f.name}</Link>
                   </td>

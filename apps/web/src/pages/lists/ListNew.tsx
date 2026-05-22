@@ -31,7 +31,7 @@ export default function ListNew() {
           <label className="label">Description</label>
           <textarea className="input" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
         </div>
-        <label className="flex items-center gap-2 text-sm text-ink-100">
+        <label className="flex items-center gap-2 text-sm text-ink-700">
           <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
           Public (others can view)
         </label>

@@ -80,7 +80,7 @@ export default function PhotoDetail() {
             </Link>
             <div className="flex-1">
               <Link to={`/u/${author?.username}`} className="font-semibold text-sm hover:underline">@{author?.username}</Link>
-              <div className="text-xs text-ink-300">{new Date(p.createdAt).toLocaleString('en-US')}</div>
+              <div className="text-xs text-ink-500">{new Date(p.createdAt).toLocaleString('en-US')}</div>
             </div>
           </div>
           {p.caption && <p className="text-sm">{p.caption}</p>}
@@ -107,7 +107,7 @@ export default function PhotoDetail() {
               )}
               {p.shootingConditions && (
                 <div className="card p-2">
-                  <div className="text-ink-300">Conditions</div>
+                  <div className="text-ink-500">Conditions</div>
                   <div className="font-medium">{p.shootingConditions}</div>
                 </div>
               )}
@@ -145,8 +145,8 @@ export default function PhotoDetail() {
             </span>
           </div>
 
-          <div className="border-t border-ink-600 pt-3">
-            <div className="text-xs font-semibold mb-2 text-ink-200 uppercase tracking-wider">Comments</div>
+          <div className="border-t border-ink-300 pt-3">
+            <div className="text-xs font-semibold mb-2 text-ink-600 uppercase tracking-wider">Comments</div>
             {isLoggedIn() && (
               <div className="flex gap-2 mb-3">
                 <input

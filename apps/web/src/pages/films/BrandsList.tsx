@@ -20,11 +20,11 @@ export default function BrandsList() {
     return (
       <div className="space-y-6">
         <div className="card p-6 flex items-center gap-4">
-          <div className="w-16 h-16 bg-ink-600 rounded-lg flex items-center justify-center font-bold text-2xl text-ink-50">{b.name[0]}</div>
+          <div className="w-16 h-16 bg-ink-200 rounded-lg flex items-center justify-center font-bold text-2xl text-ink-900">{b.name[0]}</div>
           <div>
-            <h1 className="text-2xl font-bold text-ink-50">{b.name}</h1>
-            <div className="text-sm text-ink-300">{b.country} · Since {b.foundedYear}</div>
-            {b.description && <p className="text-sm text-ink-100 mt-2">{b.description}</p>}
+            <h1 className="text-2xl font-bold text-ink-900">{b.name}</h1>
+            <div className="text-sm text-ink-500">{b.country} · Since {b.foundedYear}</div>
+            {b.description && <p className="text-sm text-ink-700 mt-2">{b.description}</p>}
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -39,15 +39,15 @@ export default function BrandsList() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-ink-50">Film Brands</h1>
+      <h1 className="text-2xl font-bold text-ink-900">Film Brands</h1>
       {brands.isLoading ? (
         <Loading />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {(brands.data?.items || []).map((b: any) => (
             <Link key={b.id} to={`/brands?slug=${b.slug}`} className="card card-hover p-5 text-center transition">
-              <div className="w-14 h-14 mx-auto mb-3 bg-ink-600 rounded-lg flex items-center justify-center font-bold text-xl text-ink-50">{b.name[0]}</div>
-              <div className="font-semibold text-ink-50">{b.name}</div>
+              <div className="w-14 h-14 mx-auto mb-3 bg-ink-200 rounded-lg flex items-center justify-center font-bold text-xl text-ink-900">{b.name[0]}</div>
+              <div className="font-semibold text-ink-900">{b.name}</div>
               <FormatBadge format={`${b.filmCount} films`} />
             </Link>
           ))}

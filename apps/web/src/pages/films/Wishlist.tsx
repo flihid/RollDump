@@ -19,7 +19,7 @@ export default function Wishlist() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-ink-50">Wishlist</h1>
+      <h1 className="text-2xl font-bold text-ink-900">Wishlist</h1>
       {q.isLoading ? (
         <Loading />
       ) : q.data?.items?.length === 0 ? (

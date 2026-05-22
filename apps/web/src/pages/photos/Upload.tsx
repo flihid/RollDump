@@ -61,16 +61,16 @@ export default function Upload() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Upload photos</h1>
-        <div className="flex gap-1 bg-ink-700 border border-ink-600 p-1 rounded-lg">
+        <div className="flex gap-1 bg-ink-50 border border-ink-300 p-1 rounded-lg">
           <button
             onClick={() => setMode('single')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'single' ? 'bg-ink-500 text-ink-50 shadow-sm' : 'text-ink-200'}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'single' ? 'bg-ink-500 text-ink-900 shadow-sm' : 'text-ink-600'}`}
           >
             <ImageIcon className="w-3.5 h-3.5 inline mr-1" /> Single
           </button>
           <button
             onClick={() => setMode('bulk')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'bulk' ? 'bg-ink-500 text-ink-50 shadow-sm' : 'text-ink-200'}`}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium ${mode === 'bulk' ? 'bg-ink-500 text-ink-900 shadow-sm' : 'text-ink-600'}`}
           >
             <Layers className="w-3.5 h-3.5 inline mr-1" /> Bulk (Roll)
           </button>
@@ -122,7 +122,7 @@ export default function Upload() {
             <label className="label">Camera</label>
             <input className="input" value={cameraText} onChange={(e) => setCameraText(e.target.value)} placeholder="e.g. Yashica Mat-124G" />
             {cameras.data?.items?.length > 0 && cameraText && (
-              <div className="mt-1 text-xs text-ink-300">
+              <div className="mt-1 text-xs text-ink-500">
                 Suggestions:{' '}
                 {cameras.data.items.slice(0, 3).map((c: any) => (
                   <button key={c.id} type="button" onClick={() => setCameraText(`${c.brand} ${c.model}`)} className="underline mr-2">
@@ -152,7 +152,7 @@ export default function Upload() {
               <label className="label">Image URL *</label>
               <input className="input" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" />
               {imageUrl && (
-                <div className="mt-2 aspect-[4/3] bg-ink-600 rounded-lg overflow-hidden">
+                <div className="mt-2 aspect-[4/3] bg-ink-200 rounded-lg overflow-hidden">
                   <img src={imageUrl} className="w-full h-full object-cover" />
                 </div>
               )}

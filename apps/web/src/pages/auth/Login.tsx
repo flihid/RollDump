@@ -38,8 +38,8 @@ export default function Login() {
         </div>
         <div className="card p-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-ink-50">Sign in</h2>
-            <p className="mt-1 text-sm text-ink-200">Continue your darkroom journal.</p>
+            <h2 className="text-2xl font-semibold text-ink-900">Sign in</h2>
+            <p className="mt-1 text-sm text-ink-600">Continue your darkroom journal.</p>
           </div>
 
           {verifyHint && (
@@ -86,7 +86,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink-200">
+          <p className="mt-6 text-center text-sm text-ink-600">
             New here?{' '}
             <Link to="/register" className="link-amber font-semibold">
               Create an account

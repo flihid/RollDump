@@ -18,7 +18,7 @@ export default function Discover() {
     <div className="space-y-10">
       <div className="flex items-center gap-2">
         <Compass className="text-primary-400" />
-        <h1 className="text-2xl font-bold text-ink-50">Discover</h1>
+        <h1 className="text-2xl font-bold text-ink-900">Discover</h1>
       </div>
 
       {featured && (
@@ -29,10 +29,10 @@ export default function Discover() {
                 <div className="text-xs font-semibold text-primary-400 mb-2 uppercase tracking-[0.2em]">
                   RollDump Spotlight
                 </div>
-                <h2 className="text-3xl font-bold text-ink-50 group-hover:text-primary-400 transition-colors">
+                <h2 className="text-3xl font-bold text-ink-900 group-hover:text-primary-400 transition-colors">
                   {featured.name}
                 </h2>
-                <p className="text-sm text-ink-200 mt-1">
+                <p className="text-sm text-ink-600 mt-1">
                   {featured.brand?.name} • ISO {featured.iso}
                 </p>
               </div>
@@ -71,10 +71,10 @@ export default function Discover() {
                 to={`/lists/${row.list.id}`}
                 className="card p-4 hover:border-primary-500/50 hover:scale-[1.01] transition-all duration-200"
               >
-                <div className="font-bold text-ink-50">{row.list.title}</div>
-                <div className="text-xs text-ink-300 mt-0.5">by @{row.author?.username}</div>
+                <div className="font-bold text-ink-900">{row.list.title}</div>
+                <div className="text-xs text-ink-500 mt-0.5">by @{row.author?.username}</div>
                 {row.list.description && (
-                  <p className="text-sm text-ink-200 mt-2 line-clamp-2">{row.list.description}</p>
+                  <p className="text-sm text-ink-600 mt-2 line-clamp-2">{row.list.description}</p>
                 )}
               </Link>
             ))}
@@ -94,10 +94,10 @@ export default function Discover() {
               <Link
                 key={b.id}
                 to={`/brands?slug=${b.slug}`}
-                className="card p-4 text-center hover:border-primary-500/50 hover:bg-ink-600/50 transition-all"
+                className="card p-4 text-center hover:border-primary-500/50 hover:bg-ink-200/50 transition-all"
               >
-                <div className="font-semibold text-sm text-ink-50">{b.name}</div>
-                <div className="text-xs text-ink-300">{b.filmCount} films</div>
+                <div className="font-semibold text-sm text-ink-900">{b.name}</div>
+                <div className="text-xs text-ink-500">{b.filmCount} films</div>
               </Link>
             ))}
           </div>

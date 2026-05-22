@@ -49,8 +49,8 @@ export default function FilmsList() {
     <div className="space-y-4">
       <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink-50">Film Catalog</h1>
-          <p className="text-sm text-ink-200">Browse every emulsion curated by the community.</p>
+          <h1 className="text-2xl font-bold text-ink-900">Film Catalog</h1>
+          <p className="text-sm text-ink-600">Browse every emulsion curated by the community.</p>
         </div>
         <div className="flex gap-2">
           <input
@@ -75,7 +75,7 @@ export default function FilmsList() {
         <aside className={`${showFilter ? '' : 'hidden lg:block'}`}>
           <div className="card p-4 space-y-4 sticky top-20">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm text-ink-50">Filter</h3>
+              <h3 className="font-semibold text-sm text-ink-900">Filter</h3>
               {Array.from(params.keys()).length > 0 && (
                 <button onClick={reset} className="text-xs text-primary-400 hover:underline flex items-center">
                   <X className="w-3 h-3" /> Reset
@@ -83,7 +83,7 @@ export default function FilmsList() {
               )}
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-200 mb-2">Format</div>
+              <div className="text-xs font-semibold text-ink-600 mb-2">Format</div>
               <div className="flex flex-wrap gap-1.5">
                 {FORMATS.map((f) => (
                   <button key={f} onClick={() => toggleFormat(f)} className={formats.includes(f) ? 'chip-active' : 'chip'}>
@@ -93,7 +93,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-200 mb-2">Type</div>
+              <div className="text-xs font-semibold text-ink-600 mb-2">Type</div>
               <div className="flex flex-wrap gap-1.5">
                 {COLOR_TYPES.map((c) => (
                   <button
@@ -107,7 +107,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-200 mb-2">ISO</div>
+              <div className="text-xs font-semibold text-ink-600 mb-2">ISO</div>
               <div className="flex gap-2">
                 <input
                   placeholder="Min"
@@ -126,7 +126,7 @@ export default function FilmsList() {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-200 mb-2">Brand</div>
+              <div className="text-xs font-semibold text-ink-600 mb-2">Brand</div>
               <div className="flex flex-wrap gap-1.5">
                 {(brands.data?.items || []).slice(0, 10).map((b: any) => (
                   <button

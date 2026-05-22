@@ -17,7 +17,7 @@ export default function TipsExplore() {
         <h1 className="flex items-center gap-2">
           <BookOpen className="w-7 h-7 text-primary-400" /> Tips &amp; Guides
         </h1>
-        <p className="text-sm text-ink-200 mt-1">
+        <p className="text-sm text-ink-600 mt-1">
           Pick a film stock to read community tips for its specific format.
         </p>
       </div>

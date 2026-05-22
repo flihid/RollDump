@@ -41,13 +41,13 @@ export default function WriteTip() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Write a tip</h1>
-        <p className="text-sm text-ink-200">{film.data?.film.name}</p>
+        <p className="text-sm text-ink-600">{film.data?.film.name}</p>
       </div>
       <div className="card p-6 space-y-4">
         <div>
           <label className="label">Title</label>
           <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="e.g. Best development time for Tri-X 400" />
-          <div className="text-xs text-ink-300 mt-0.5">{title.length}/100</div>
+          <div className="text-xs text-ink-500 mt-0.5">{title.length}/100</div>
         </div>
         <div>
           <label className="label">Target format</label>
@@ -70,7 +70,7 @@ export default function WriteTip() {
         <div>
           <label className="label">Content</label>
           <textarea className="input" rows={10} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Markdown supported. Walk through the steps, tips, and caveats clearly." />
-          <div className="text-xs text-ink-300 mt-0.5">{content.length}/10000 (min 50)</div>
+          <div className="text-xs text-ink-500 mt-0.5">{content.length}/10000 (min 50)</div>
         </div>
         <div className="flex justify-end gap-2">
           <button onClick={() => nav(-1)} className="btn-ghost">Cancel</button>

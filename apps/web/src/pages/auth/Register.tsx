@@ -56,8 +56,8 @@ export default function Register() {
         </div>
         <div className="card p-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-ink-50">Create your account</h2>
-            <p className="mt-1 text-sm text-ink-200">Start logging your rolls.</p>
+            <h2 className="text-2xl font-semibold text-ink-900">Create your account</h2>
+            <p className="mt-1 text-sm text-ink-600">Start logging your rolls.</p>
           </div>
 
           <form
@@ -87,10 +87,10 @@ export default function Register() {
               <input value={form.password} onChange={(e) => set('password', e.target.value)} type="password" required className="input" />
               {form.password && (
                 <div className="mt-1.5">
-                  <div className="h-1 w-full bg-ink-600 rounded overflow-hidden">
+                  <div className="h-1 w-full bg-ink-200 rounded overflow-hidden">
                     <div className={`h-full transition-all ${strengthColor}`} style={{ width: `${(strength / 5) * 100}%` }} />
                   </div>
-                  <div className="text-xs text-ink-200 mt-0.5">{strengthLabel}</div>
+                  <div className="text-xs text-ink-600 mt-0.5">{strengthLabel}</div>
                 </div>
               )}
             </div>
@@ -106,7 +106,7 @@ export default function Register() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink-200">
+          <p className="mt-6 text-center text-sm text-ink-600">
             Already have an account?{' '}
             <Link to="/login" className="link-amber font-semibold">
               Sign in

@@ -69,7 +69,7 @@ export default function AccountSettings() {
         <div className="mt-4">
           <label className="label">Bio</label>
           <textarea className="input" rows={3} maxLength={280} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-          <div className="text-xs text-ink-300 mt-0.5">{(form.bio || '').length}/280</div>
+          <div className="text-xs text-ink-500 mt-0.5">{(form.bio || '').length}/280</div>
         </div>
         <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary mt-4">Save profile</button>
       </section>

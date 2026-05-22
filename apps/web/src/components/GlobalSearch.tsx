@@ -41,26 +41,26 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center pt-20" onClick={onClose}>
       <div
-        className="w-full max-w-xl bg-ink-700 rounded-xl shadow-2xl shadow-black/60 border border-ink-600 overflow-hidden"
+        className="w-full max-w-xl bg-ink-50 rounded-xl shadow-2xl shadow-black/60 border border-ink-300 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 px-4 border-b border-ink-600">
-          <Search className="w-4 h-4 text-ink-300" />
+        <div className="flex items-center gap-2 px-4 border-b border-ink-300">
+          <Search className="w-4 h-4 text-ink-500" />
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search films, creators, lists, cameras…"
-            className="flex-1 py-3 outline-none text-sm bg-transparent text-ink-50 placeholder-ink-300"
+            className="flex-1 py-3 outline-none text-sm bg-transparent text-ink-900 placeholder-ink-300"
           />
-          <button onClick={onClose} className="p-1 hover:bg-ink-600 rounded text-ink-100">
+          <button onClick={onClose} className="p-1 hover:bg-ink-200 rounded text-ink-700">
             <X className="w-4 h-4" />
           </button>
         </div>
         <div className="max-h-96 overflow-y-auto">
-          {loading && <div className="py-8 text-center text-sm text-ink-300">Searching…</div>}
+          {loading && <div className="py-8 text-center text-sm text-ink-500">Searching…</div>}
           {!loading && q && allEmpty(data) && (
-            <div className="py-8 text-center text-sm text-ink-300">No results for "{q}".</div>
+            <div className="py-8 text-center text-sm text-ink-500">No results for "{q}".</div>
           )}
           {data.films?.length > 0 && (
             <Section title="Films" icon={<Film className="w-3.5 h-3.5" />}>
@@ -69,14 +69,14 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                   key={f.id}
                   to={`/films/${f.slug}`}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-ink-600"
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-ink-200"
                 >
                   <div className="w-12 h-14 flex items-center justify-center shrink-0">
                     <FilmRoll3D film={f} size="sm" interactive={false} hoverSpin={false} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-ink-50 truncate">{f.name}</div>
-                    <div className="text-xs text-ink-300 truncate">ISO {f.iso}</div>
+                    <div className="font-medium text-sm text-ink-900 truncate">{f.name}</div>
+                    <div className="text-xs text-ink-500 truncate">ISO {f.iso}</div>
                   </div>
                 </Link>
               ))}
@@ -89,12 +89,12 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
                   key={u.id}
                   to={`/u/${u.username}`}
                   onClick={onClose}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-ink-600"
+                  className="flex items-center gap-3 px-4 py-2 hover:bg-ink-200"
                 >
                   <div className="w-8 h-8 bg-primary-500 text-ink-900 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden">
                     {u.avatarUrl ? <img src={u.avatarUrl} className="w-full h-full object-cover" /> : u.username[0].toUpperCase()}
                   </div>
-                  <div className="text-sm text-ink-50">@{u.username}</div>
+                  <div className="text-sm text-ink-900">@{u.username}</div>
                 </Link>
               ))}
             </Section>
@@ -102,7 +102,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
           {data.lists?.length > 0 && (
             <Section title="Lists" icon={<ListChecks className="w-3.5 h-3.5" />}>
               {data.lists.map((l: any) => (
-                <Link key={l.id} to={`/lists/${l.id}`} onClick={onClose} className="block px-4 py-2 hover:bg-ink-600 text-sm text-ink-50">
+                <Link key={l.id} to={`/lists/${l.id}`} onClick={onClose} className="block px-4 py-2 hover:bg-ink-200 text-sm text-ink-900">
                   {l.title}
                 </Link>
               ))}
@@ -111,7 +111,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
           {data.cameras?.length > 0 && (
             <Section title="Cameras" icon={<Camera className="w-3.5 h-3.5" />}>
               {data.cameras.map((c: any) => (
-                <div key={c.id} className="px-4 py-2 text-sm text-ink-50 hover:bg-ink-600">
+                <div key={c.id} className="px-4 py-2 text-sm text-ink-900 hover:bg-ink-200">
                   {c.brand} {c.model}
                 </div>
               ))}
@@ -126,7 +126,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="py-1">
-      <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-300 flex items-center gap-1.5">
+      <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-500 flex items-center gap-1.5">
         {icon} {title}
       </div>
       {children}

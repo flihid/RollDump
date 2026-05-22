@@ -23,7 +23,7 @@ export default function Settings() {
               to={to}
               end
               className={({ isActive }) =>
-                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive ? 'bg-primary-500/15 text-primary-300' : 'text-ink-200 hover:bg-ink-600/50'}`
+                `flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive ? 'bg-primary-500/15 text-primary-300' : 'text-ink-600 hover:bg-ink-200/50'}`
               }
             >
               <Icon className="w-4 h-4" />

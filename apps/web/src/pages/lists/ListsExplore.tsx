@@ -12,7 +12,7 @@ export default function ListsExplore() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><ListChecks /> Lists</h1>
-          <p className="text-sm text-ink-200">Themed collections from the community.</p>
+          <p className="text-sm text-ink-600">Themed collections from the community.</p>
         </div>
         {isLoggedIn() && (
           <Link to="/lists/new" className="btn-primary">
@@ -29,9 +29,9 @@ export default function ListsExplore() {
           {q.data!.items.map((row: any) => (
             <Link key={row.list.id} to={`/lists/${row.list.id}`} className="card p-4 card-hover transition">
               <h3 className="font-bold">{row.list.title}</h3>
-              <div className="text-xs text-ink-300 mt-0.5">by @{row.author.username}</div>
-              {row.list.description && <p className="text-sm text-ink-100 mt-2 line-clamp-2">{row.list.description}</p>}
-              <div className="text-xs text-ink-300 mt-3">{row.list.itemCount} films · ❤ {row.list.likeCount}</div>
+              <div className="text-xs text-ink-500 mt-0.5">by @{row.author.username}</div>
+              {row.list.description && <p className="text-sm text-ink-700 mt-2 line-clamp-2">{row.list.description}</p>}
+              <div className="text-xs text-ink-500 mt-3">{row.list.itemCount} films · ❤ {row.list.likeCount}</div>
             </Link>
           ))}
         </div>

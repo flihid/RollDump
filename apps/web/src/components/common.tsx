@@ -4,9 +4,9 @@ export function Spinner({ className = '' }: { className?: string }) {
   return <Loader2 className={`w-4 h-4 animate-spin ${className}`} />;
 }
 
-export function Loading({ label = 'Memuat…' }: { label?: string }) {
+export function Loading({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div className="py-12 flex items-center justify-center gap-2 text-ink-300 text-sm">
+    <div className="py-12 flex items-center justify-center gap-2 text-sm" style={{ color: '#7a7a7a' }}>
       <Spinner /> {label}
     </div>
   );
@@ -23,17 +23,25 @@ export function EmptyState({
 }) {
   return (
     <div className="py-12 text-center">
-      <div className="mx-auto w-14 h-14 rounded-full bg-ink-600 flex items-center justify-center text-ink-300 mb-3">
+      <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: '#e8e1cb', color: '#7a7a7a' }}>
         <ImageIcon className="w-6 h-6" />
       </div>
-      <h3 className="font-semibold text-ink-50">{title}</h3>
-      {description && <p className="text-sm text-ink-200 mt-1 max-w-sm mx-auto">{description}</p>}
+      <h3 className="font-semibold" style={{ color: '#1a1a1a' }}>{title}</h3>
+      {description && <p className="text-sm mt-1 max-w-sm mx-auto" style={{ color: '#4a4a4a' }}>{description}</p>}
       {cta && <div className="mt-4">{cta}</div>}
     </div>
   );
 }
 
-export function StarRating({ value, size = 'md', onChange }: { value: number; size?: 'sm' | 'md' | 'lg'; onChange?: (v: number) => void }) {
+export function StarRating({
+  value,
+  size = 'md',
+  onChange,
+}: {
+  value: number;
+  size?: 'sm' | 'md' | 'lg';
+  onChange?: (v: number) => void;
+}) {
   const sz = size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-2xl' : 'text-lg';
   const stars = [1, 2, 3, 4, 5];
   return (
@@ -48,9 +56,9 @@ export function StarRating({ value, size = 'md', onChange }: { value: number; si
             disabled={!onChange}
             onClick={() => onChange?.(s)}
             className={`leading-none ${onChange ? 'hover:scale-110' : ''} transition`}
-            aria-label={`${s} bintang`}
+            aria-label={`${s} stars`}
           >
-            <span className={filled ? 'text-amber-500' : half ? 'text-amber-300' : 'text-ink-300'}>★</span>
+            <span style={{ color: filled ? '#e6a519' : half ? '#ffd56b' : '#c9c2ae' }}>★</span>
           </button>
         );
       })}
@@ -59,26 +67,27 @@ export function StarRating({ value, size = 'md', onChange }: { value: number; si
 }
 
 export function FormatBadge({ format }: { format: string }) {
-  const labelMap: Record<string, string> = {
-    '35mm': '35mm',
-    '120': '120',
-    large_format: 'Large Format',
-    instant: 'Instant',
-    '110': '110',
-    half_frame: 'Half Frame',
-    all: 'Semua',
+  const map: Record<string, { label: string; cls: string }> = {
+    '35mm':         { label: '35mm',         cls: 'badge-35mm' },
+    '120':          { label: '120',          cls: 'badge-120' },
+    large_format:   { label: 'Large Format', cls: 'badge-large' },
+    instant:        { label: 'Instant',      cls: 'badge-instant' },
+    '110':          { label: '110',          cls: 'badge' },
+    half_frame:     { label: 'Half Frame',   cls: 'badge' },
+    all:            { label: 'All',          cls: 'badge' },
   };
-  return <span className="badge-format">{labelMap[format] || format}</span>;
+  const { label, cls } = map[format] ?? { label: format, cls: 'badge' };
+  return <span className={cls}>{label}</span>;
 }
 
 export function ColorTypeBadge({ value }: { value?: string | null }) {
   if (!value) return null;
   const m: Record<string, [string, string]> = {
-    color_negative: ['Color Neg', 'bg-primary-500/20 text-primary-300 border border-primary-500/30'],
-    color_positive: ['Color Pos', 'bg-primary-500/20 text-primary-300 border border-primary-500/30'],
-    bw: ['B&W', 'bg-ink-500/50 text-ink-100 border border-ink-400'],
-    slide_e6: ['Slide E6', 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30'],
+    color_negative: ['Color Neg',  'badge-35mm'],
+    color_positive: ['Color Pos',  'badge-35mm'],
+    bw:             ['B&W',        'badge'],
+    slide_e6:       ['Slide E6',   'badge-instant'],
   };
-  const [label, cls] = m[value] || [value, 'bg-ink-600 text-ink-100 border border-ink-500'];
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>{label}</span>;
+  const [label, cls] = m[value] || [value, 'badge'];
+  return <span className={cls}>{label}</span>;
 }

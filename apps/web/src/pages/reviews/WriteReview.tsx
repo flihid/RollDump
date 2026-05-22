@@ -62,7 +62,7 @@ export default function WriteReview() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Write a review</h1>
-        <p className="text-sm text-ink-200">{f.name} by {f.brand?.name}</p>
+        <p className="text-sm text-ink-600">{f.name} by {f.brand?.name}</p>
       </div>
 
       <div className="card p-6 space-y-6">
@@ -111,7 +111,7 @@ export default function WriteReview() {
             placeholder="What's the color, grain, and latitude like? Where does it shine?"
             className="input"
           />
-          <div className="text-xs text-ink-300 mt-1">{content.length}/5000 characters (min 20)</div>
+          <div className="text-xs text-ink-500 mt-1">{content.length}/5000 characters (min 20)</div>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">

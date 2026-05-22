@@ -14,13 +14,13 @@ export default function RollDetail() {
     <div className="space-y-6">
       <div className="card p-6">
         <div className="text-xs text-primary-400 font-bold uppercase tracking-[0.2em]">Roll Album</div>
-        <h1 className="text-2xl font-bold text-ink-50">{roll.title}</h1>
-        <div className="text-sm text-ink-200">{photos.length} frames</div>
-        {roll.labName && <div className="text-sm text-ink-200">Developed at {roll.labName}</div>}
+        <h1 className="text-2xl font-bold text-ink-900">{roll.title}</h1>
+        <div className="text-sm text-ink-600">{photos.length} frames</div>
+        {roll.labName && <div className="text-sm text-ink-600">Developed at {roll.labName}</div>}
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
         {photos.map((p: any) => (
-          <Link key={p.id} to={`/photos/${p.id}`} className="aspect-square bg-ink-600 rounded overflow-hidden">
+          <Link key={p.id} to={`/photos/${p.id}`} className="aspect-square bg-ink-200 rounded overflow-hidden">
             <img src={p.thumbUrl || p.imageUrl} className="w-full h-full object-cover" />
           </Link>
         ))}

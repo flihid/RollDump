@@ -31,12 +31,12 @@ export default function Home() {
                 Welcome back, @{user?.username}
               </div>
             )}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.02] text-ink-50">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.02] text-ink-900">
               Track every roll.
               <br />
               <span className="text-primary-400 font-display-italic">Share every frame.</span>
             </h1>
-            <p className="mt-5 text-ink-100 text-base sm:text-lg max-w-xl leading-relaxed">
+            <p className="mt-5 text-ink-700 text-base sm:text-lg max-w-xl leading-relaxed">
               The social home for analog photographers. Catalog film stocks, log
               your rolls, and discover what others are shooting on 35mm, 120,
               and sheet film.
@@ -53,14 +53,14 @@ export default function Home() {
               {!loggedIn ? (
                 <Link
                   to="/register"
-                  className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
+                  className="btn bg-ink-50/10 text-ink-900 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
                 >
                   Create account
                 </Link>
               ) : (
                 <Link
                   to="/upload"
-                  className="btn bg-ink-50/10 text-ink-50 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
+                  className="btn bg-ink-50/10 text-ink-900 border border-ink-300/30 hover:bg-ink-50/15 backdrop-blur-sm"
                 >
                   Log a roll
                 </Link>
@@ -152,7 +152,7 @@ export default function Home() {
 
       {!loggedIn && (
         <RevealSection>
-          <section className="relative overflow-hidden rounded-xl border border-ink-600 bg-gradient-to-r from-ink-700 to-ink-800 px-6 sm:px-10 py-10 text-center">
+          <section className="ink-strip px-6 sm:px-10 py-10 text-center">
             <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-30 hidden sm:block pointer-events-none">
               <FilmRoll3D
                 film={{ name: 'Tri-X', iso: 400, colorType: 'bw', brand: { name: 'Kodak' } }}
@@ -161,10 +161,10 @@ export default function Home() {
                 interactive={false}
               />
             </div>
-            <h3 className="text-2xl sm:text-3xl font-semibold text-ink-50 relative z-10">
+            <h3 className="text-2xl sm:text-3xl relative z-10">
               Your darkroom journal, in your pocket.
             </h3>
-            <p className="mt-2 text-ink-200 max-w-xl mx-auto relative z-10">
+            <p className="mt-2 max-w-xl mx-auto relative z-10">
               Free forever. Log unlimited rolls, write reviews, and follow other shooters.
             </p>
             <Link to="/register" className="btn-primary mt-5 inline-flex relative z-10">
@@ -196,14 +196,14 @@ function ActivityCard({ item }: { item: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm">
-          <Link to={`/u/${actor}`} className="font-semibold text-ink-50 hover:text-primary-400">
+          <Link to={`/u/${actor}`} className="font-semibold text-ink-900 hover:text-primary-400">
             @{actor}
           </Link>{' '}
-          <span className="text-ink-200">{verb}</span>
+          <span className="text-ink-600">{verb}</span>
         </div>
-        {item.title && <div className="text-sm mt-0.5 truncate text-ink-100">{item.title}</div>}
+        {item.title && <div className="text-sm mt-0.5 truncate text-ink-700">{item.title}</div>}
         {item.imageUrl && (
-          <div className="mt-2 rounded-md overflow-hidden h-32 bg-ink-600 group">
+          <div className="mt-2 rounded-md overflow-hidden h-32 bg-ink-200 group">
             <img
               src={item.imageUrl}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
