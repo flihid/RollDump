@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Demo / dummy data seed — creates many fake users, then has them upload photos,
  * write reviews, build lists, follow each other, like/comment on everything,

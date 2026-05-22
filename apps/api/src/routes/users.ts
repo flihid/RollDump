@@ -8,18 +8,52 @@ import {
   notificationPreferences,
   reviews,
   photos,
+  rolls,
   userLists,
+  userAchievements,
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+
+/** Aggregate basic user stats used by /me + public profile. */
+async function computeUserStats(db: any, userId: string) {
+  const [photoC] = await db.select({ c: sql<number>`count(*)` }).from(photos).where(eq(photos.userId, userId));
+  const [reviewC] = await db.select({ c: sql<number>`count(*)` }).from(reviews).where(eq(reviews.userId, userId));
+  const [listC] = await db.select({ c: sql<number>`count(*)` }).from(userLists).where(eq(userLists.userId, userId));
+  const [rollC] = await db.select({ c: sql<number>`count(*)` }).from(rolls).where(eq(rolls.userId, userId));
+  const [achievementC] = await db.select({ c: sql<number>`count(*)` }).from(userAchievements).where(eq(userAchievements.userId, userId));
+  const [avgRating] = await db
+    .select({ avg: sql<number>`coalesce(avg(${reviews.ratingOverall}), 0)` })
+    .from(reviews)
+    .where(eq(reviews.userId, userId));
+  return {
+    photoCount: Number(photoC?.c || 0),
+    reviewCount: Number(reviewC?.c || 0),
+    listCount: Number(listC?.c || 0),
+    rollCount: Number(rollC?.c || 0),
+    achievementCount: Number(achievementC?.c || 0),
+    avgRating: Number(avgRating?.avg || 0),
+    streak: Math.min(30, Number(rollC?.c || 0)), // simple proxy until streak tracking exists
+  };
+}
 
 const r = createApp();
 
 r.get('/me', authMiddleware, async (c) => {
   const db = c.get('db');
   const [u] = await db.select().from(users).where(eq(users.id, c.get('user')!.id));
-  if (!u) return c.json({ error: 'User tidak ditemukan' }, 404);
+  if (!u) return c.json({ error: 'User not found' }, 404);
   const { password, ...safe } = u as any;
-  return c.json({ user: safe });
+  const stats = await computeUserStats(db, u.id);
+  return c.json({
+    user: {
+      ...safe,
+      stats: {
+        ...stats,
+        followersCount: u.followersCount ?? 0,
+        followingCount: u.followingCount ?? 0,
+      },
+    },
+  });
 });
 
 r.put('/me/profile', authMiddleware, async (c) => {
@@ -135,29 +169,16 @@ r.delete('/me', authMiddleware, async (c) => {
 r.get('/by-username/:username', optionalAuth, async (c) => {
   const db = c.get('db');
   const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
-  if (!u) return c.json({ error: 'User tidak ditemukan' }, 404);
+  if (!u) return c.json({ error: 'User not found' }, 404);
   const { password, totpSecret, email, lastLoginIp, ...safe } = u as any;
-  const photoCount = await db
-    .select({ c: sql<number>`count(*)` })
-    .from(photos)
-    .where(eq(photos.userId, u.id));
-  const reviewCount = await db
-    .select({ c: sql<number>`count(*)` })
-    .from(reviews)
-    .where(eq(reviews.userId, u.id));
-  const listCount = await db
-    .select({ c: sql<number>`count(*)` })
-    .from(userLists)
-    .where(eq(userLists.userId, u.id));
+  const stats = await computeUserStats(db, u.id);
   return c.json({
     user: {
       ...safe,
       stats: {
-        photoCount: Number(photoCount[0]?.c || 0),
-        reviewCount: Number(reviewCount[0]?.c || 0),
-        listCount: Number(listCount[0]?.c || 0),
-        followersCount: u.followersCount,
-        followingCount: u.followingCount,
+        ...stats,
+        followersCount: u.followersCount ?? 0,
+        followingCount: u.followingCount ?? 0,
       },
     },
   });

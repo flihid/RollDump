@@ -99,17 +99,37 @@ r.get('/', optionalAuth, async (c) => {
 r.get('/trending', async (c) => {
   const db = c.get('db');
   const period = c.req.query('period') || 'week';
-  const since = new Date();
-  if (period === 'day') since.setDate(since.getDate() - 1);
-  else if (period === 'month') since.setMonth(since.getMonth() - 1);
-  else since.setDate(since.getDate() - 7);
   const list = await db
     .select()
     .from(films)
     .where(eq(films.isActive, true))
     .orderBy(desc(films.reviewCount), desc(films.photoCount))
-    .limit(10);
-  return c.json({ items: list, period });
+    .limit(12);
+
+  const ids = list.map((x) => x.id);
+  const variants = ids.length
+    ? await db.select().from(filmVariants).where(inArray(filmVariants.filmId, ids))
+    : [];
+  const formatsByFilm = new Map<string, string[]>();
+  for (const v of variants) {
+    const arr = formatsByFilm.get(v.filmId) || [];
+    if (!arr.includes(v.format)) arr.push(v.format);
+    formatsByFilm.set(v.filmId, arr);
+  }
+  const brandIds = Array.from(new Set(list.map((r) => r.brandId).filter(Boolean) as string[]));
+  const brandRows = brandIds.length
+    ? await db.select().from(brands).where(inArray(brands.id, brandIds))
+    : [];
+  const brandMap = new Map(brandRows.map((b) => [b.id, b]));
+
+  return c.json({
+    items: list.map((f) => ({
+      ...f,
+      brand: f.brandId ? brandMap.get(f.brandId) : null,
+      availableFormats: formatsByFilm.get(f.id) || [],
+    })),
+    period,
+  });
 });
 
 r.get('/:slug', optionalAuth, async (c) => {

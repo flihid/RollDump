@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   comments,
   likes,
@@ -9,6 +9,8 @@ import {
   reviews,
   photos,
   userLists,
+  films,
+  filmVariants,
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth } from '../lib/context';
 
@@ -123,7 +125,8 @@ r.post('/reports/:type/:id', authMiddleware, async (c) => {
   return c.json({ ok: true });
 });
 
-// Activity feed: simple union view of recent actions by users I follow
+// Activity feed: union of photo / review / list activity from followed users,
+// enriched with author info + like/comment counts + film name.
 r.get('/feed', authMiddleware, async (c) => {
   const db = c.get('db');
   const me = c.get('user')!.id;
@@ -131,34 +134,44 @@ r.get('/feed', authMiddleware, async (c) => {
     .select({ id: follows.followingId })
     .from(follows)
     .where(eq(follows.followerId, me));
-  const ids = followingRows.map((r) => r.id);
+  let ids = followingRows.map((r: any) => r.id);
+
+  // Fallback: if user follows nobody, surface popular activity globally
+  if (!ids.length) {
+    const recent = await db.select({ id: users.id }).from(users).limit(20);
+    ids = recent.map((r: any) => r.id);
+  }
   if (!ids.length) return c.json({ items: [] });
+
   const phs = await db
     .select({
       type: sql<string>`'photo'`,
       id: photos.id,
       userId: photos.userId,
       createdAt: photos.createdAt,
-      title: sql<string>`coalesce(${photos.caption}, '')`,
+      caption: photos.caption,
       imageUrl: photos.imageUrl,
+      filmVariantId: photos.filmVariantId,
     })
     .from(photos)
     .where(sql`${photos.userId} = ANY(${ids}) and ${photos.status} = 'published'`)
     .orderBy(desc(photos.createdAt))
     .limit(20);
+
   const rvs = await db
     .select({
       type: sql<string>`'review'`,
       id: reviews.id,
       userId: reviews.userId,
       createdAt: reviews.createdAt,
-      title: sql<string>`substr(${reviews.content}, 1, 100)`,
-      imageUrl: sql<string>`null`,
+      content: reviews.content,
+      filmId: reviews.filmId,
     })
     .from(reviews)
     .where(sql`${reviews.userId} = ANY(${ids}) and ${reviews.status} = 'published'`)
     .orderBy(desc(reviews.createdAt))
     .limit(20);
+
   const lists0 = await db
     .select({
       type: sql<string>`'list'`,
@@ -172,36 +185,136 @@ r.get('/feed', authMiddleware, async (c) => {
     .where(sql`${userLists.userId} = ANY(${ids}) and ${userLists.isPublic} = true`)
     .orderBy(desc(userLists.createdAt))
     .limit(20);
-  const all = [...phs, ...rvs, ...lists0].sort(
-    (a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime(),
-  );
-  // attach user info
-  const userIds = Array.from(new Set(all.map((a) => a.userId)));
+
+  const all = [...phs, ...rvs, ...lists0]
+    .sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime())
+    .slice(0, 30);
+
+  // === Enrichment ===
+  const userIds = Array.from(new Set(all.map((a: any) => a.userId)));
   const usersRows = userIds.length
     ? await db
-        .select({ id: users.id, username: users.username, avatarUrl: users.avatarUrl })
+        .select({ id: users.id, username: users.username, avatarUrl: users.avatarUrl, fullName: users.fullName })
         .from(users)
-        .where(sql`${users.id} = ANY(${userIds})`)
+        .where(inArray(users.id, userIds))
     : [];
-  const map = new Map(usersRows.map((u) => [u.id, u]));
-  return c.json({ items: all.slice(0, 30).map((a) => ({ ...a, author: map.get(a.userId) })) });
+  const userMap = new Map(usersRows.map((u: any) => [u.id, u]));
+
+  // film name for photos (via filmVariant → film) + reviews (filmId direct)
+  const photoVariantIds = phs.map((p: any) => p.filmVariantId).filter(Boolean);
+  const variants = photoVariantIds.length
+    ? await db.select().from(filmVariants).where(inArray(filmVariants.id, photoVariantIds))
+    : [];
+  const filmIdsFromPhotos = variants.map((v: any) => v.filmId);
+  const reviewFilmIds = rvs.map((r: any) => r.filmId).filter(Boolean);
+  const filmIds = Array.from(new Set([...filmIdsFromPhotos, ...reviewFilmIds]));
+  const filmRows = filmIds.length
+    ? await db.select({ id: films.id, name: films.name, slug: films.slug }).from(films).where(inArray(films.id, filmIds))
+    : [];
+  const filmMap = new Map(filmRows.map((f: any) => [f.id, f]));
+  const variantMap = new Map(variants.map((v: any) => [v.id, v]));
+
+  // like/comment counts per (type, id)
+  const photoIds = phs.map((p: any) => p.id);
+  const reviewIds = rvs.map((r: any) => r.id);
+  const allIds = [...photoIds, ...reviewIds];
+  const likeRows = allIds.length
+    ? await db
+        .select({ id: likes.likeableId, type: likes.likeableType, c: sql<number>`count(*)` })
+        .from(likes)
+        .where(inArray(likes.likeableId, allIds))
+        .groupBy(likes.likeableId, likes.likeableType)
+    : [];
+  const commentRows = allIds.length
+    ? await db
+        .select({ id: comments.commentableId, type: comments.commentableType, c: sql<number>`count(*)` })
+        .from(comments)
+        .where(inArray(comments.commentableId, allIds))
+        .groupBy(comments.commentableId, comments.commentableType)
+    : [];
+  const likeMap = new Map(likeRows.map((r: any) => [`${r.type}:${r.id}`, Number(r.c)]));
+  const commentMap = new Map(commentRows.map((r: any) => [`${r.type}:${r.id}`, Number(r.c)]));
+
+  return c.json({
+    items: all.map((a: any) => {
+      const author = userMap.get(a.userId);
+      const filmName =
+        a.type === 'photo'
+          ? filmMap.get(variantMap.get(a.filmVariantId)?.filmId)?.name
+          : a.type === 'review'
+          ? filmMap.get(a.filmId)?.name
+          : undefined;
+      const likeCount = likeMap.get(`${a.type}:${a.id}`) || 0;
+      const commentCount = commentMap.get(`${a.type}:${a.id}`) || 0;
+      return {
+        ...a,
+        author,
+        filmName,
+        likeCount,
+        commentCount,
+        // Keep "title" alias for back-compat
+        title: a.caption || a.title || (a.content ? String(a.content).slice(0, 100) : ''),
+      };
+    }),
+  });
 });
 
-// Notifications
+// Notifications — flat shape consumed by NotificationBell + Notifications page
 r.get('/notifications', authMiddleware, async (c) => {
   const db = c.get('db');
   const me = c.get('user')!.id;
   const list = await db
     .select({
-      n: notifications,
-      actor: { id: users.id, username: users.username, avatarUrl: users.avatarUrl },
+      id: notifications.id,
+      type: notifications.type,
+      payload: notifications.payload,
+      notifiableId: notifications.notifiableId,
+      notifiableType: notifications.notifiableType,
+      isRead: notifications.isRead,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+      actorId: users.id,
+      actorUsername: users.username,
+      actorAvatarUrl: users.avatarUrl,
     })
     .from(notifications)
     .leftJoin(users, eq(users.id, notifications.actorId))
     .where(eq(notifications.recipientId, me))
     .orderBy(desc(notifications.createdAt))
     .limit(50);
-  return c.json({ items: list });
+
+  const flat = list.map((row: any) => {
+    const messageFromPayload =
+      row.payload && typeof row.payload === 'object' && row.payload.message;
+    const fallbackMsg = {
+      like: `@${row.actorUsername} liked your content`,
+      comment: `@${row.actorUsername} commented on your content`,
+      follow: `@${row.actorUsername} started following you`,
+      review_helpful: `@${row.actorUsername} marked your review as helpful`,
+      mention: `@${row.actorUsername} mentioned you`,
+    }[row.type as string];
+    return {
+      id: row.id,
+      type: row.type,
+      message: messageFromPayload || fallbackMsg || 'New activity',
+      title: messageFromPayload || fallbackMsg || 'Notification',
+      actionUrl: row.actorUsername ? `/u/${row.actorUsername}` : null,
+      readAt: row.readAt,
+      isRead: row.isRead,
+      createdAt: row.createdAt,
+      actor: row.actorId
+        ? { id: row.actorId, username: row.actorUsername, avatarUrl: row.actorAvatarUrl }
+        : null,
+      // Back-compat with old Notifications page consumer
+      n: {
+        id: row.id,
+        type: row.type,
+        isRead: row.isRead,
+        createdAt: row.createdAt,
+      },
+    };
+  });
+  return c.json({ items: flat });
 });
 
 r.put('/notifications/:id/read', authMiddleware, async (c) => {
