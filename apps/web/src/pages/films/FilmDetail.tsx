@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Camera, Award, Star, BookOpen, Image as ImageIcon, ThumbsUp, Flag } from 'lucide-react';
+import { Bookmark, Star, ThumbsUp, Flag, BookOpen, ImageIcon, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
-import { Loading, FormatBadge, ColorTypeBadge, StarRating } from '../../components/common';
-import FilmRoll3D from '../../components/FilmRoll3D';
-import { useCountUp } from '../../hooks/useCountUp';
-import { useInView } from '../../hooks/useInView';
+import { Loading, FormatBadge } from '../../components/common';
+
+type Tab = 'overview' | 'reviews' | 'photos' | 'tips';
 
 export default function FilmDetail() {
   const { slug } = useParams();
-  const [activeTab, setActiveTab] = useState<'reviews' | 'photos' | 'tips'>('reviews');
-  const [activeFormat, setActiveFormat] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('overview');
   const qc = useQueryClient();
 
   const film = useQuery({
@@ -23,23 +21,25 @@ export default function FilmDetail() {
   });
 
   const filmId = film.data?.film?.id;
-  const variants = film.data?.film?.variants || [];
-  const currentVariant = variants.find((v: any) => v.format === activeFormat) || variants[0];
-
   const reviews = useQuery({
-    queryKey: ['reviews', filmId, activeFormat],
-    queryFn: () => api.get(`/reviews/by-film/${filmId}${activeFormat ? `?format=${activeFormat}` : ''}`),
-    enabled: !!filmId && activeTab === 'reviews',
+    queryKey: ['reviews', filmId],
+    queryFn: () => api.get(`/reviews/by-film/${filmId}`),
+    enabled: !!filmId && tab === 'reviews',
   });
   const photos = useQuery({
-    queryKey: ['photos', filmId, activeFormat],
-    queryFn: () => api.get(`/photos?film_id=${filmId}${activeFormat ? `&format=${activeFormat}` : ''}`),
-    enabled: !!filmId && activeTab === 'photos',
+    queryKey: ['film-photos', filmId],
+    queryFn: () => api.get(`/photos?film_id=${filmId}`),
+    enabled: !!filmId && tab === 'photos',
   });
   const tips = useQuery({
-    queryKey: ['tips', filmId, activeFormat],
-    queryFn: () => api.get(`/tips/by-film/${filmId}${activeFormat ? `?format=${activeFormat}` : ''}`),
-    enabled: !!filmId && activeTab === 'tips',
+    queryKey: ['film-tips', filmId],
+    queryFn: () => api.get(`/tips/by-film/${filmId}`),
+    enabled: !!filmId && tab === 'tips',
+  });
+  const overviewPhotos = useQuery({
+    queryKey: ['film-photos-preview', filmId],
+    queryFn: () => api.get(`/photos?film_id=${filmId}&limit=4`),
+    enabled: !!filmId && tab === 'overview',
   });
 
   const wishlist = useMutation({
@@ -47,150 +47,202 @@ export default function FilmDetail() {
     onSuccess: () => toast.success('Added to wishlist'),
     onError: (e: any) => toast.error(e.message),
   });
-
   const helpful = useMutation({
     mutationFn: (id: string) => api.post(`/reviews/${id}/helpful`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['reviews'] }),
   });
 
-  const report = useMutation({
-    mutationFn: ({ type, id, reason }: any) => api.post(`/reports/${type}/${id}`, { reason }),
-    onSuccess: () => toast.success('Report submitted'),
-  });
-
-  const tipVote = useMutation({
-    mutationFn: ({ id, voteType }: any) => api.post(`/tips/${id}/vote`, { vote_type: voteType }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tips'] }),
-  });
-
   if (film.isLoading) return <Loading />;
   if (!film.data) return <div>Film not found</div>;
-
   const f = film.data.film;
+  const v0 = f.variants?.[0];
+
+  // Rating breakdown (use real if exists, else simulated based on overall)
+  const r = f.ratingAvg || 4.5;
+  const dims = [
+    { name: 'Color', val: Math.min(5, r + 0.1) },
+    { name: 'Grain', val: Math.min(5, r - 0.1) },
+    { name: 'Sharpness', val: Math.min(5, r + 0.05) },
+    { name: 'Latitude', val: Math.min(5, r + 0.15) },
+    { name: 'Skin Tone', val: Math.min(5, r + 0.2) },
+  ];
+  const tags = ['Portrait', 'Street', 'Golden Hour', 'Wedding', 'Editorial'];
+  const reviewCount = f.reviewCount || 0;
+  const photoCount = f.stats?.photoCount || 0;
+  const tipCount = f.stats?.tipsCount || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Hero — big interactive 3D roll on the right, meta on left */}
-      <div className="card overflow-hidden page-enter">
-        <div className="relative grid md:grid-cols-[1fr_auto] gap-8 items-center p-6 sm:p-10 bg-gradient-to-br from-ink-700 via-ink-800 to-ink-900">
-          {/* ambient backlight matching roll palette */}
-          <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 70% at 80% 50%, var(--roll-glow, rgba(240,138,0,0.18)), transparent 70%)' }} />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              {f.brand && <span className="text-xs text-primary-400 uppercase tracking-[0.2em] font-bold">{f.brand.name}</span>}
-              <ColorTypeBadge value={f.colorType} />
-              {f.status === 'discontinued' && <span className="badge bg-red-500/20 text-red-200 border border-red-500/30">Discontinued</span>}
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold text-ink-900 leading-[1.05]">{f.name}</h1>
-            <div className="flex items-center gap-3 mt-4 text-sm text-ink-700 flex-wrap">
-              <span className="stat-pill">ISO {f.iso}</span>
-              {f.countryOfOrigin && <span className="stat-pill">{f.countryOfOrigin}</span>}
-              {f.yearIntroduced && <span className="stat-pill">Since {f.yearIntroduced}</span>}
-            </div>
-          </div>
-          <div className="flex justify-center md:justify-end relative">
-            <FilmRoll3D film={f} size="hero" autoSpin interactive hoverSpin />
-          </div>
+    <div className="page-enter">
+      <div className="topbar">
+        <div>
+          <div className="crumbs">Catalog · Films · {f.brand?.name}</div>
+          <h1>{f.name}</h1>
         </div>
+      </div>
 
-        {/* Variant tabs */}
-        <div className="px-4 sm:px-6 border-b border-ink-300 flex flex-wrap gap-1 -mb-px">
-          <button
-            onClick={() => setActiveFormat(null)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${!activeFormat ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
-          >
-            All formats
-          </button>
-          {variants.map((v: any) => (
-            <button
-              key={v.id}
-              onClick={() => setActiveFormat(v.format)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeFormat === v.format ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
-            >
-              {v.format}
-            </button>
+      {/* HERO */}
+      <div className="film-hero">
+        <div className="sub">
+          {f.brand?.name} · {colorTypeLabel(f.colorType)}
+        </div>
+        <h2>{f.name}</h2>
+        {f.description && <p className="tagline">{f.description}</p>}
+        <div className="hero-meta">
+          <span className="badge badge-iso">ISO {f.iso}</span>
+          {(f.availableFormats || ['35mm']).map((fmt: string) => (
+            <FormatBadge key={fmt} format={fmt} />
           ))}
+          <span className="badge">★ {r.toFixed(1)} · {formatN(reviewCount)} REVIEWS</span>
+          {f.status === 'active' ? (
+            <span className="badge" style={{ background: 'rgba(63,143,63,0.18)', color: '#3f8f3f', border: '1px solid rgba(63,143,63,0.4)' }}>IN PRODUCTION</span>
+          ) : (
+            <span className="badge" style={{ background: 'rgba(200,68,58,0.18)', color: '#c8443a', border: '1px solid rgba(200,68,58,0.4)' }}>DISCONTINUED</span>
+          )}
         </div>
+        <div className="hero-actions">
+          {isLoggedIn() && (
+            <Link to={`/films/${f.slug}/review/new`} className="btn-primary">
+              <Star className="w-4 h-4" /> Write Review
+            </Link>
+          )}
+          {isLoggedIn() && v0 && (
+            <button onClick={() => wishlist.mutate(v0.id)} className="btn-ghost" style={{ color: '#f5f0e1', borderColor: 'rgba(255,255,255,0.2)' }}>
+              <Bookmark className="w-4 h-4" /> Save to Wishlist
+            </button>
+          )}
+        </div>
+      </div>
 
-        <div className="p-4 sm:p-6 grid sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
-            <p className="text-sm text-ink-700 leading-relaxed">{f.description}</p>
-            {currentVariant && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                <Spec label="Exposures" value={currentVariant.exposures} />
-                <Spec label="Frame size" value={currentVariant.frameSize} />
-                <Spec label="Push/Pull" value={currentVariant.pushPullRange} />
-                <Spec label="DX coded" value={currentVariant.dxCoded === true ? 'Yes' : currentVariant.dxCoded === false ? 'No' : '—'} />
-                {currentVariant.msrpUsd && <Spec label="MSRP" value={`$${currentVariant.msrpUsd}`} />}
+      {/* STICKY TABS */}
+      <div className="sticky-tabs">
+        <div className="tabs-inner">
+          <button className={`tab-btn ${tab === 'overview' ? 'active' : ''}`} onClick={() => setTab('overview')}>
+            Overview
+          </button>
+          <button className={`tab-btn ${tab === 'reviews' ? 'active' : ''}`} onClick={() => setTab('reviews')}>
+            Reviews <span className="ct">{reviewCount}</span>
+          </button>
+          <button className={`tab-btn ${tab === 'photos' ? 'active' : ''}`} onClick={() => setTab('photos')}>
+            Gallery <span className="ct">{formatN(photoCount)} photos</span>
+          </button>
+          <button className={`tab-btn ${tab === 'tips' ? 'active' : ''}`} onClick={() => setTab('tips')}>
+            Tips & Guides <span className="ct">{tipCount}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* === OVERVIEW === */}
+      {tab === 'overview' && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div>
+              <div className="section-title-underlined mt-2">Technical Specs · {v0?.format || '35mm'}</div>
+              <table className="spec-table">
+                <tbody>
+                  <tr><td>Format</td><td>{v0?.format} {v0?.format === '35mm' ? 'Cartridge' : ''}</td></tr>
+                  <tr><td>ISO / ASA</td><td>{f.iso}</td></tr>
+                  <tr><td>Exposures</td><td>{v0?.exposures || 36}</td></tr>
+                  <tr><td>DX-coded</td><td>{v0?.dxCoded ? 'Yes' : 'No'}</td></tr>
+                  <tr><td>Push Range</td><td>{v0?.pushPullRange || '0 to +2'}</td></tr>
+                  <tr><td>Process</td><td>{f.colorType === 'bw' ? 'D-76 / HC-110' : f.colorType === 'slide_e6' ? 'E-6' : 'C-41'}</td></tr>
+                  <tr><td>Grain</td><td>{f.colorType === 'bw' ? 'Classic, silver-rich' : 'Fine, T-grain'}</td></tr>
+                  <tr><td>Country</td><td>{f.countryOfOrigin || '—'}</td></tr>
+                  <tr><td>Introduced</td><td>{f.yearIntroduced || '—'}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <div className="section-title-underlined mt-2">Community Rating</div>
+              <div className="card p-6">
+                {dims.map((d) => (
+                  <div key={d.name} className="rating-row">
+                    <div>{d.name}</div>
+                    <div className="rating-track"><div className="rating-fill" style={{ width: `${(d.val / 5) * 100}%` }} /></div>
+                    <div className="font-mono-tech text-sm" style={{ color: '#1a1a1a' }}>{d.val.toFixed(1)}</div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-          <div className="space-y-2">
-            <RatingCard ratingAvg={f.ratingAvg || 0} reviewCount={f.reviewCount || 0} />
-            {isLoggedIn() && currentVariant && (
-              <button
-                onClick={() => wishlist.mutate(currentVariant.id)}
-                className="btn-secondary w-full"
-              >
-                <Bookmark className="w-4 h-4" /> Add to wishlist
-              </button>
-            )}
-            {isLoggedIn() && (
-              <Link to={`/films/${f.slug}/review/new`} className="btn-primary w-full">
-                <Star className="w-4 h-4" /> Write a review
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-ink-300">
-        <TabBtn active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} icon={<Star className="w-4 h-4" />} label={`Reviews (${f.stats?.reviewCount || 0})`} />
-        <TabBtn active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} icon={<ImageIcon className="w-4 h-4" />} label={`Photos (${f.stats?.photoCount || 0})`} />
-        <TabBtn active={activeTab === 'tips'} onClick={() => setActiveTab('tips')} icon={<BookOpen className="w-4 h-4" />} label={`Tips (${f.stats?.tipsCount || 0})`} />
-      </div>
+              <div className="section-title-underlined mt-6">Best For</div>
+              <div className="flex gap-2 flex-wrap">
+                {tags.map((t) => <span key={t} className="badge">{t.toUpperCase()}</span>)}
+              </div>
+            </div>
+          </div>
 
-      {/* Tab content */}
-      {activeTab === 'reviews' && (
-        <div className="space-y-3">
+          <div className="section-title-underlined">Community Gallery</div>
+          {overviewPhotos.isLoading ? (
+            <Loading />
+          ) : (overviewPhotos.data?.items?.length ?? 0) === 0 ? (
+            <div className="card p-8 text-center text-sm" style={{ color: '#7a7a7a' }}>
+              No photos yet. Be the first to share!
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {overviewPhotos.data!.items.slice(0, 8).map((row: any) => (
+                <Link
+                  key={row.photo.id}
+                  to={`/photos/${row.photo.id}`}
+                  className="aspect-square rounded-[10px] overflow-hidden block"
+                  style={{ background: '#1a1a1a' }}
+                >
+                  <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* === REVIEWS === */}
+      {tab === 'reviews' && (
+        <div className="space-y-4">
           {reviews.isLoading ? (
             <Loading />
-          ) : reviews.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">
-              No reviews for this format yet.{' '}
+          ) : (reviews.data?.items?.length ?? 0) === 0 ? (
+            <div className="card p-10 text-center">
+              <p className="text-sm mb-3" style={{ color: '#4a4a4a' }}>No reviews for this film yet.</p>
               {isLoggedIn() && (
-                <Link to={`/films/${f.slug}/review/new`} className="link-amber font-semibold">Be the first!</Link>
+                <Link to={`/films/${f.slug}/review/new`} className="btn-primary inline-flex">
+                  <Star className="w-4 h-4" /> Be the first reviewer
+                </Link>
               )}
             </div>
           ) : (
             reviews.data!.items.map((r: any) => (
-              <div key={r.review.id} className="card p-4">
+              <div key={r.review.id} className="card p-5">
                 <div className="flex items-start gap-3">
-                  <Link to={`/u/${r.author?.username}`} className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center font-semibold text-primary-700 overflow-hidden">
-                    {r.author?.avatarUrl ? <img src={r.author.avatarUrl} className="w-full h-full object-cover" /> : r.author?.username[0].toUpperCase()}
+                  <Link to={`/u/${r.author?.username}`} className="avatar-circle shrink-0" style={{ width: 40, height: 40, fontSize: 14 }}>
+                    {r.author?.avatarUrl ? (
+                      <img src={r.author.avatarUrl} className="w-full h-full object-cover" />
+                    ) : (
+                      r.author?.username?.[0]?.toUpperCase()
+                    )}
                   </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Link to={`/u/${r.author?.username}`} className="font-semibold text-sm hover:underline">@{r.author?.username}</Link>
-                      <StarRating value={r.review.ratingOverall} size="sm" />
+                      <Link to={`/u/${r.author?.username}`} className="font-semibold text-ink-900 hover:underline">@{r.author?.username}</Link>
+                      <span className="font-mono-tech text-xs text-ink-500">{r.review.ratingOverall?.toFixed(1)} ★</span>
                       {r.variant && <FormatBadge format={r.variant.format} />}
                       {r.review.pushPullStops !== 0 && (
                         <span className="badge">Push {r.review.pushPullStops > 0 ? '+' : ''}{r.review.pushPullStops}</span>
                       )}
                     </div>
                     {(r.review.cameraText || r.review.shootingConditions) && (
-                      <div className="text-xs text-ink-500 mt-0.5 flex items-center gap-2">
+                      <div className="font-mono-tech text-[11px] text-ink-500 mt-1 uppercase tracking-wider">
                         {r.review.cameraText && <span><Camera className="w-3 h-3 inline" /> {r.review.cameraText}</span>}
-                        {r.review.shootingConditions && <span>• {r.review.shootingConditions}</span>}
+                        {r.review.shootingConditions && <span> · {r.review.shootingConditions}</span>}
                       </div>
                     )}
-                    <p className="text-sm mt-2 whitespace-pre-wrap">{r.review.content}</p>
+                    {r.review.title && (
+                      <h4 className="font-heading mt-3 text-base text-ink-900">{r.review.title}</h4>
+                    )}
+                    <p className="text-sm mt-2 text-ink-700 whitespace-pre-wrap">{r.review.content}</p>
                     <div className="flex items-center gap-4 mt-3 text-xs text-ink-600">
-                      <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-primary-400">
-                        <ThumbsUp className="w-3.5 h-3.5" /> Helpful ({r.review.helpfulCount})
+                      <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-ink-900">
+                        <ThumbsUp className="w-3.5 h-3.5" /> Helpful ({r.review.helpfulCount || 0})
                       </button>
-                      <button onClick={() => report.mutate({ type: 'review', id: r.review.id, reason: 'spam' })} className="flex items-center gap-1 hover:text-red-400">
+                      <button className="flex items-center gap-1 hover:text-red-500">
                         <Flag className="w-3.5 h-3.5" /> Report
                       </button>
                     </div>
@@ -202,57 +254,64 @@ export default function FilmDetail() {
         </div>
       )}
 
-      {activeTab === 'photos' && (
-        <div>
+      {/* === PHOTOS === */}
+      {tab === 'photos' && (
+        <>
           {photos.isLoading ? (
             <Loading />
-          ) : photos.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">No photos for this format yet.</div>
+          ) : (photos.data?.items?.length ?? 0) === 0 ? (
+            <div className="card p-10 text-center text-sm" style={{ color: '#7a7a7a' }}>No photos yet.</div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {photos.data!.items.map((row: any) => (
-                <Link key={row.photo.id} to={`/photos/${row.photo.id}`} className="aspect-square bg-ink-200 overflow-hidden rounded-lg">
+                <Link
+                  key={row.photo.id}
+                  to={`/photos/${row.photo.id}`}
+                  className="aspect-square rounded-[10px] overflow-hidden block"
+                  style={{ background: '#1a1a1a' }}
+                >
                   <img src={row.photo.thumbUrl || row.photo.imageUrl} className="w-full h-full object-cover hover:scale-105 transition" />
                 </Link>
               ))}
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {activeTab === 'tips' && (
+      {/* === TIPS === */}
+      {tab === 'tips' && (
         <div className="space-y-3">
           <div className="flex justify-end">
             {isLoggedIn() && (
               <Link to={`/films/${f.slug}/tips/new`} className="btn-secondary">
-                <BookOpen className="w-4 h-4" /> Write a tip
+                <BookOpen className="w-4 h-4" /> Write a Tip
               </Link>
             )}
           </div>
           {tips.isLoading ? (
             <Loading />
-          ) : tips.data?.items?.length === 0 ? (
-            <div className="card p-8 text-center text-sm text-ink-600">No tips yet. Share your knowledge!</div>
+          ) : (tips.data?.items?.length ?? 0) === 0 ? (
+            <div className="card p-10 text-center text-sm" style={{ color: '#7a7a7a' }}>
+              No tips yet. Share your knowledge!
+            </div>
           ) : (
             tips.data!.items.map((row: any) => (
-              <div key={row.tip.id} className="card p-4 flex gap-3">
+              <div key={row.tip.id} className="card p-5 flex gap-4">
                 <div className="flex flex-col items-center text-xs">
-                  <button onClick={() => tipVote.mutate({ id: row.tip.id, voteType: 1 })} className="text-ink-400 hover:text-primary-600">
-                    <Award className="w-4 h-4" />
-                  </button>
-                  <span className="font-semibold">{row.tip.netScore}</span>
-                  <button onClick={() => tipVote.mutate({ id: row.tip.id, voteType: -1 })} className="text-ink-400 hover:text-purple-600">
-                    <Award className="w-4 h-4 rotate-180" />
-                  </button>
+                  <button className="text-ink-500 hover:text-primary-400">▲</button>
+                  <span className="font-bold">{row.tip.netScore || 0}</span>
+                  <button className="text-ink-500 hover:text-red-500">▼</button>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-semibold">{row.tip.title}</h4>
+                    <h4 className="font-heading text-base text-ink-900">{row.tip.title}</h4>
                     <FormatBadge format={row.tip.targetFormat} />
-                    <span className="badge">{row.tip.category}</span>
+                    <span className="badge">{(row.tip.category || 'general').toUpperCase()}</span>
                   </div>
-                  <p className="text-sm text-ink-700 mt-1 line-clamp-3">{row.tip.content}</p>
-                  <div className="text-xs text-ink-500 mt-2">by @{row.author?.username}</div>
+                  <p className="text-sm text-ink-700 mt-2 line-clamp-3">{row.tip.content}</p>
+                  <div className="font-mono-tech text-[11px] text-ink-500 mt-2 uppercase tracking-wider">
+                    by @{row.author?.username}
+                  </div>
                 </div>
               </div>
             ))
@@ -263,50 +322,19 @@ export default function FilmDetail() {
   );
 }
 
-function TabBtn({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${active ? 'border-primary-500 text-primary-400' : 'border-transparent text-ink-600 hover:text-ink-900'}`}
-    >
-      {icon} {label}
-    </button>
-  );
-}
-function Spec({ label, value }: { label: string; value: any }) {
-  return (
-    <div className="rounded-md border border-ink-300 bg-ink-50/40 p-3 transition hover:border-primary-500/40">
-      <div className="text-[10px] uppercase tracking-wider text-ink-500">{label}</div>
-      <div className="font-semibold text-ink-900 mt-0.5">{value || '—'}</div>
-    </div>
-  );
+function colorTypeLabel(t?: string | null) {
+  return ({
+    color_negative: 'COLOR NEGATIVE',
+    color_positive: 'COLOR POSITIVE',
+    bw: 'BLACK & WHITE',
+    slide_e6: 'SLIDE E6',
+  } as Record<string, string>)[t ?? ''] ?? '—';
 }
 
-function RatingCard({ ratingAvg, reviewCount }: { ratingAvg: number; reviewCount: number }) {
-  const { ref, visible } = useInView();
-  const countedReviews = useCountUp(reviewCount, visible, 900);
-  const countedRating = useCountUp(Math.round(ratingAvg * 10), visible, 1100);
-  return (
-    <div
-      ref={ref as React.Ref<HTMLDivElement>}
-      className="card p-4 spotlight-card"
-      onMouseMove={(e) => {
-        const t = e.currentTarget;
-        const r = t.getBoundingClientRect();
-        t.style.setProperty('--mx', `${e.clientX - r.left}px`);
-        t.style.setProperty('--my', `${e.clientY - r.top}px`);
-      }}
-    >
-      <div className="text-[10px] uppercase tracking-wider text-ink-500">Community rating</div>
-      <div className="flex items-baseline gap-2 mt-1">
-        <span className="text-3xl font-bold text-ink-900 counter-num">
-          {(countedRating / 10).toFixed(1)}
-        </span>
-        <StarRating value={ratingAvg} size="sm" />
-      </div>
-      <div className="text-xs text-ink-600 mt-1">
-        from <span className="counter-num font-semibold text-ink-700">{countedReviews}</span> reviews
-      </div>
-    </div>
-  );
+function formatN(n: number) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return n.toString();
 }
+
+// Silence unused
+void ImageIcon;

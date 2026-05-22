@@ -38,79 +38,107 @@ export default function Register() {
         fullName: form.fullName || form.username,
       }),
     onSuccess: (data: any) => {
-      toast.success('Registration successful! Check your email to verify.');
+      toast.success('Account created! Check your email to verify.');
       navigate(`/verify?token=${data.verify_token || ''}`);
     },
     onError: (e: any) => toast.error(e.message || 'Registration failed'),
   });
 
   const strengthLabel = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very strong'][strength] || 'Very weak';
-  const strengthColor =
-    strength <= 1 ? 'bg-red-500' : strength === 2 ? 'bg-amber-500' : strength === 3 ? 'bg-yellow-500' : 'bg-emerald-500';
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Logo size={64} showTagline />
+    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: '#f5f0e1' }}>
+      <div className="auth-wrap w-full max-w-5xl">
+        {/* LEFT — INK SLAB */}
+        <div className="auth-left">
+          <div>
+            <Logo size={48} showWordmark={false} />
+            <div className="brand-big mt-5">RollDump</div>
+            <div className="tagline-big">Every roll tells a story. <br /> Share yours.</div>
+            <div className="desc-big">
+              Free forever. Track unlimited rolls, write reviews, and follow other shooters.
+              Join thousands cataloging their analog journey.
+            </div>
+          </div>
+          <div className="testimonial">
+            <p>
+              "I came for the catalog, stayed for the community.
+              Every roll I shoot now gets logged here first."
+            </p>
+            <div className="who">— Maya Rinjani · Medium-Format · Jakarta</div>
+          </div>
         </div>
-        <div className="card p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-ink-900">Create your account</h2>
-            <p className="mt-1 text-sm text-ink-600">Start logging your rolls.</p>
+
+        {/* RIGHT — FORM */}
+        <div className="auth-right">
+          <h2>Start your journey</h2>
+          <p className="sub">Sign up free to start logging your rolls.</p>
+
+          <div className="auth-tabs">
+            <Link to="/login" className="text-center"><button type="button">Sign In</button></Link>
+            <button className="active" type="button">Create Account</button>
           </div>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (valid) m.mutate();
-            }}
+            onSubmit={(e) => { e.preventDefault(); if (valid) m.mutate(); }}
             className="space-y-4"
           >
-            <div>
-              <label className="label">Username</label>
-              <input value={form.username} onChange={(e) => set('username', e.target.value)} required className="input" placeholder="ahmadphoto" />
+            <div className="field">
+              <label>Username</label>
+              <input
+                value={form.username}
+                onChange={(e) => set('username', e.target.value)}
+                required
+                className="input"
+                placeholder="@your_handle"
+              />
+              <div className="hint">3–20 characters · letters, numbers, underscore</div>
               {form.username && !/^[a-zA-Z0-9_]+$/.test(form.username) && (
-                <p className="text-xs text-red-400 mt-1">Letters, numbers, underscore only</p>
+                <p className="err">⚠ Only letters, numbers, and underscores</p>
               )}
             </div>
-            <div>
-              <label className="label">Full name</label>
+            <div className="field">
+              <label>Full Name</label>
               <input value={form.fullName} onChange={(e) => set('fullName', e.target.value)} className="input" placeholder="Your name" />
             </div>
-            <div>
-              <label className="label">Email</label>
+            <div className="field">
+              <label>Email</label>
               <input value={form.email} onChange={(e) => set('email', e.target.value)} type="email" required className="input" placeholder="you@example.com" />
             </div>
-            <div>
-              <label className="label">Password</label>
-              <input value={form.password} onChange={(e) => set('password', e.target.value)} type="password" required className="input" />
+            <div className="field">
+              <label>Password</label>
+              <input value={form.password} onChange={(e) => set('password', e.target.value)} type="password" required className="input" placeholder="Min 8 chars, mix case + numbers" />
               {form.password && (
-                <div className="mt-1.5">
-                  <div className="h-1 w-full bg-ink-200 rounded overflow-hidden">
-                    <div className={`h-full transition-all ${strengthColor}`} style={{ width: `${(strength / 5) * 100}%` }} />
+                <>
+                  <div className="password-bar mt-2">
+                    {[1, 2, 3, 4].map((s) => (
+                      <div
+                        key={s}
+                        className={s <= strength ? (strength <= 1 ? 'strong-1' : strength === 2 ? 'strong-2' : 'strong-3') : ''}
+                      />
+                    ))}
                   </div>
-                  <div className="text-xs text-ink-600 mt-0.5">{strengthLabel}</div>
-                </div>
+                  <div className="hint">{strengthLabel}</div>
+                </>
               )}
             </div>
-            <div>
-              <label className="label">Confirm password</label>
+            <div className="field">
+              <label>Confirm Password</label>
               <input value={form.confirm} onChange={(e) => set('confirm', e.target.value)} type="password" required className="input" />
               {form.confirm && form.password !== form.confirm && (
-                <p className="text-xs text-red-400 mt-1">Passwords don't match</p>
+                <p className="err">⚠ Passwords don't match</p>
               )}
             </div>
-            <button type="submit" disabled={!valid || m.isPending} className="btn-primary w-full">
-              {m.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create account'}
+            <button type="submit" disabled={!valid || m.isPending} className="btn-primary w-full !justify-center">
+              {m.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account & Start'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink-600">
-            Already have an account?{' '}
-            <Link to="/login" className="link-amber font-semibold">
-              Sign in
-            </Link>
+          <p className="text-sm mt-6 text-center" style={{ color: '#7a7a7a' }}>
+            By signing up you agree to our{' '}
+            <a href="#" style={{ color: '#c68a0e', textDecoration: 'underline' }}>Terms</a>
+            {' '}and{' '}
+            <a href="#" style={{ color: '#c68a0e', textDecoration: 'underline' }}>Privacy Policy</a>.
           </p>
         </div>
       </div>

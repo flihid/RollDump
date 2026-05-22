@@ -19,44 +19,59 @@ export default function Login() {
     onSuccess: (data: any) => {
       setAuth(data.access_token, data.refresh_token, data.user);
       toast.success('Welcome back!');
-      const next = params.get('next') || '/';
-      navigate(next);
+      navigate(params.get('next') || '/');
     },
     onError: (e: any) => {
-      if (e.data?.code === 'VERIFY_REQUIRED') {
-        setVerifyHint(true);
-      }
-      toast.error(e.message || 'Sign-in failed');
+      if (e.data?.code === 'VERIFY_REQUIRED') setVerifyHint(true);
+      toast.error(e.message || 'Login failed');
     },
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <Logo size={64} showTagline />
+    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ background: '#f5f0e1' }}>
+      <div className="auth-wrap w-full max-w-5xl">
+        {/* LEFT — INK SLAB */}
+        <div className="auth-left">
+          <div>
+            <Logo size={48} showWordmark={false} />
+            <div className="brand-big mt-5">RollDump</div>
+            <div className="tagline-big">Every roll tells a story. <br /> Share yours.</div>
+            <div className="desc-big">
+              The community platform for analog photographers. Review films,
+              upload rolls, and discover authentic aesthetics from shooters worldwide.
+            </div>
+          </div>
+          <div className="testimonial">
+            <p>
+              "Finally a place that truly gets the grain on Portra 400.
+              The community is alive, reviews are technical — not just aesthetic."
+            </p>
+            <div className="who">— Arundaya · 35mm Shooter · Bandung</div>
+          </div>
         </div>
-        <div className="card p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-ink-900">Sign in</h2>
-            <p className="mt-1 text-sm text-ink-600">Continue your darkroom journal.</p>
+
+        {/* RIGHT — FORM */}
+        <div className="auth-right">
+          <h2>Welcome back</h2>
+          <p className="sub">Sign in to continue your roll journal.</p>
+
+          <div className="auth-tabs">
+            <button className="active" type="button">Sign In</button>
+            <Link to="/register" className="text-center"><button type="button">Create Account</button></Link>
           </div>
 
           {verifyHint && (
-            <div className="mb-4 p-3 rounded-md bg-primary-500/10 border border-primary-500/30 text-sm text-primary-200">
-              Your account isn't verified yet. <Link to="/verify" className="font-medium underline link-amber">Verify now</Link>.
+            <div className="mb-4 p-3 rounded-md text-sm" style={{ background: 'rgba(224,138,26,0.1)', border: '1px solid rgba(224,138,26,0.4)', color: '#9a5e10' }}>
+              Your account isn't verified yet. <Link to="/verify" className="font-semibold underline">Verify now</Link>.
             </div>
           )}
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              m.mutate();
-            }}
+            onSubmit={(e) => { e.preventDefault(); m.mutate(); }}
             className="space-y-4"
           >
-            <div>
-              <label className="label">Email or username</label>
+            <div className="field">
+              <label>Email or Username</label>
               <input
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -65,10 +80,10 @@ export default function Login() {
                 placeholder="you@example.com"
               />
             </div>
-            <div>
+            <div className="field">
               <div className="flex items-center justify-between">
-                <label className="label">Password</label>
-                <Link to="/forgot-password" className="text-xs link-amber">
+                <label>Password</label>
+                <Link to="/forgot-password" className="text-xs" style={{ color: '#c68a0e' }}>
                   Forgot password?
                 </Link>
               </div>
@@ -81,16 +96,19 @@ export default function Login() {
                 placeholder="••••••••"
               />
             </div>
-            <button type="submit" disabled={m.isPending} className="btn-primary w-full">
-              {m.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign in'}
+            <button type="submit" disabled={m.isPending} className="btn-primary w-full !justify-center">
+              {m.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink-600">
-            New here?{' '}
-            <Link to="/register" className="link-amber font-semibold">
-              Create an account
-            </Link>
+          <div className="divider">or</div>
+          <button className="btn-ghost w-full !justify-center" type="button">Continue with Google</button>
+
+          <p className="text-sm mt-6 text-center" style={{ color: '#7a7a7a' }}>
+            By signing in you agree to our{' '}
+            <a href="#" style={{ color: '#c68a0e', textDecoration: 'underline' }}>Terms</a>
+            {' '}and{' '}
+            <a href="#" style={{ color: '#c68a0e', textDecoration: 'underline' }}>Privacy Policy</a>.
           </p>
         </div>
       </div>

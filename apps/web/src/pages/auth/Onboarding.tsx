@@ -5,15 +5,19 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 
 const FORMATS = [
-  { key: '35mm', label: '35mm' },
-  { key: '120', label: 'Medium Format (120)' },
-  { key: 'large_format', label: 'Large Format' },
-  { key: 'instant', label: 'Instant' },
+  { key: '35mm', label: '35mm', sub: 'CLASSIC FORMAT', ico: '🎞️' },
+  { key: '120', label: '120 Medium', sub: '6×4.5 · 6×6 · 6×7', ico: '📷' },
+  { key: 'large_format', label: 'Large Format', sub: '4×5 · 8×10', ico: '🖼️' },
+  { key: 'instant', label: 'Instant', sub: 'POLAROID · INSTAX', ico: '⚡' },
+  { key: 'half_frame', label: 'Half-Frame', sub: '18×24mm', ico: '⊟' },
+  { key: '110', label: '110 / APS', sub: 'VINTAGE COMPACT', ico: '⬚' },
 ];
-const COLOR = [
-  { key: 'color_negative', label: 'Color Negative' },
-  { key: 'bw', label: 'Black & White' },
-  { key: 'slide_e6', label: 'Slide E6' },
+
+const EMULSIONS = [
+  { key: 'color_negative', label: 'Color Negative', sub: 'C-41 PROCESS', ico: '🌈' },
+  { key: 'bw', label: 'Black & White', sub: 'CLASSIC SILVER', ico: '⚫' },
+  { key: 'slide_e6', label: 'Slide E6', sub: 'POSITIVE FILM', ico: '🎨' },
+  { key: 'color_positive', label: 'Color Positive', sub: 'REVERSAL', ico: '🌅' },
 ];
 
 export default function Onboarding() {
@@ -21,9 +25,14 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [formats, setFormats] = useState<string[]>(['35mm']);
   const [colors, setColors] = useState<string[]>(['color_negative']);
-
-  const suggested = useQuery({ queryKey: ['suggested'], queryFn: () => api.get('/users/suggested') });
   const [follows, setFollows] = useState<string[]>([]);
+  const total = 4;
+
+  const suggested = useQuery({
+    queryKey: ['suggested'],
+    queryFn: () => api.get('/users/suggested'),
+    enabled: step === 3,
+  });
 
   const save = useMutation({
     mutationFn: async () => {
@@ -36,7 +45,7 @@ export default function Onboarding() {
       }
     },
     onSuccess: () => {
-      toast.success('Selamat datang di RollDump!');
+      toast.success('Welcome to RollDump! 🎬');
       nav('/');
     },
   });
@@ -45,84 +54,134 @@ export default function Onboarding() {
     setArr(arr.includes(k) ? arr.filter((x) => x !== k) : [...arr, k]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="card p-8 max-w-xl w-full">
-        <div className="flex items-center gap-1 mb-6">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className={`flex-1 h-1.5 rounded-full ${s <= step ? 'bg-primary-500' : 'bg-ink-200'}`} />
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: '#f5f0e1' }}>
+      <div className="onb-wrap w-full">
+        <div className="onb-progress">
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className={i < step ? 'active' : ''} />
           ))}
         </div>
+        <div className="onb-step-label">Step {step} of {total}</div>
+
         {step === 1 && (
-          <div>
-            <h2 className="text-2xl font-bold text-ink-900">Favorite film formats?</h2>
-            <p className="text-sm text-ink-600 mt-1">Pick one or more.</p>
-            <div className="flex flex-wrap gap-2 mt-6">
+          <>
+            <h2>What formats do you shoot?</h2>
+            <p className="desc">We'll curate your feed based on these. Pick one or more — you can change later.</p>
+            <div className="chip-grid">
               {FORMATS.map((f) => (
                 <button
                   key={f.key}
                   type="button"
                   onClick={() => toggle(formats, setFormats, f.key)}
-                  className={formats.includes(f.key) ? 'chip-active' : 'chip'}
+                  className={`onb-chip ${formats.includes(f.key) ? 'selected' : ''}`}
                 >
-                  {f.label}
+                  <div className="chip-ico">{f.ico}</div>
+                  <div className="chip-name">{f.label}</div>
+                  <div className="chip-sub">{f.sub}</div>
                 </button>
               ))}
             </div>
-            <div className="mt-8 flex justify-end">
-              <button onClick={() => setStep(2)} className="btn-primary">Next</button>
+            <div className="onb-actions">
+              <span className="skip" onClick={() => save.mutate()}>Skip for now</span>
+              <button onClick={() => setStep(2)} className="btn-primary" disabled={formats.length === 0}>
+                Next →
+              </button>
             </div>
-          </div>
+          </>
         )}
+
         {step === 2 && (
-          <div>
-            <h2 className="text-2xl font-bold text-ink-900">Favorite emulsion types?</h2>
-            <div className="flex flex-wrap gap-2 mt-6">
-              {COLOR.map((f) => (
+          <>
+            <h2>Favorite emulsion types?</h2>
+            <p className="desc">Color or B&W? E6 slides? Tell us your vibe.</p>
+            <div className="chip-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+              {EMULSIONS.map((c) => (
                 <button
-                  key={f.key}
+                  key={c.key}
                   type="button"
-                  onClick={() => toggle(colors, setColors, f.key)}
-                  className={colors.includes(f.key) ? 'chip-active' : 'chip'}
+                  onClick={() => toggle(colors, setColors, c.key)}
+                  className={`onb-chip ${colors.includes(c.key) ? 'selected' : ''}`}
                 >
-                  {f.label}
+                  <div className="chip-ico">{c.ico}</div>
+                  <div className="chip-name">{c.label}</div>
+                  <div className="chip-sub">{c.sub}</div>
                 </button>
               ))}
             </div>
-            <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(1)} className="btn-ghost">Back</button>
-              <button onClick={() => setStep(3)} className="btn-primary">Next</button>
+            <div className="onb-actions">
+              <button onClick={() => setStep(1)} className="btn-ghost">← Back</button>
+              <button onClick={() => setStep(3)} className="btn-primary">Next →</button>
             </div>
-          </div>
+          </>
         )}
+
         {step === 3 && (
-          <div>
-            <h2 className="text-2xl font-bold text-ink-900">Follow some photographers</h2>
-            <p className="text-sm text-ink-600 mt-1">Mulai isi feed Anda.</p>
-            <div className="grid grid-cols-2 gap-2 mt-6">
+          <>
+            <h2>Follow some photographers</h2>
+            <p className="desc">Get inspiration from active shooters in the community.</p>
+            <div className="space-y-2 mb-6">
               {(suggested.data?.items || []).slice(0, 6).map((u: any) => {
                 const f = follows.includes(u.username);
                 return (
                   <button
                     key={u.id}
                     onClick={() => toggle(follows, setFollows, u.username)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border ${f ? 'border-primary-500 bg-primary-50' : 'border-ink-200'}`}
+                    className="w-full flex items-center gap-3 p-3 rounded-[10px] border-2 text-left transition"
+                    style={{
+                      borderColor: f ? '#e6a519' : '#dcd5bf',
+                      background: f ? 'rgba(230,165,25,0.08)' : '#fbf8ef',
+                    }}
                   >
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center font-semibold text-primary-700 overflow-hidden">
-                      {u.avatarUrl ? <img src={u.avatarUrl} className="w-full h-full object-cover" /> : u.username[0].toUpperCase()}
+                    <div className="avatar-circle shrink-0">
+                      {u.avatarUrl ? <img src={u.avatarUrl} className="w-full h-full object-cover" /> : u.username[0]?.toUpperCase()}
                     </div>
-                    <div className="text-left flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">@{u.username}</div>
-                      <div className="text-xs text-ink-500 truncate">{u.fullName}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-sm text-ink-900 truncate">@{u.username}</div>
+                      <div className="font-mono-tech text-[11px] text-ink-500 truncate">
+                        {u.fullName || 'Photographer'}
+                      </div>
+                    </div>
+                    <div
+                      className="text-xs font-bold px-3 py-1.5 rounded-full"
+                      style={{ background: f ? '#e6a519' : '#1a1a1a', color: f ? '#1a1a1a' : '#e6a519' }}
+                    >
+                      {f ? '✓ Following' : '+ Follow'}
                     </div>
                   </button>
                 );
               })}
+              {(!suggested.data?.items || suggested.data.items.length === 0) && (
+                <div className="card p-6 text-center text-sm" style={{ color: '#7a7a7a' }}>
+                  No suggestions yet. Skip to finish.
+                </div>
+              )}
             </div>
-            <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(2)} className="btn-ghost">Back</button>
-              <button disabled={save.isPending} onClick={() => save.mutate()} className="btn-primary">Finish</button>
+            <div className="onb-actions">
+              <button onClick={() => setStep(2)} className="btn-ghost">← Back</button>
+              <button onClick={() => setStep(4)} className="btn-primary">Next →</button>
             </div>
-          </div>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h2>You're all set! 🎉</h2>
+            <p className="desc">Welcome to the analog community. Your feed is now curated.</p>
+            <div className="card p-6 text-center mb-6">
+              <div className="text-6xl mb-3">🎬</div>
+              <h3 className="font-heading text-lg mb-2 text-ink-900">Start your journey</h3>
+              <p className="text-sm text-ink-600 max-w-md mx-auto">
+                Log your first roll, write a review, or just explore the catalog.
+                The community can't wait to see what you shoot.
+              </p>
+            </div>
+            <div className="onb-actions">
+              <button onClick={() => setStep(3)} className="btn-ghost">← Back</button>
+              <button onClick={() => save.mutate()} disabled={save.isPending} className="btn-primary">
+                {save.isPending ? 'Finalizing…' : 'Enter RollDump →'}
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -38,7 +38,7 @@ export default function Home() {
       {/* === TOPBAR === */}
       <div className="topbar">
         <div>
-          <div className="crumbs">PBI-52 · Activity Feed</div>
+          <div className="crumbs">Activity · Feed</div>
           <h1>{loggedIn ? `${greeting}, ${user?.username || 'shooter'} ☀️` : 'Track every roll.'}</h1>
         </div>
         <div className="topbar-right">

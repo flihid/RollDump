@@ -48,7 +48,7 @@ export default function FilmsList() {
       {/* TOPBAR */}
       <div className="topbar">
         <div>
-          <div className="crumbs">PBI-9 · PBI-46 · Film Catalog</div>
+          <div className="crumbs">Discover · Catalog</div>
           <h1>Film Catalog</h1>
         </div>
         <div className="topbar-right">

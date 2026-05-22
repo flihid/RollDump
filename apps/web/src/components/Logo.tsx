@@ -57,7 +57,7 @@ export default function Logo({
                 color: '#ffd56b',
               }}
             >
-              v0.1 · Modern Analog
+              Shoot · Share · Discover
             </span>
           )}
         </div>
