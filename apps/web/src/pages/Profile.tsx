@@ -377,6 +377,9 @@ export default function Profile() {
         <AchievementModal
           achv={selectedAchv}
           unlocked={unlockedKeys.has(selectedAchv.key)}
+          unlockedRecord={unlocked.find((a) => a.key === selectedAchv.key)}
+          isMe={isMe}
+          ownerUsername={u.username}
           onClose={() => setSelectedAchv(null)}
         />
       )}
@@ -387,23 +390,35 @@ export default function Profile() {
 function AchievementModal({
   achv,
   unlocked,
+  unlockedRecord,
+  isMe,
+  ownerUsername,
   onClose,
 }: {
   achv: any;
   unlocked: boolean;
+  unlockedRecord?: any;
+  isMe: boolean;
+  ownerUsername: string;
   onClose: () => void;
 }) {
+  // Only fetch viewer's own progress if they're looking at THEIR OWN profile.
+  // On someone else's profile, "how to earn" + progress is irrelevant —
+  // it's their badge, not yours.
   const progress = useQuery({
     queryKey: ['achv-progress', achv.key],
     queryFn: () => api.get(`/achievements/progress/${achv.key}`),
-    enabled: isLoggedIn(),
+    enabled: isLoggedIn() && isMe && !unlocked,
   });
   const p = progress.data;
   const pct = p ? Math.min(100, Math.round((p.progress / Math.max(1, p.threshold)) * 100)) : 0;
+  const unlockedDate = unlockedRecord?.unlockedAt
+    ? new Date(unlockedRecord.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
 
   return (
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
-      <div className="card p-7 max-w-md w-full" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
+      <div className="card p-7 max-w-md w-full relative" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onClose}
           className="absolute top-3 right-3 w-8 h-8 grid place-items-center rounded-full text-ink-500 hover:bg-ink-200"
@@ -430,11 +445,26 @@ function AchievementModal({
           </div>
           <p className="text-sm text-ink-700 mb-5">{achv.description}</p>
 
-          {/* Progress bar (only relevant if not unlocked + we can compute) */}
-          {!unlocked && p && (
+          {/* === Unlocked state === */}
+          {unlocked && (
+            <div className="p-4 rounded-md" style={{ background: 'rgba(230,165,25,0.15)' }}>
+              <div className="text-sm text-ink-900 font-semibold">
+                {isMe ? '🎉 Congrats — you earned this!' : `@${ownerUsername} earned this badge`}
+              </div>
+              {unlockedDate && (
+                <div className="text-xs text-ink-700 mt-1 font-mono-tech uppercase tracking-wider">
+                  on {unlockedDate}
+                </div>
+              )}
+              <div className="text-xs text-ink-700 mt-1">+{achv.points} points</div>
+            </div>
+          )}
+
+          {/* === Locked: only show progress on YOUR OWN profile === */}
+          {!unlocked && isMe && p && (
             <>
               <div className="flex items-baseline justify-between mb-2">
-                <span className="font-mono-tech text-[11px] uppercase tracking-wider text-ink-500">Progress</span>
+                <span className="font-mono-tech text-[11px] uppercase tracking-wider text-ink-500">Your progress</span>
                 <span className="font-mono-tech text-sm text-ink-900">
                   {p.progress} / {p.threshold}
                 </span>
@@ -444,16 +474,18 @@ function AchievementModal({
               </div>
               <div className="text-xs text-ink-500 mt-3">
                 {pct >= 100
-                  ? 'Eligible! Click "Recompute" on the achievements tab to claim.'
+                  ? 'Eligible! Click "Check for new achievements" to claim it.'
                   : `${p.threshold - p.progress} more to unlock`}
               </div>
             </>
           )}
 
-          {unlocked && (
-            <div className="p-3 rounded-md mt-2" style={{ background: 'rgba(230,165,25,0.15)' }}>
-              <div className="text-sm text-ink-900 font-semibold">Congrats — you earned this!</div>
-              <div className="text-xs text-ink-700 mt-1">+{achv.points} points added to your profile.</div>
+          {/* Locked on someone else's profile — no progress, just the description */}
+          {!unlocked && !isMe && (
+            <div className="p-3 rounded-md" style={{ background: '#ede5cf' }}>
+              <div className="text-sm text-ink-700">
+                @{ownerUsername} hasn't earned this badge yet.
+              </div>
             </div>
           )}
         </div>
