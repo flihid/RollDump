@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import {
   comments,
   likes,
@@ -12,7 +12,7 @@ import {
   films,
   filmVariants,
 } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
 
 const r = createApp();
 
@@ -60,9 +60,15 @@ r.get('/likes/:type/:id/count', async (c) => {
   return c.json({ count: Number(r0?.c || 0) });
 });
 
-// Polymorphic comments
+// Polymorphic comments — hidden authors are filtered out
 r.get('/comments/:type/:id', optionalAuth, async (c) => {
   const db = c.get('db');
+  const conds: any[] = [
+    eq(comments.commentableId, c.req.param('id')),
+    eq(comments.commentableType, c.req.param('type')),
+  ];
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) conds.push(notInArray(comments.userId, hidden));
   const rows = await db
     .select({
       comment: comments,
@@ -70,12 +76,7 @@ r.get('/comments/:type/:id', optionalAuth, async (c) => {
     })
     .from(comments)
     .innerJoin(users, eq(users.id, comments.userId))
-    .where(
-      and(
-        eq(comments.commentableId, c.req.param('id')),
-        eq(comments.commentableType, c.req.param('type')),
-      ),
-    )
+    .where(and(...conds))
     .orderBy(desc(comments.createdAt));
   return c.json({ items: rows });
 });
@@ -141,6 +142,9 @@ r.get('/feed', authMiddleware, async (c) => {
     const recent = await db.select({ id: users.id }).from(users).limit(20);
     ids = recent.map((r: any) => r.id);
   }
+  // Strip hidden (blocked) users from the candidate set
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) ids = ids.filter((id: string) => !hidden.includes(id));
   if (!ids.length) return c.json({ items: [] });
 
   const phs = await db
@@ -263,6 +267,9 @@ r.get('/feed', authMiddleware, async (c) => {
 r.get('/notifications', authMiddleware, async (c) => {
   const db = c.get('db');
   const me = c.get('user')!.id;
+  const hidden = await getHiddenUserIds(c);
+  const conds: any[] = [eq(notifications.recipientId, me)];
+  if (hidden.length) conds.push(notInArray(notifications.actorId, hidden));
   const list = await db
     .select({
       id: notifications.id,
@@ -279,7 +286,7 @@ r.get('/notifications', authMiddleware, async (c) => {
     })
     .from(notifications)
     .leftJoin(users, eq(users.id, notifications.actorId))
-    .where(eq(notifications.recipientId, me))
+    .where(and(...conds))
     .orderBy(desc(notifications.createdAt))
     .limit(50);
 

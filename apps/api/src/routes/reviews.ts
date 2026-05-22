@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, notInArray, sql } from 'drizzle-orm';
 import {
   reviews,
   reviewHelpfulMarks,
@@ -6,7 +6,7 @@ import {
   users,
   filmVariants,
 } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
 
 /** Extract a derived title from the first markdown H1 in review content. */
 function deriveTitle(content?: string | null): string | null {
@@ -36,6 +36,8 @@ r.get('/by-film/:filmId', optionalAuth, async (c) => {
   const format = c.req.query('format');
   const sort = c.req.query('sort') || 'helpful';
   const conds: any[] = [eq(reviews.filmId, filmId), eq(reviews.status, 'published')];
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) conds.push(notInArray(reviews.userId, hidden));
   if (format) {
     const variants = await db.select().from(filmVariants).where(eq(filmVariants.filmId, filmId));
     const ids = variants.filter((v) => v.format === format).map((v) => v.id);
@@ -91,6 +93,8 @@ r.get('/:id', optionalAuth, async (c) => {
     .leftJoin(filmVariants, eq(filmVariants.id, reviews.filmVariantId))
     .where(eq(reviews.id, c.req.param('id')));
   if (!row) return c.json({ error: 'Review not found' }, 404);
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.includes(row.author?.id)) return c.json({ error: 'Review not found' }, 404);
   return c.json(withTitle(row));
 });
 

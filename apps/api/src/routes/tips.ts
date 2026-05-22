@@ -1,6 +1,6 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, notInArray, sql } from 'drizzle-orm';
 import { filmTips, tipVotes, users } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
 
 const r = createApp();
 
@@ -11,6 +11,8 @@ r.get('/by-film/:filmId', optionalAuth, async (c) => {
   const category = c.req.query('category');
   const sort = c.req.query('sort') || 'top';
   const conds: any[] = [eq(filmTips.filmId, filmId), eq(filmTips.status, 'published')];
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) conds.push(notInArray(filmTips.userId, hidden));
   if (format && format !== 'all') conds.push(eq(filmTips.targetFormat, format));
   if (category) conds.push(eq(filmTips.category, category));
   const orderBy = sort === 'recent' ? desc(filmTips.createdAt) : desc(filmTips.netScore);
@@ -42,7 +44,9 @@ r.get('/:id', optionalAuth, async (c) => {
     .from(filmTips)
     .innerJoin(users, eq(users.id, filmTips.userId))
     .where(eq(filmTips.id, c.req.param('id')));
-  if (!row) return c.json({ error: 'Tips tidak ditemukan' }, 404);
+  if (!row) return c.json({ error: 'Tip not found' }, 404);
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.includes(row.author?.id)) return c.json({ error: 'Tip not found' }, 404);
   await db
     .update(filmTips)
     .set({ viewCount: sql`${filmTips.viewCount} + 1` })

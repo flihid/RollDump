@@ -12,7 +12,8 @@ import {
   userLists,
   userAchievements,
 } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
+import { notInArray } from 'drizzle-orm';
 
 /** Aggregate basic user stats used by /me + public profile. */
 async function computeUserStats(db: any, userId: string) {
@@ -294,6 +295,9 @@ r.get('/me/blocked', authMiddleware, async (c) => {
 r.get('/suggested', optionalAuth, async (c) => {
   const db = c.get('db');
   const me = c.get('user')?.id;
+  const hidden = await getHiddenUserIds(c);
+  const conds: any[] = [eq(users.status, 'active')];
+  if (hidden.length) conds.push(notInArray(users.id, hidden));
   const list = await db
     .select({
       id: users.id,
@@ -304,7 +308,7 @@ r.get('/suggested', optionalAuth, async (c) => {
       followersCount: users.followersCount,
     })
     .from(users)
-    .where(eq(users.status, 'active'))
+    .where(and(...conds))
     .orderBy(desc(users.followersCount))
     .limit(8);
   return c.json({ items: list.filter((u) => u.id !== me) });

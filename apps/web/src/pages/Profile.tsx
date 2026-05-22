@@ -14,7 +14,7 @@ export default function Profile() {
   const me = getUser();
   const isMe = me?.username === username;
   const [tab, setTab] = useState<Tab>('gallery');
-  const [blockConfirm, setBlockConfirm] = useState(false);
+  const [blockConfirm, setBlockConfirm] = useState<null | 'block' | 'unblock'>(null);
   const [selectedAchv, setSelectedAchv] = useState<any | null>(null);
   const qc = useQueryClient();
 
@@ -71,8 +71,15 @@ export default function Profile() {
     mutationFn: () => api.post(`/users/by-username/${username}/block`),
     onSuccess: (data: any) => {
       qc.invalidateQueries({ queryKey: ['user', username] });
-      setBlockConfirm(false);
-      toast.success(data.blocked ? `${u?.username} blocked` : `${u?.username} unblocked`);
+      qc.invalidateQueries({ queryKey: ['user-photos'] });
+      qc.invalidateQueries({ queryKey: ['user-reviews'] });
+      qc.invalidateQueries({ queryKey: ['user-lists'] });
+      qc.invalidateQueries({ queryKey: ['user-rolls'] });
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['comments'] });
+      setBlockConfirm(null);
+      toast.success(data.blocked ? `@${u?.username} blocked` : `@${u?.username} unblocked`);
     },
   });
 
@@ -147,7 +154,7 @@ export default function Profile() {
                 </button>
               )}
               <button
-                onClick={() => (isBlocked ? block.mutate() : setBlockConfirm(true))}
+                onClick={() => setBlockConfirm(isBlocked ? 'unblock' : 'block')}
                 className="btn-ghost px-3"
                 title={isBlocked ? 'Unblock' : 'Block'}
                 style={isBlocked ? { background: '#c8443a', color: 'white', borderColor: '#c8443a' } : undefined}
@@ -346,26 +353,44 @@ export default function Profile() {
         </>
       )}
 
-      {/* === BLOCK CONFIRMATION MODAL === */}
+      {/* === BLOCK / UNBLOCK CONFIRMATION MODAL === */}
       {blockConfirm && (
-        <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setBlockConfirm(false)}>
+        <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setBlockConfirm(null)}>
           <div className="card p-6 max-w-md w-full" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full grid place-items-center" style={{ background: 'rgba(200,68,58,0.15)', color: '#c8443a' }}>
-                <Shield className="w-6 h-6" />
+              <div
+                className="w-12 h-12 rounded-full grid place-items-center"
+                style={{
+                  background: blockConfirm === 'block' ? 'rgba(200,68,58,0.15)' : 'rgba(230,165,25,0.18)',
+                  color: blockConfirm === 'block' ? '#c8443a' : '#c68a0e',
+                }}
+              >
+                {blockConfirm === 'block' ? <Shield className="w-6 h-6" /> : <ShieldOff className="w-6 h-6" />}
               </div>
               <div>
-                <h3 className="font-heading text-lg text-ink-900">Block @{u.username}?</h3>
-                <div className="text-xs text-ink-500 font-mono-tech uppercase tracking-wider">This can be undone</div>
+                <h3 className="font-heading text-lg text-ink-900">
+                  {blockConfirm === 'block' ? `Block @${u.username}?` : `Unblock @${u.username}?`}
+                </h3>
+                <div className="text-xs text-ink-500 font-mono-tech uppercase tracking-wider">
+                  {blockConfirm === 'block' ? 'This can be undone' : 'You can re-block anytime'}
+                </div>
               </div>
             </div>
             <p className="text-sm text-ink-700 mb-5">
-              They won't be able to see your profile, photos, or interact with your content. You won't see theirs either. Any existing follow relationship between you both will be removed.
+              {blockConfirm === 'block'
+                ? "They won't be able to see your profile, photos, or interact with you. You also won't see any of their photos, reviews, tips, lists, or comments anywhere on RollDump. Any existing follow relationship between you will be removed."
+                : `You'll see @${u.username}'s photos, reviews, tips, lists, and comments again. Their profile will be visible to you, and they can interact with your content if they're not blocking you.`}
             </p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setBlockConfirm(false)} className="btn-ghost">Cancel</button>
-              <button onClick={() => block.mutate()} disabled={block.isPending} className="btn-danger">
-                {block.isPending ? 'Blocking…' : 'Block User'}
+              <button onClick={() => setBlockConfirm(null)} className="btn-ghost">Cancel</button>
+              <button
+                onClick={() => block.mutate()}
+                disabled={block.isPending}
+                className={blockConfirm === 'block' ? 'btn-danger' : 'btn-primary'}
+              >
+                {block.isPending
+                  ? blockConfirm === 'block' ? 'Blocking…' : 'Unblocking…'
+                  : blockConfirm === 'block' ? 'Block User' : 'Unblock User'}
               </button>
             </div>
           </div>

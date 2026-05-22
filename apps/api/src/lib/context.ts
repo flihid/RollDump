@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { verify } from 'hono/jwt';
+import { or, eq } from 'drizzle-orm';
 import { AuthService } from '@rolldump/auth';
-import { createDatabase } from '@rolldump/db';
+import { createDatabase, userBlocks } from '@rolldump/db';
 
 export type Bindings = {
   DATABASE_URL: string;
@@ -13,6 +14,7 @@ export type Variables = {
   user: { id: string; role?: string } | null;
   authService: AuthService;
   db: ReturnType<typeof createDatabase>;
+  hiddenUserIds?: string[];
 };
 
 export type AppEnv = { Bindings: Bindings; Variables: Variables };
@@ -75,4 +77,31 @@ export function slugify(s: string): string {
 
 export function cuidLike(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Returns the set of user IDs the current viewer should not see — that means
+ * users they blocked AND users who blocked them. Used to filter photos,
+ * reviews, tips, lists, comments, feed items, notifications etc.
+ *
+ * Cached on the context for the duration of the request.
+ */
+export async function getHiddenUserIds(c: any): Promise<string[]> {
+  const me = c.get('user')?.id;
+  if (!me) return [];
+  const cached = c.get('hiddenUserIds');
+  if (Array.isArray(cached)) return cached;
+  const db = c.get('db');
+  const rows = await db
+    .select({ a: userBlocks.blockerId, b: userBlocks.blockedId })
+    .from(userBlocks)
+    .where(or(eq(userBlocks.blockerId, me), eq(userBlocks.blockedId, me)));
+  const set = new Set<string>();
+  for (const row of rows) {
+    if (row.a !== me) set.add(row.a as string);
+    if (row.b !== me) set.add(row.b as string);
+  }
+  const arr = Array.from(set);
+  c.set('hiddenUserIds', arr);
+  return arr;
 }

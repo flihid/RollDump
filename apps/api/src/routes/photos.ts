@@ -10,7 +10,8 @@ import {
   likes,
   comments,
 } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
+import { notInArray } from 'drizzle-orm';
 
 const r = createApp();
 
@@ -23,6 +24,9 @@ r.get('/', optionalAuth, async (c) => {
   const conds: any[] = [eq(photos.status, 'published')];
   if (filmId) conds.push(eq(photos.filmId, filmId));
   if (userId) conds.push(eq(photos.userId, userId));
+  // Hide content from users blocked by / blocking the viewer
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) conds.push(notInArray(photos.userId, hidden));
   if (format) {
     const variants = await db
       .select()
@@ -94,6 +98,8 @@ r.get('/:id', optionalAuth, async (c) => {
     .leftJoin(lenses, eq(lenses.id, photos.lensId))
     .where(eq(photos.id, photoId));
   if (!row) return c.json({ error: 'Photo not found' }, 404);
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.includes(row.author?.id)) return c.json({ error: 'Photo not found' }, 404);
 
   // Like & comment counts so the FE doesn't need extra round-trips
   const [{ c: likeC }] = await db

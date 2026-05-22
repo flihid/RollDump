@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import {
   userLists,
   listItems,
@@ -9,7 +9,7 @@ import {
   brands,
   users,
 } from '@rolldump/db';
-import { authMiddleware, createApp, optionalAuth, slugify } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, optionalAuth, slugify } from '../lib/context';
 
 const r = createApp();
 
@@ -17,6 +17,9 @@ r.get('/', optionalAuth, async (c) => {
   const db = c.get('db');
   const tab = c.req.query('tab') || 'recent';
   const order = tab === 'trending' ? desc(userLists.likeCount) : desc(userLists.createdAt);
+  const conds: any[] = [eq(userLists.isPublic, true), eq(userLists.status, 'active')];
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.length) conds.push(notInArray(userLists.userId, hidden));
   const rows = await db
     .select({
       list: userLists,
@@ -24,7 +27,7 @@ r.get('/', optionalAuth, async (c) => {
     })
     .from(userLists)
     .innerJoin(users, eq(users.id, userLists.userId))
-    .where(and(eq(userLists.isPublic, true), eq(userLists.status, 'active')))
+    .where(and(...conds))
     .orderBy(order)
     .limit(30);
   return c.json({ items: rows });
@@ -43,9 +46,11 @@ r.get('/by-user/:userId', optionalAuth, async (c) => {
 r.get('/:id', optionalAuth, async (c) => {
   const db = c.get('db');
   const [list] = await db.select().from(userLists).where(eq(userLists.id, c.req.param('id')));
-  if (!list) return c.json({ error: 'List tidak ditemukan' }, 404);
+  if (!list) return c.json({ error: 'List not found' }, 404);
   if (!list.isPublic && list.userId !== c.get('user')?.id)
     return c.json({ error: 'Forbidden' }, 403);
+  const hidden = await getHiddenUserIds(c);
+  if (hidden.includes(list.userId)) return c.json({ error: 'List not found' }, 404);
   const rawItems = await db
     .select({ item: listItems, film: films, variant: filmVariants, brand: brands })
     .from(listItems)
