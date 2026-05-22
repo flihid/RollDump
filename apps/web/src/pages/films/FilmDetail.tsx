@@ -6,12 +6,14 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
 import { Loading, FormatBadge } from '../../components/common';
+import ReportModal from '../../components/ReportModal';
 
 type Tab = 'overview' | 'reviews' | 'photos' | 'tips';
 
 export default function FilmDetail() {
   const { slug } = useParams();
   const [tab, setTab] = useState<Tab>('overview');
+  const [reportTarget, setReportTarget] = useState<{ type: 'review'; id: string; label?: string } | null>(null);
   const qc = useQueryClient();
 
   const film = useQuery({
@@ -279,9 +281,20 @@ export default function FilmDetail() {
                       <button onClick={() => helpful.mutate(r.review.id)} className="flex items-center gap-1 hover:text-ink-900">
                         <ThumbsUp className="w-3.5 h-3.5" /> Helpful ({r.review.helpfulCount || 0})
                       </button>
-                      <button className="flex items-center gap-1 hover:text-red-500">
-                        <Flag className="w-3.5 h-3.5" /> Report
-                      </button>
+                      {isLoggedIn() && (
+                        <button
+                          onClick={() =>
+                            setReportTarget({
+                              type: 'review',
+                              id: r.review.id,
+                              label: r.review.title || `review by @${r.author?.username}`,
+                            })
+                          }
+                          className="flex items-center gap-1 hover:text-red-500"
+                        >
+                          <Flag className="w-3.5 h-3.5" /> Report
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -354,6 +367,10 @@ export default function FilmDetail() {
             ))
           )}
         </div>
+      )}
+
+      {reportTarget && (
+        <ReportModal target={reportTarget} onClose={() => setReportTarget(null)} />
       )}
     </div>
   );

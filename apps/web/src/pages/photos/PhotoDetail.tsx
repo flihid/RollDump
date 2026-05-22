@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Loading, FormatBadge } from '../../components/common';
 import { getUser, isLoggedIn } from '../../store/auth';
+import ReportModal from '../../components/ReportModal';
 
 export default function PhotoDetail() {
   const { id } = useParams();
@@ -52,10 +53,7 @@ export default function PhotoDetail() {
       nav(-1);
     },
   });
-  const report = useMutation({
-    mutationFn: () => api.post(`/reports/photo/${id}`, { reason: 'offensive' }),
-    onSuccess: () => toast.success('Report submitted'),
-  });
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (photo.isLoading) return <Loading />;
   if (!photo.data) return <div>Photo not found</div>;
@@ -139,7 +137,7 @@ export default function PhotoDetail() {
                 </button>
               )}
               {!isOwner && isLoggedIn() && (
-                <button onClick={() => report.mutate()} className="btn-ghost p-2">
+                <button onClick={() => setReportOpen(true)} className="btn-ghost p-2" title="Report photo">
                   <Flag className="w-4 h-4" />
                 </button>
               )}
@@ -176,6 +174,17 @@ export default function PhotoDetail() {
           </div>
         </div>
       </div>
+
+      {reportOpen && (
+        <ReportModal
+          target={{
+            type: 'photo',
+            id: p.id,
+            label: p.caption?.slice(0, 60) || `photo by @${author?.username}`,
+          }}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </div>
   );
 }
