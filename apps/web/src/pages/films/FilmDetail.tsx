@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Star, ThumbsUp, Flag, BookOpen, ImageIcon, Camera } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Star, ThumbsUp, Flag, BookOpen, ImageIcon, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
@@ -42,10 +42,21 @@ export default function FilmDetail() {
     enabled: !!filmId && tab === 'overview',
   });
 
-  const wishlist = useMutation({
+  // Track wishlist state for this film's variants
+  const wishlistIds = useQuery({
+    queryKey: ['wishlist-ids'],
+    queryFn: () => api.get('/films/wishlists/ids'),
+    enabled: isLoggedIn(),
+    staleTime: 30_000,
+  });
+  const addToWishlist = useMutation({
     mutationFn: (variantId: string) => api.post('/films/wishlists', { film_variant_id: variantId }),
-    onSuccess: () => toast.success('Added to wishlist'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['wishlist-ids'] }),
     onError: (e: any) => toast.error(e.message),
+  });
+  const removeFromWishlist = useMutation({
+    mutationFn: (variantId: string) => api.delete(`/films/wishlists/${variantId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['wishlist-ids'] }),
   });
   const helpful = useMutation({
     mutationFn: (id: string) => api.post(`/reviews/${id}/helpful`),
@@ -105,11 +116,37 @@ export default function FilmDetail() {
               <Star className="w-4 h-4" /> Write Review
             </Link>
           )}
-          {isLoggedIn() && v0 && (
-            <button onClick={() => wishlist.mutate(v0.id)} className="btn-ghost" style={{ color: '#f5f0e1', borderColor: 'rgba(255,255,255,0.2)' }}>
-              <Bookmark className="w-4 h-4" /> Save to Wishlist
-            </button>
-          )}
+          {isLoggedIn() && v0 && (() => {
+            const ids: string[] = wishlistIds.data?.ids || [];
+            const saved = ids.includes(v0.id);
+            const pending = addToWishlist.isPending || removeFromWishlist.isPending;
+            return (
+              <button
+                onClick={() => {
+                  if (pending) return;
+                  if (saved) removeFromWishlist.mutate(v0.id);
+                  else addToWishlist.mutate(v0.id);
+                }}
+                disabled={pending}
+                className="btn-ghost transition-all"
+                style={
+                  saved
+                    ? { background: '#e6a519', color: '#1a1a1a', borderColor: '#e6a519' }
+                    : { color: '#f5f0e1', borderColor: 'rgba(255,255,255,0.2)' }
+                }
+              >
+                {saved ? (
+                  <>
+                    <BookmarkCheck className="w-4 h-4" fill="#1a1a1a" /> Saved
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" /> Save to Wishlist
+                  </>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 

@@ -325,6 +325,78 @@
     letter-spacing: -0.5px;
   }
 
+  /* ── Film cover (replaces 3D roll) ── */
+  .film-cover-img {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #2d2d2d;
+    box-shadow: 0 6px 18px rgba(45,45,45,0.18);
+  }
+  .film-cover-art {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(45,45,45,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  .film-cover-art__band {
+    padding: 4px 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .film-cover-art__brand {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+  }
+  .film-cover-art__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 10px;
+    text-align: center;
+    gap: 4px;
+  }
+  .film-cover-art__name {
+    font-family: "Archivo Black", "Syne", sans-serif;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    word-break: break-word;
+  }
+  .film-cover-art__iso {
+    font-family: "Archivo Black", "Syne", sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .film-cover-art__sprockets {
+    display: flex;
+    justify-content: space-around;
+    padding: 3px 6px;
+    flex-shrink: 0;
+  }
+  .film-cover-art__sprockets span {
+    width: 6px;
+    height: 4px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 1px;
+  }
+  /* Larger sizes scale up internal text */
+  .film-cover-art[style*="280px"] .film-cover-art__name,
+  .film-cover-art[style*="200px"] .film-cover-art__name { font-size: 22px; }
+  .film-cover-art[style*="280px"] .film-cover-art__iso,
+  .film-cover-art[style*="200px"] .film-cover-art__iso { font-size: 38px; }
+  .film-cover-art[style*="280px"] .film-cover-art__brand,
+  .film-cover-art[style*="200px"] .film-cover-art__brand { font-size: 11px; }
+  .film-cover-art[style*="80px"] .film-cover-art__name { font-size: 10px; }
+  .film-cover-art[style*="80px"] .film-cover-art__iso { font-size: 16px; }
+  .film-cover-art[style*="80px"] .film-cover-art__brand { font-size: 8px; }
+
   /* Topbar pattern (used on every page) */
   .topbar {
     display: flex;

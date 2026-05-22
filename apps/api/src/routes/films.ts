@@ -242,6 +242,17 @@ r.patch('/:id/status', authMiddleware, requireRole('admin', 'super_admin'), asyn
   return c.json({ ok: true });
 });
 
+// Lightweight: just the variant IDs the current user has wishlisted.
+// Used by FilmCard hearts to render filled/empty state without N+1 queries.
+r.get('/wishlists/ids', authMiddleware, async (c) => {
+  const db = c.get('db');
+  const list = await db
+    .select({ id: wishlists.filmVariantId })
+    .from(wishlists)
+    .where(eq(wishlists.userId, c.get('user')!.id));
+  return c.json({ ids: list.map((r: any) => r.id) });
+});
+
 // Wishlist on variants
 r.post('/wishlists', authMiddleware, async (c) => {
   const { film_variant_id } = await c.req.json();

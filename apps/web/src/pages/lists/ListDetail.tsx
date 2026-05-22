@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { isLoggedIn } from '../../store/auth';
 import { Loading, FormatBadge } from '../../components/common';
-import FilmRoll3D from '../../components/FilmRoll3D';
+import FilmCover from '../../components/FilmCover';
 
 export default function ListDetail() {
   const { id } = useParams();
@@ -61,9 +61,19 @@ export default function ListDetail() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {items.map((row: any) => (
             <Link key={row.item.id} to={`/films/${row.film.slug}`} className="card card-hover overflow-hidden group">
-              <div className="film-card__visual relative spotlight-card">
-                <div className="film-card__glow" aria-hidden />
-                <FilmRoll3D film={row.film} size="md" hoverSpin />
+              <div className="relative" style={{ aspectRatio: '4 / 5', background: '#1a1a1a' }}>
+                {row.film.coverUrl ? (
+                  <img
+                    src={row.film.coverUrl}
+                    alt={row.film.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <FilmCover film={row.film} size="md" />
+                  </div>
+                )}
                 <div className="absolute top-2 right-2 z-10">
                   <FormatBadge format={row.variant.format} />
                 </div>

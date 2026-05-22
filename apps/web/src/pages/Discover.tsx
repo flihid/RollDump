@@ -4,7 +4,7 @@ import { Compass } from 'lucide-react';
 import { api } from '../lib/api';
 import { Loading } from '../components/common';
 import FilmCard from '../components/FilmCard';
-import FilmRoll3D from '../components/FilmRoll3D';
+import FilmCover from '../components/FilmCover';
 import RevealSection from '../components/RevealSection';
 
 export default function Discover() {
@@ -36,7 +36,16 @@ export default function Discover() {
                   {featured.brand?.name} • ISO {featured.iso}
                 </p>
               </div>
-              <FilmRoll3D film={featured} size="lg" autoSpin interactive />
+              {featured.coverUrl ? (
+                <img
+                  src={featured.coverUrl}
+                  alt={featured.name}
+                  className="w-[200px] h-[250px] object-cover rounded-md shadow-lg"
+                  loading="lazy"
+                />
+              ) : (
+                <FilmCover film={featured} size="lg" />
+              )}
             </div>
           </div>
         </Link>
