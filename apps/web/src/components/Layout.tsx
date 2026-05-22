@@ -23,16 +23,17 @@ import GlobalSearch from './GlobalSearch';
 import NotificationBell from './NotificationBell';
 import Logo from './Logo';
 
-const NAV = [
+type NavItem = { to: string; icon: any; label: string; pbi?: string | null };
+const NAV: { section: string; items: NavItem[] }[] = [
   { section: 'Discover', items: [
-    { to: '/', icon: HomeIcon, label: 'Home' },
+    { to: '/', icon: HomeIcon, label: 'Home', pbi: 'PBI-52' },
     { to: '/discover', icon: Compass, label: 'Discover' },
-    { to: '/films', icon: Film, label: 'Films' },
+    { to: '/films', icon: Film, label: 'Catalog', pbi: 'PBI-9' },
   ]},
   { section: 'Community', items: [
-    { to: '/photos', icon: ImageIcon, label: 'Gallery' },
-    { to: '/lists', icon: ListChecks, label: 'Lists' },
-    { to: '/tips', icon: BookOpen, label: 'Tips' },
+    { to: '/photos', icon: ImageIcon, label: 'Gallery', pbi: 'PBI-26' },
+    { to: '/lists', icon: ListChecks, label: 'Lists', pbi: 'PBI-43' },
+    { to: '/tips', icon: BookOpen, label: 'Tips', pbi: 'PBI-19' },
   ]},
 ];
 
@@ -65,7 +66,15 @@ export default function Layout() {
                 className={({ isActive }) => (isActive ? 'nav-item-active' : 'nav-item')}
               >
                 <it.icon className="w-[18px] h-[18px] shrink-0" />
-                {it.label}
+                <span className="flex-1">{it.label}</span>
+                {it.pbi && (
+                  <span
+                    className="text-[10px] font-mono-tech px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(230,165,25,0.18)', color: '#ffd56b' }}
+                  >
+                    {it.pbi}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>

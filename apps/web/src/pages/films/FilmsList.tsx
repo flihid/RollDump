@@ -1,28 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Filter as FilterIcon, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { api } from '../../lib/api';
-import { Loading, EmptyState } from '../../components/common';
+import { Loading, EmptyState, FormatBadge } from '../../components/common';
 import FilmCard from '../../components/FilmCard';
 
-const FORMATS = ['35mm', '120', 'large_format', 'instant', '110', 'half_frame'];
-const COLOR_TYPES = [
-  { key: 'color_negative', label: 'Color Negative' },
-  { key: 'bw', label: 'B&W' },
-  { key: 'slide_e6', label: 'Slide E6' },
+const FORMATS = [
+  { key: '35mm',         label: '35MM' },
+  { key: '120',          label: '120' },
+  { key: 'large_format', label: 'LARGE' },
+  { key: 'instant',      label: 'INSTANT' },
 ];
 
 export default function FilmsList() {
   const [params, setParams] = useSearchParams();
-  const [showFilter, setShowFilter] = useState(false);
 
   const q = params.get('q') || '';
   const sort = params.get('sort') || 'popular';
   const colorType = params.get('color_type') || '';
   const formats = useMemo(() => params.get('formats')?.split(',').filter(Boolean) || [], [params]);
-  const isoMin = params.get('iso_min') || '';
-  const isoMax = params.get('iso_max') || '';
+  const brand = params.get('brand') || '';
 
   const setParam = (k: string, v: string | null) => {
     const p = new URLSearchParams(params);
@@ -43,119 +41,124 @@ export default function FilmsList() {
 
   const brands = useQuery({ queryKey: ['brands'], queryFn: () => api.get('/brands') });
 
-  const reset = () => setParams(new URLSearchParams());
+  const totalCount = films.data?.items?.length ?? 0;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between flex-wrap gap-3">
+    <div className="page-enter">
+      {/* TOPBAR */}
+      <div className="topbar">
         <div>
-          <h1 className="text-2xl font-bold text-ink-900">Film Catalog</h1>
-          <p className="text-sm text-ink-600">Browse every emulsion curated by the community.</p>
+          <div className="crumbs">PBI-9 · PBI-46 · Film Catalog</div>
+          <h1>Film Catalog</h1>
         </div>
-        <div className="flex gap-2">
-          <input
-            placeholder="Search film name…"
-            className="input w-44 sm:w-64"
-            value={q}
-            onChange={(e) => setParam('q', e.target.value || null)}
-          />
-          <select className="input w-auto" value={sort} onChange={(e) => setParam('sort', e.target.value)}>
-            <option value="popular">Most reviewed</option>
-            <option value="rating">Highest rated</option>
-            <option value="recent">Newest</option>
-            <option value="name">A–Z</option>
-          </select>
-          <button onClick={() => setShowFilter((s) => !s)} className="btn-secondary lg:hidden">
-            <FilterIcon className="w-4 h-4" /> Filter
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
-        <aside className={`${showFilter ? '' : 'hidden lg:block'}`}>
-          <div className="card p-4 space-y-4 sticky top-20">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm text-ink-900">Filter</h3>
-              {Array.from(params.keys()).length > 0 && (
-                <button onClick={reset} className="text-xs text-primary-400 hover:underline flex items-center">
-                  <X className="w-3 h-3" /> Reset
-                </button>
-              )}
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-ink-600 mb-2">Format</div>
-              <div className="flex flex-wrap gap-1.5">
-                {FORMATS.map((f) => (
-                  <button key={f} onClick={() => toggleFormat(f)} className={formats.includes(f) ? 'chip-active' : 'chip'}>
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-ink-600 mb-2">Type</div>
-              <div className="flex flex-wrap gap-1.5">
-                {COLOR_TYPES.map((c) => (
-                  <button
-                    key={c.key}
-                    onClick={() => setParam('color_type', colorType === c.key ? null : c.key)}
-                    className={colorType === c.key ? 'chip-active' : 'chip'}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-ink-600 mb-2">ISO</div>
-              <div className="flex gap-2">
-                <input
-                  placeholder="Min"
-                  className="input"
-                  type="number"
-                  value={isoMin}
-                  onChange={(e) => setParam('iso_min', e.target.value || null)}
-                />
-                <input
-                  placeholder="Max"
-                  className="input"
-                  type="number"
-                  value={isoMax}
-                  onChange={(e) => setParam('iso_max', e.target.value || null)}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-ink-600 mb-2">Brand</div>
-              <div className="flex flex-wrap gap-1.5">
-                {(brands.data?.items || []).slice(0, 10).map((b: any) => (
-                  <button
-                    key={b.id}
-                    onClick={() => setParam('brand', params.get('brand') === b.slug ? null : b.slug)}
-                    className={params.get('brand') === b.slug ? 'chip-active' : 'chip'}
-                  >
-                    {b.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+        <div className="topbar-right">
+          <div className="hidden md:flex items-center gap-2 px-4 py-2.5 text-sm rounded-full"
+               style={{ background: '#fbf8ef', border: '1px solid #dcd5bf', color: '#7a7a7a', minWidth: 260 }}>
+            <Search className="w-4 h-4" />
+            <input
+              value={q}
+              onChange={(e) => setParam('q', e.target.value || null)}
+              placeholder="Search Portra, Velvia, etc…"
+              className="bg-transparent outline-none flex-1 text-sm placeholder-ink-500"
+            />
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                  style={{ background: '#e8e1cb', color: '#2d2d2d', border: '1px solid #dcd5bf' }}>⌘K</span>
           </div>
-        </aside>
-
-        <div>
-          {films.isLoading ? (
-            <Loading />
-          ) : (films.data?.items || []).length === 0 ? (
-            <EmptyState title="Tidak ada film ditemukan" description="Coba longgarkan filter Anda." />
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-5">
-              {films.data!.items.map((f: any, i: number) => (
-                <FilmCard key={f.id} film={f} showColorBadge delay={i * 40} />
-              ))}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* FILTER CHIPS */}
+      <div className="filter-row">
+        <span className="filter-label">Format</span>
+        <button
+          onClick={() => setParam('formats', null)}
+          className={formats.length === 0 ? 'badge badge-mustard cursor-pointer' : 'badge cursor-pointer hover:bg-ink-200'}
+          style={formats.length === 0 ? { background: '#e6a519', color: '#1a1a1a', border: '1px solid #c68a0e' } : undefined}
+        >
+          ALL · {totalCount}
+        </button>
+        {FORMATS.map((f) => {
+          const active = formats.includes(f.key);
+          const badgeClass =
+            f.key === '35mm' ? 'badge-35mm' :
+            f.key === '120' ? 'badge-120' :
+            f.key === 'large_format' ? 'badge-large' :
+            'badge-instant';
+          return (
+            <button
+              key={f.key}
+              onClick={() => toggleFormat(f.key)}
+              className={`${badgeClass} cursor-pointer transition-all`}
+              style={active ? { transform: 'scale(1.05)', boxShadow: '0 2px 8px rgba(45,45,45,0.15)' } : undefined}
+            >
+              {f.label}
+            </button>
+          );
+        })}
+
+        <span className="filter-sep" />
+
+        <span className="filter-label">Sort</span>
+        <select
+          value={sort}
+          onChange={(e) => setParam('sort', e.target.value)}
+          className="badge cursor-pointer outline-none"
+          style={{ paddingRight: 24 }}
+        >
+          <option value="popular">MOST REVIEWED</option>
+          <option value="rating">HIGHEST RATED</option>
+          <option value="recent">NEWEST</option>
+          <option value="name">A–Z</option>
+        </select>
+
+        {brands.data?.items?.length > 0 && (
+          <>
+            <span className="filter-sep" />
+            <span className="filter-label">Brand</span>
+            {(brands.data.items as any[]).slice(0, 8).map((b: any) => (
+              <button
+                key={b.id}
+                onClick={() => setParam('brand', brand === b.slug ? null : b.slug)}
+                className="badge cursor-pointer"
+                style={brand === b.slug
+                  ? { background: '#1a1a1a', color: '#e6a519', border: '1px solid #1a1a1a' }
+                  : undefined}
+              >
+                {b.name}
+              </button>
+            ))}
+          </>
+        )}
+
+        {(formats.length > 0 || colorType || brand || q) && (
+          <>
+            <span className="filter-sep" />
+            <button
+              onClick={() => setParams(new URLSearchParams())}
+              className="badge cursor-pointer"
+              style={{ background: '#c8443a', color: 'white', border: '1px solid #a8362d' }}
+            >
+              ✕ RESET
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* RESULTS */}
+      {films.isLoading ? (
+        <Loading />
+      ) : (films.data?.items || []).length === 0 ? (
+        <EmptyState title="No films found" description="Try loosening your filters." />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          {films.data!.items.map((f: any, i: number) => (
+            <FilmCard key={f.id} film={f} delay={i * 40} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+// Silence
+void FormatBadge;

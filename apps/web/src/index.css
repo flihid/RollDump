@@ -216,7 +216,7 @@
   .link-amber { color: #c68a0e; }
   .link-amber:hover { color: #e6a519; }
 
-  /* === Film card visual (mustard cover area + paper meta) === */
+  /* === Film card — design-system spec === */
   .film-card {
     background: #fbf8ef;
     border: 1px solid #dcd5bf;
@@ -237,29 +237,245 @@
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .film-card__visual {
+  .film-cover {
     position: relative;
     aspect-ratio: 4/5;
     background: linear-gradient(135deg, #2a2a2a, #4a4a4a);
+    overflow: hidden;
+    display: block;
+  }
+  .cover-art {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+  .film-cover .iso {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-family: "Archivo Black", "Syne", sans-serif;
+    font-size: 32px;
+    line-height: 1;
+    color: #e6a519;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    letter-spacing: -0.02em;
+    z-index: 2;
+  }
+  .film-cover .format-badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    z-index: 2;
+  }
+  .film-cover .save-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    background: rgba(245,240,225,0.92);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    transition: all 0.15s;
+    z-index: 2;
+    border: none;
+    cursor: pointer;
+  }
+  .film-cover .save-btn:hover { background: #e6a519; }
+  .film-meta {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .film-brand {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #7a7a7a;
+  }
+  .film-name {
+    font-family: "Syne", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #1a1a1a;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+  }
+  .film-stats {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 18px;
-    overflow: hidden;
+    gap: 10px;
+    font-size: 12px;
+    color: #4a4a4a;
+    margin-top: 2px;
   }
-  .film-card__glow {
-    position: absolute;
-    inset: 20% 10% 5%;
-    background: rgba(230, 165, 25, 0.25);
-    filter: blur(28px);
-    opacity: 0;
-    transition: opacity 0.35s;
-    pointer-events: none;
+  .film-stats .stars {
+    display: inline-flex;
+    gap: 1px;
+    color: #e6a519;
+    font-size: 13px;
+    letter-spacing: -0.5px;
   }
-  .film-card:hover .film-card__glow { opacity: 0.8; }
-  .film-card__meta {
-    padding: 16px;
+
+  /* Topbar pattern (used on every page) */
+  .topbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    padding-bottom: 22px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #dcd5bf;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .topbar .crumbs {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #7a7a7a;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .topbar h1 {
+    font-family: "Archivo Black", "Syne", sans-serif;
+    font-size: clamp(24px, 3.4vw, 32px);
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+    margin-top: 4px;
+    line-height: 1.05;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  /* Stat cards (4-up grid on home/profile/moderation) */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (min-width: 768px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-card {
     background: #fbf8ef;
+    border: 1px solid #dcd5bf;
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .stat-card .lbl {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #7a7a7a;
+    text-transform: uppercase;
+  }
+  .stat-card .val {
+    font-family: "Archivo Black", "Syne", sans-serif;
+    font-size: 30px;
+    line-height: 1.1;
+    color: #1a1a1a;
+    margin-top: 4px;
+    letter-spacing: -0.02em;
+  }
+  .stat-card .delta {
+    font-size: 12px;
+    color: #3f8f3f;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .stat-card.is-accent {
+    background: #1a1a1a;
+    color: #f5f0e1;
+    border-color: #1a1a1a;
+  }
+  .stat-card.is-accent .lbl { color: #ffd56b; }
+  .stat-card.is-accent .val { color: #e6a519; }
+
+  /* Feed grid (main + side) */
+  .feed-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  @media (min-width: 1024px) { .feed-grid { grid-template-columns: 2fr 1fr; } }
+
+  /* Section title (cream underline + Syne) */
+  .section-title-underlined {
+    font-family: "Syne", sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+  .section-sub {
+    font-size: 14px;
+    color: #4a4a4a;
+    margin-bottom: 20px;
+    max-width: 720px;
+  }
+
+  /* Catalog filter chip row */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #7a7a7a;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-right: 4px;
+    align-self: center;
+  }
+  .filter-sep {
+    width: 1px;
+    height: 22px;
+    background: #dcd5bf;
+    margin: 0 4px;
+  }
+
+  /* Icon button (notification bell etc) */
+  .icon-btn {
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    background: #fbf8ef;
+    border: 1px solid #dcd5bf;
+    position: relative;
+    transition: all 0.15s;
+    color: #2d2d2d;
+  }
+  .icon-btn:hover { border-color: #2d2d2d; }
+  .icon-btn .dot {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #e6a519;
+    border: 2px solid #fbf8ef;
+  }
+
+  /* Avatar */
+  .avatar-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e6a519, #c68a0e);
+    display: grid; place-items: center;
+    color: #1a1a1a;
+    font-weight: 700;
+    border: 2px solid #f5f0e1;
+    box-shadow: 0 2px 6px rgba(45,45,45,0.08);
+    overflow: hidden;
   }
 
   /* Stat pill (used on hero meta strip) */
