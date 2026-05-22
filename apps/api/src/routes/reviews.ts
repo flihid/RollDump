@@ -8,6 +8,16 @@ import {
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth } from '../lib/context';
 
+/** Extract a derived title from the first markdown H1 in review content. */
+function deriveTitle(content?: string | null): string | null {
+  if (!content) return null;
+  const m = content.match(/^\s*#\s+(.+?)\s*$/m);
+  return m ? m[1] : null;
+}
+function withTitle<T extends { review: any }>(row: T): T {
+  return { ...row, review: { ...row.review, title: deriveTitle(row.review?.content) } };
+}
+
 const r = createApp();
 
 async function recomputeFilmAggregate(db: any, filmId: string) {
@@ -58,7 +68,7 @@ r.get('/by-film/:filmId', optionalAuth, async (c) => {
     .where(and(...conds))
     .orderBy(orderBy)
     .limit(50);
-  return c.json({ items: rows });
+  return c.json({ items: rows.map(withTitle) });
 });
 
 r.get('/:id', optionalAuth, async (c) => {
@@ -80,8 +90,8 @@ r.get('/:id', optionalAuth, async (c) => {
     .innerJoin(films, eq(films.id, reviews.filmId))
     .leftJoin(filmVariants, eq(filmVariants.id, reviews.filmVariantId))
     .where(eq(reviews.id, c.req.param('id')));
-  if (!row) return c.json({ error: 'Review tidak ditemukan' }, 404);
-  return c.json(row);
+  if (!row) return c.json({ error: 'Review not found' }, 404);
+  return c.json(withTitle(row));
 });
 
 r.post('/', authMiddleware, async (c) => {
@@ -194,7 +204,7 @@ r.get('/by-user/:userId', optionalAuth, async (c) => {
     .where(and(eq(reviews.userId, c.req.param('userId')), eq(reviews.status, 'published')))
     .orderBy(desc(reviews.createdAt))
     .limit(50);
-  return c.json({ items: list });
+  return c.json({ items: list.map(withTitle) });
 });
 
 export default r;

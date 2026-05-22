@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   userLists,
   listItems,
@@ -6,6 +6,7 @@ import {
   listSaves,
   films,
   filmVariants,
+  brands,
   users,
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth, slugify } from '../lib/context';
@@ -45,13 +46,20 @@ r.get('/:id', optionalAuth, async (c) => {
   if (!list) return c.json({ error: 'List tidak ditemukan' }, 404);
   if (!list.isPublic && list.userId !== c.get('user')?.id)
     return c.json({ error: 'Forbidden' }, 403);
-  const items = await db
-    .select({ item: listItems, film: films, variant: filmVariants })
+  const rawItems = await db
+    .select({ item: listItems, film: films, variant: filmVariants, brand: brands })
     .from(listItems)
     .innerJoin(filmVariants, eq(filmVariants.id, listItems.filmVariantId))
     .innerJoin(films, eq(films.id, filmVariants.filmId))
+    .leftJoin(brands, eq(brands.id, films.brandId))
     .where(eq(listItems.listId, list.id))
     .orderBy(listItems.position);
+  // Flatten: attach brand onto film so FilmRoll3D + FilmCard work
+  const items = rawItems.map((row: any) => ({
+    item: row.item,
+    film: { ...row.film, brand: row.brand },
+    variant: row.variant,
+  }));
   const [author] = await db.select().from(users).where(eq(users.id, list.userId));
   return c.json({
     list,

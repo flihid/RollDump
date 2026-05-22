@@ -271,16 +271,24 @@ r.delete('/wishlists/:variantId', authMiddleware, async (c) => {
 r.get('/wishlists/me', authMiddleware, async (c) => {
   const db = c.get('db');
   const userId = c.get('user')!.id;
-  const list = await db
+  const rows = await db
     .select({
       film: films,
       variant: filmVariants,
+      brand: brands,
     })
     .from(wishlists)
     .innerJoin(filmVariants, eq(filmVariants.id, wishlists.filmVariantId))
     .innerJoin(films, eq(films.id, filmVariants.filmId))
+    .leftJoin(brands, eq(brands.id, films.brandId))
     .where(eq(wishlists.userId, userId));
-  return c.json({ items: list });
+  // Flatten: attach brand onto film so FilmRoll3D + FilmCard can read film.brand.name
+  return c.json({
+    items: rows.map((row: any) => ({
+      film: { ...row.film, brand: row.brand },
+      variant: row.variant,
+    })),
+  });
 });
 
 export default r;

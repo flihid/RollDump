@@ -293,12 +293,21 @@ r.get('/notifications', authMiddleware, async (c) => {
       review_helpful: `@${row.actorUsername} marked your review as helpful`,
       mention: `@${row.actorUsername} mentioned you`,
     }[row.type as string];
+
+    // Deep-link by notifiable type → otherwise fall back to actor profile
+    let actionUrl: string | null = null;
+    if (row.notifiableType === 'photo' && row.notifiableId) actionUrl = `/photos/${row.notifiableId}`;
+    else if (row.notifiableType === 'review' && row.notifiableId) actionUrl = `/reviews/${row.notifiableId}`;
+    else if (row.notifiableType === 'list' && row.notifiableId) actionUrl = `/lists/${row.notifiableId}`;
+    else if (row.type === 'follow' && row.actorUsername) actionUrl = `/u/${row.actorUsername}`;
+    else if (row.actorUsername) actionUrl = `/u/${row.actorUsername}`;
+
     return {
       id: row.id,
       type: row.type,
       message: messageFromPayload || fallbackMsg || 'New activity',
       title: messageFromPayload || fallbackMsg || 'Notification',
-      actionUrl: row.actorUsername ? `/u/${row.actorUsername}` : null,
+      actionUrl,
       readAt: row.readAt,
       isRead: row.isRead,
       createdAt: row.createdAt,

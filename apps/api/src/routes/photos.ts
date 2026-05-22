@@ -81,12 +81,18 @@ r.get('/:id', optionalAuth, async (c) => {
 r.post('/', authMiddleware, async (c) => {
   const body = await c.req.json();
   const db = c.get('db');
-  if (!body.imageUrl) return c.json({ error: 'imageUrl wajib' }, 400);
+  if (!body.imageUrl) return c.json({ error: 'imageUrl is required' }, 400);
   let filmId: string | undefined = body.filmId;
   if (!filmId && body.filmVariantId) {
     const [v] = await db.select().from(filmVariants).where(eq(filmVariants.id, body.filmVariantId));
     if (v) filmId = v.filmId;
   }
+  // Persist cameraText/lensText as EXIF since the photos table has no dedicated columns
+  const exif: Record<string, any> = body.exif || {};
+  if (body.cameraText) exif.camera = body.cameraText;
+  if (body.lensText) exif.lens = body.lensText;
+  if (body.labName) exif.lab = body.labName;
+  if (body.visibility) exif.visibility = body.visibility;
   const [row] = await db
     .insert(photos)
     .values({
@@ -103,7 +109,8 @@ r.post('/', authMiddleware, async (c) => {
       pushPullStops: body.pushPullStops || 0,
       shootingConditions: body.shootingConditions,
       shotAtDate: body.shotAtDate ? new Date(body.shotAtDate) : null,
-      location: body.location,
+      location: body.location || body.shotLocation,
+      exif: Object.keys(exif).length ? exif : null,
       width: body.width,
       height: body.height,
     })
@@ -120,28 +127,39 @@ r.post('/', authMiddleware, async (c) => {
 r.post('/bulk', authMiddleware, async (c) => {
   const body = await c.req.json();
   const db = c.get('db');
-  const items: any[] = body.items || [];
-  if (!items.length) return c.json({ error: 'items wajib' }, 400);
+  const items: any[] = (body.items || []).filter((it: any) => it && it.imageUrl);
+  if (!items.length) return c.json({ error: 'items is required' }, 400);
   let filmId: string | undefined = body.filmId;
   if (!filmId && body.filmVariantId) {
     const [v] = await db.select().from(filmVariants).where(eq(filmVariants.id, body.filmVariantId));
     if (v) filmId = v.filmId;
   }
-  // create roll
+  const sharedExif: Record<string, any> = {};
+  if (body.cameraText) sharedExif.camera = body.cameraText;
+  if (body.lensText) sharedExif.lens = body.lensText;
+  if (body.labName) sharedExif.lab = body.labName;
+  if (body.visibility) sharedExif.visibility = body.visibility;
+
+  // Create roll album
   const [roll] = await db
     .insert(rolls)
     .values({
       userId: c.get('user')!.id,
       filmVariantId: body.filmVariantId,
-      title: body.rollTitle || `Roll ${new Date().toLocaleDateString('id-ID')}`,
+      title: body.rollTitle || `Roll ${new Date().toLocaleDateString('en-US')}`,
+      description: body.shotLocation
+        ? `Shot in ${body.shotLocation}${body.cameraText ? ` on ${body.cameraText}` : ''}`
+        : null,
       labName: body.labName,
       developedAt: body.developedAt ? new Date(body.developedAt) : null,
       photoCount: items.length,
     })
     .returning();
+
   const created: any[] = [];
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
+    const exif = { ...sharedExif, ...(it.exif || {}) };
     const [p] = await db
       .insert(photos)
       .values({
@@ -155,8 +173,11 @@ r.post('/bulk', authMiddleware, async (c) => {
         cameraId: body.cameraId,
         lensId: body.lensId,
         frameSize: body.frameSize,
-        frameNumber: it.frameNumber || i + 1,
+        frameNumber: it.frameNumber ?? i + 1,
+        pushPullStops: body.pushPullStops ?? 0,
         shootingConditions: body.shootingConditions,
+        location: body.shotLocation || body.location || null,
+        exif: Object.keys(exif).length ? exif : null,
       })
       .returning();
     created.push(p);
@@ -164,11 +185,12 @@ r.post('/bulk', authMiddleware, async (c) => {
   if (created.length && !roll.coverPhotoId) {
     await db.update(rolls).set({ coverPhotoId: created[0].id }).where(eq(rolls.id, roll.id));
   }
-  if (filmId)
+  if (filmId) {
     await db
       .update(films)
       .set({ photoCount: sql`${films.photoCount} + ${created.length}` })
       .where(eq(films.id, filmId));
+  }
   return c.json({ roll, photos: created }, 201);
 });
 
@@ -214,24 +236,69 @@ r.delete('/:id', authMiddleware, async (c) => {
   return c.body(null, 204);
 });
 
-// Rolls
+// Rolls — list by user, enriched with film name + cover thumbnail
 r.get('/rolls/by-user/:userId', optionalAuth, async (c) => {
-  const list = await c
-    .get('db')
-    .select()
+  const db = c.get('db');
+  const rows = await db
+    .select({
+      id: rolls.id,
+      title: rolls.title,
+      description: rolls.description,
+      labName: rolls.labName,
+      developedAt: rolls.developedAt,
+      photoCount: rolls.photoCount,
+      coverPhotoId: rolls.coverPhotoId,
+      createdAt: rolls.createdAt,
+      filmVariantId: rolls.filmVariantId,
+      variantFormat: filmVariants.format,
+      filmId: filmVariants.filmId,
+      filmName: films.name,
+    })
     .from(rolls)
+    .leftJoin(filmVariants, eq(filmVariants.id, rolls.filmVariantId))
+    .leftJoin(films, eq(films.id, filmVariants.filmId))
     .where(eq(rolls.userId, c.req.param('userId')))
     .orderBy(desc(rolls.createdAt))
     .limit(50);
-  return c.json({ items: list });
+
+  // Attach cover URL from photo
+  const coverIds = rows.map((r: any) => r.coverPhotoId).filter(Boolean);
+  const covers = coverIds.length
+    ? await db.select({ id: photos.id, thumbUrl: photos.thumbUrl, imageUrl: photos.imageUrl })
+        .from(photos)
+        .where(inArray(photos.id, coverIds))
+    : [];
+  const coverMap = new Map(covers.map((c: any) => [c.id, c.thumbUrl || c.imageUrl]));
+
+  return c.json({
+    items: rows.map((r: any) => ({
+      ...r,
+      coverUrl: coverMap.get(r.coverPhotoId) || null,
+    })),
+  });
 });
 
 r.get('/rolls/:id', optionalAuth, async (c) => {
   const db = c.get('db');
-  const [roll] = await db.select().from(rolls).where(eq(rolls.id, c.req.param('id')));
-  if (!roll) return c.json({ error: 'Roll tidak ditemukan' }, 404);
-  const ps = await db.select().from(photos).where(eq(photos.rollId, roll.id));
-  return c.json({ roll, photos: ps });
+  const [row] = await db
+    .select({
+      roll: rolls,
+      film: films,
+      variant: filmVariants,
+      author: { id: users.id, username: users.username, avatarUrl: users.avatarUrl, fullName: users.fullName },
+    })
+    .from(rolls)
+    .leftJoin(filmVariants, eq(filmVariants.id, rolls.filmVariantId))
+    .leftJoin(films, eq(films.id, filmVariants.filmId))
+    .leftJoin(users, eq(users.id, rolls.userId))
+    .where(eq(rolls.id, c.req.param('id')));
+  if (!row) return c.json({ error: 'Roll not found' }, 404);
+  const ps = await db
+    .select()
+    .from(photos)
+    .where(eq(photos.rollId, row.roll.id))
+    .orderBy(photos.frameNumber);
+  return c.json({ ...row, photos: ps });
 });
 
 export default r;
