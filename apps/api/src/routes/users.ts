@@ -16,8 +16,10 @@ import {
 import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
 import { notInArray } from 'drizzle-orm';
 
-/** Aggregate basic user stats used by /me + public profile. */
-async function computeUserStats(db: any, userId: string) {
+/** Aggregate basic user stats used by /me + public profile.
+ *  `hidden` is the list of user IDs to exclude from follower/following counts
+ *  (so blockers + blocked never appear as followers). */
+async function computeUserStats(db: any, userId: string, hidden: string[] = []) {
   const [photoC] = await db.select({ c: sql<number>`count(*)` }).from(photos).where(eq(photos.userId, userId));
   const [reviewC] = await db.select({ c: sql<number>`count(*)` }).from(reviews).where(eq(reviews.userId, userId));
   const [listC] = await db.select({ c: sql<number>`count(*)` }).from(userLists).where(eq(userLists.userId, userId));
@@ -27,6 +29,14 @@ async function computeUserStats(db: any, userId: string) {
     .select({ avg: sql<number>`coalesce(avg(${reviews.ratingOverall}), 0)` })
     .from(reviews)
     .where(eq(reviews.userId, userId));
+  // Live counts from follows table — denormalized counters can drift after
+  // blocks/unblocks so we always compute fresh here. Blocked users excluded.
+  const followersConds: any[] = [eq(follows.followingId, userId)];
+  if (hidden.length) followersConds.push(notInArray(follows.followerId, hidden));
+  const followingConds: any[] = [eq(follows.followerId, userId)];
+  if (hidden.length) followingConds.push(notInArray(follows.followingId, hidden));
+  const [followersC] = await db.select({ c: sql<number>`count(*)` }).from(follows).where(and(...followersConds));
+  const [followingC] = await db.select({ c: sql<number>`count(*)` }).from(follows).where(and(...followingConds));
   return {
     photoCount: Number(photoC?.c || 0),
     reviewCount: Number(reviewC?.c || 0),
@@ -35,6 +45,8 @@ async function computeUserStats(db: any, userId: string) {
     achievementCount: Number(achievementC?.c || 0),
     avgRating: Number(avgRating?.avg || 0),
     streak: Math.min(30, Number(rollC?.c || 0)), // simple proxy until streak tracking exists
+    followersCount: Number(followersC?.c || 0),
+    followingCount: Number(followingC?.c || 0),
   };
 }
 
@@ -45,15 +57,13 @@ r.get('/me', authMiddleware, async (c) => {
   const [u] = await db.select().from(users).where(eq(users.id, c.get('user')!.id));
   if (!u) return c.json({ error: 'User not found' }, 404);
   const { password, ...safe } = u as any;
-  const stats = await computeUserStats(db, u.id);
+  const hidden = await getHiddenUserIds(c);
+  const stats = await computeUserStats(db, u.id, hidden);
   return c.json({
     user: {
       ...safe,
-      stats: {
-        ...stats,
-        followersCount: u.followersCount ?? 0,
-        followingCount: u.followingCount ?? 0,
-      },
+      // stats already contains live followersCount/followingCount
+      stats,
     },
   });
 });
@@ -173,7 +183,8 @@ r.get('/by-username/:username', optionalAuth, async (c) => {
   const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
   if (!u) return c.json({ error: 'User not found' }, 404);
   const { password, totpSecret, email, lastLoginIp, ...safe } = u as any;
-  const stats = await computeUserStats(db, u.id);
+  const hidden = await getHiddenUserIds(c);
+  const stats = await computeUserStats(db, u.id, hidden);
 
   // Compute relationship flags for the viewer
   const me = c.get('user')?.id;
@@ -201,11 +212,7 @@ r.get('/by-username/:username', optionalAuth, async (c) => {
   return c.json({
     user: {
       ...safe,
-      stats: {
-        ...stats,
-        followersCount: u.followersCount ?? 0,
-        followingCount: u.followingCount ?? 0,
-      },
+      stats, // already includes live followersCount/followingCount (blocked excluded)
       isBlocked,
       isBlockedBy,
       isFollowing,
@@ -324,11 +331,14 @@ r.post('/by-username/:username/block', authMiddleware, async (c) => {
   }
 });
 
-// Followers + following lists (own profile uses /me/* shortcuts)
+// Followers + following lists. Excludes anyone the viewer has blocked or who has blocked the viewer.
 r.get('/by-username/:username/followers', optionalAuth, async (c) => {
   const db = c.get('db');
   const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
   if (!u) return c.json({ error: 'User not found' }, 404);
+  const hidden = await getHiddenUserIds(c);
+  const conds: any[] = [eq(follows.followingId, u.id)];
+  if (hidden.length) conds.push(notInArray(follows.followerId, hidden));
   const list = await db
     .select({
       id: users.id,
@@ -339,7 +349,7 @@ r.get('/by-username/:username/followers', optionalAuth, async (c) => {
     })
     .from(follows)
     .innerJoin(users, eq(users.id, follows.followerId))
-    .where(eq(follows.followingId, u.id));
+    .where(and(...conds));
   return c.json({ items: list });
 });
 
@@ -347,6 +357,9 @@ r.get('/by-username/:username/following', optionalAuth, async (c) => {
   const db = c.get('db');
   const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
   if (!u) return c.json({ error: 'User not found' }, 404);
+  const hidden = await getHiddenUserIds(c);
+  const conds: any[] = [eq(follows.followerId, u.id)];
+  if (hidden.length) conds.push(notInArray(follows.followingId, hidden));
   const list = await db
     .select({
       id: users.id,
@@ -357,7 +370,7 @@ r.get('/by-username/:username/following', optionalAuth, async (c) => {
     })
     .from(follows)
     .innerJoin(users, eq(users.id, follows.followingId))
-    .where(eq(follows.followerId, u.id));
+    .where(and(...conds));
   return c.json({ items: list });
 });
 

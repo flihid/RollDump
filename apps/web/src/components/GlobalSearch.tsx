@@ -172,7 +172,8 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4"
+      className="modal-overlay flex items-start justify-center px-4"
+      style={{ paddingTop: '10vh', display: 'flex' }}
       onClick={onClose}
     >
       <div

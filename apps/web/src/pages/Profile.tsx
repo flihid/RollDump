@@ -186,8 +186,8 @@ export default function Profile() {
 
       {!hideContent && (
         <>
-          {/* Stat grid */}
-          <div className="stat-grid">
+          {/* Stat grid — followers & following as separate clickable cards */}
+          <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
             <div className="stat-card">
               <div className="lbl">Total Rolls</div>
               <div className="val">{stats.rollCount ?? 0}</div>
@@ -204,8 +204,20 @@ export default function Profile() {
             >
               <div className="lbl">Followers</div>
               <div className="val">{(stats.followersCount ?? 0).toLocaleString()}</div>
-              <div className="delta text-ink-500">Click to view →</div>
+              <div className="delta" style={{ color: '#c68a0e' }}>View list →</div>
             </button>
+            <button
+              type="button"
+              onClick={() => setFollowersOpen('following')}
+              className="stat-card text-left cursor-pointer hover:border-ink-400 transition"
+              title="View following"
+            >
+              <div className="lbl">Following</div>
+              <div className="val">{(stats.followingCount ?? 0).toLocaleString()}</div>
+              <div className="delta" style={{ color: '#c68a0e' }}>View list →</div>
+            </button>
+          </div>
+          <div className="stat-grid" style={{ marginTop: -8, gridTemplateColumns: '1fr' }}>
             <div className="stat-card is-accent">
               <div className="lbl">Badges Earned</div>
               <div className="val">

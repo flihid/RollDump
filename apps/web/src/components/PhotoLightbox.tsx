@@ -254,12 +254,14 @@ export default function PhotoLightbox({ photoId, onClose }: { photoId: string; o
             />
             {/* You can't report your own photo */}
             {isLoggedIn() && !isOwn && (
-              <ActionBtn
+              <button
                 onClick={() => setReportOpen(true)}
-                icon={<Flag className="w-4 h-4" />}
-                label="Report"
-                muted
-              />
+                title="Report this photo"
+                className="flex items-center justify-center rounded-full transition py-2.5"
+                style={{ background: '#ede5cf', color: '#4a4a4a', border: '1px solid #dcd5bf' }}
+              >
+                <Flag className="w-4 h-4" />
+              </button>
             )}
           </div>
 

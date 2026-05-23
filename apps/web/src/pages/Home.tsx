@@ -23,10 +23,16 @@ export default function Home() {
     queryFn: () => api.get('/users/suggested'),
     enabled: isLoggedIn(),
   });
+  // Live stats from API — getUser() snapshot from localStorage doesn't have them
+  const me = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get('/users/me'),
+    enabled: isLoggedIn(),
+  });
 
   const loggedIn = isLoggedIn();
   const user = getUser();
-  const stats = (user as any)?.stats || {};
+  const stats = me.data?.user?.stats || {};
   const fotd = trending.data?.items?.[0]; // Film of the Day
 
   const greeting = (() => {
@@ -45,38 +51,57 @@ export default function Home() {
           <h1>{loggedIn ? `${greeting}, ${user?.username || 'shooter'} ☀️` : 'Track every roll.'}</h1>
         </div>
         <div className="topbar-right">
-          <div className="hidden md:flex items-center gap-2 px-4 py-2.5 text-sm rounded-full"
-               style={{ background: '#fbf8ef', border: '1px solid #dcd5bf', color: '#7a7a7a', minWidth: 280 }}>
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
+            className="hidden md:flex items-center gap-2 px-4 py-2.5 text-sm rounded-full transition hover:border-ink-400"
+            style={{ background: '#fbf8ef', border: '1px solid #dcd5bf', color: '#7a7a7a', minWidth: 320, cursor: 'pointer' }}
+          >
             <Search className="w-4 h-4" />
             <span>Search films, photographers, lists…</span>
-            <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded"
-                  style={{ background: '#e8e1cb', color: '#2d2d2d', border: '1px solid #dcd5bf' }}>⌘K</span>
-          </div>
+            <span
+              className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded"
+              style={{ background: '#e8e1cb', color: '#2d2d2d', border: '1px solid #dcd5bf' }}
+            >
+              ⌘K
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* === STAT GRID === */}
+      {/* === STAT GRID — personalized to the signed-in user === */}
       {loggedIn && (
         <div className="stat-grid">
           <div className="stat-card">
             <div className="lbl">Rolls This Year</div>
             <div className="val">{stats.rollCount ?? 0}</div>
-            <div className="delta">+{Math.floor((stats.rollCount ?? 0) / 3)} from last month</div>
+            <div className="delta">
+              {stats.rollCount > 0
+                ? `${stats.photoCount ?? 0} frames captured`
+                : 'Log your first roll'}
+            </div>
           </div>
           <div className="stat-card">
             <div className="lbl">Total Photos</div>
             <div className="val">{(stats.photoCount ?? 0).toLocaleString()}</div>
-            <div className="delta">+{Math.floor((stats.photoCount ?? 0) / 10)} this week</div>
+            <div className="delta">
+              {stats.photoCount > 0
+                ? `Across ${stats.rollCount ?? 0} rolls`
+                : 'Upload to start'}
+            </div>
           </div>
           <div className="stat-card">
             <div className="lbl">Avg. Rating</div>
-            <div className="val">{(stats.avgRating ?? 4.3).toFixed(1)}</div>
-            <div className="delta" style={{ color: '#e6a519' }}>★★★★☆</div>
+            <div className="val">{(stats.avgRating ?? 0).toFixed(1)}</div>
+            <div className="delta" style={{ color: '#e6a519' }}>
+              {stats.reviewCount > 0 ? `from ${stats.reviewCount} review${stats.reviewCount > 1 ? 's' : ''}` : 'Write a review'}
+            </div>
           </div>
           <div className="stat-card is-accent">
-            <div className="lbl">Streak</div>
-            <div className="val">{stats.streak ?? 0} days</div>
-            <div className="delta" style={{ color: '#ffd56b' }}>🔥 Keep shooting!</div>
+            <div className="lbl">Followers</div>
+            <div className="val">{(stats.followersCount ?? 0).toLocaleString()}</div>
+            <div className="delta" style={{ color: '#ffd56b' }}>
+              {stats.followersCount > 0 ? `Following ${stats.followingCount ?? 0}` : 'Share & build community'}
+            </div>
           </div>
         </div>
       )}
@@ -99,19 +124,32 @@ export default function Home() {
               ))}
             </>
           ) : loggedIn && !feed.isLoading && feed.data?.items?.length === 0 ? (
-            <div className="card p-10 text-center mb-7">
-              <div className="text-5xl mb-3">🎞️</div>
-              <h3 className="font-heading text-xl text-ink-900 mb-2">
-                Be the first to post on RollDump
-              </h3>
-              <p className="text-sm text-ink-600 max-w-md mx-auto mb-5">
-                Nothing in your feed yet. Upload your first roll, write a review,
-                or follow more photographers to see fresh content here.
-              </p>
-              <div className="flex gap-2 justify-center flex-wrap">
-                <Link to="/upload" className="btn-primary">Upload a Roll</Link>
-                <Link to="/films" className="btn-ghost">Find a Film to Review</Link>
-                <Link to="/discover" className="btn-ghost">Discover Photographers</Link>
+            <div
+              className="mb-7 px-6 sm:px-10 py-14 text-center rounded-[26px] relative overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #e6a519 0%, #c68a0e 100%)',
+                color: '#1a1a1a',
+              }}
+            >
+              <div
+                className="absolute right-[-40px] top-[-40px] w-[240px] h-[240px] rounded-full pointer-events-none"
+                style={{ background: 'rgba(255,255,255,0.15)' }}
+              />
+              <div className="relative z-10">
+                <div className="text-6xl mb-4">🎞️</div>
+                <h2 className="text-3xl sm:text-4xl font-display mb-2">
+                  Your feed starts here.
+                </h2>
+                <p className="text-sm sm:text-base mb-6 max-w-lg mx-auto" style={{ color: 'rgba(26,26,26,0.78)' }}>
+                  Nothing in your feed yet. Upload your first roll, write a review,
+                  or follow more photographers to see fresh activity show up here.
+                </p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  <Link to="/upload" className="btn-secondary">📷 Upload Your First Roll</Link>
+                  <Link to="/discover" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
+                    Find Photographers
+                  </Link>
+                </div>
               </div>
             </div>
           ) : (

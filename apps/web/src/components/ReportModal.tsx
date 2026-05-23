@@ -67,8 +67,9 @@ export default function ReportModal({
         detail: detail.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success("Report submitted. Thanks — we'll review it.");
-      // Hide the reported content from this user immediately by busting caches
+      toast.success("Reported. Hidden from your view — mods will review it.");
+      // Hide the reported content from THIS user only (others still see it normally
+      // until a moderator decides). Bust local caches so it disappears immediately.
       qc.invalidateQueries({ queryKey: ['gallery'] });
       qc.invalidateQueries({ queryKey: ['user-photos'] });
       qc.invalidateQueries({ queryKey: ['film-photos'] });

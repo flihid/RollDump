@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Search,
   Compass,
   Film,
   Image as ImageIcon,
@@ -18,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { clearAuth, getUser, isAdmin, isLoggedIn } from '../store/auth';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GlobalSearch from './GlobalSearch';
 import NotificationBell from './NotificationBell';
 import Logo from './Logo';
@@ -43,6 +42,25 @@ export default function Layout() {
   const loggedIn = isLoggedIn();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Listen for global "open-global-search" events + ⌘K hotkey.
+  // This is the only way to open the palette now — Home's search pill
+  // dispatches this event when clicked.
+  useEffect(() => {
+    const onEvent = () => setSearchOpen(true);
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener('open-global-search', onEvent);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('open-global-search', onEvent);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, []);
 
   const handleLogout = () => {
     clearAuth();
@@ -122,17 +140,7 @@ export default function Layout() {
               <Logo size={36} showWordmark={false} />
             </Link>
 
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 flex-1 max-w-md px-4 py-2.5 text-sm rounded-full transition"
-              style={{ background: '#fbf8ef', border: '1px solid #dcd5bf', color: '#7a7a7a' }}
-            >
-              <Search className="w-4 h-4" />
-              <span>Search films, creators, lists…</span>
-              <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: '#e8e1cb', color: '#2d2d2d', border: '1px solid #dcd5bf' }}>
-                ⌘K
-              </span>
-            </button>
+            <div className="flex-1" />
 
             <div className="ml-auto flex items-center gap-2">
               {loggedIn ? (
