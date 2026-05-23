@@ -11,7 +11,6 @@ import ResetPassword from './pages/auth/ResetPassword';
 import Onboarding from './pages/auth/Onboarding';
 
 import Home from './pages/Home';
-import Discover from './pages/Discover';
 import Notifications from './pages/Notifications';
 
 import FilmsList from './pages/films/FilmsList';
@@ -47,6 +46,7 @@ import BlockedSettings from './pages/settings/BlockedSettings';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFilms from './pages/admin/AdminFilms';
 import AdminFilmNew from './pages/admin/AdminFilmNew';
+import AdminFilmEdit from './pages/admin/AdminFilmEdit';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReports from './pages/admin/AdminReports';
 import AdminAuditLogs from './pages/admin/AdminAuditLogs';
@@ -76,7 +76,8 @@ function App() {
         {/* App with shell */}
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/discover" element={<Discover />} />
+          {/* /discover content merged into Home — redirect old links */}
+          <Route path="/discover" element={<Navigate to="/" replace />} />
           <Route path="/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
 
           <Route path="/films" element={<FilmsList />} />
@@ -113,6 +114,7 @@ function App() {
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/admin/films" element={<RequireAdmin><AdminFilms /></RequireAdmin>} />
           <Route path="/admin/films/new" element={<RequireAdmin><AdminFilmNew /></RequireAdmin>} />
+          <Route path="/admin/films/:slug/edit" element={<RequireAdmin><AdminFilmEdit /></RequireAdmin>} />
           <Route path="/admin/users" element={<RequireAdmin><AdminUsers /></RequireAdmin>} />
           <Route path="/admin/reports" element={<RequireAdmin><AdminReports /></RequireAdmin>} />
           <Route path="/admin/audit-logs" element={<RequireAdmin><AdminAuditLogs /></RequireAdmin>} />

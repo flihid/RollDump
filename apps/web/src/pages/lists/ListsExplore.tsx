@@ -8,17 +8,20 @@ import { Loading, EmptyState } from '../../components/common';
 export default function ListsExplore() {
   const q = useQuery({ queryKey: ['lists'], queryFn: () => api.get('/lists') });
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between">
+    <div className="page-enter">
+      <div className="topbar">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><ListChecks /> Lists</h1>
-          <p className="text-sm text-ink-600">Themed collections from the community.</p>
+          <div className="crumbs">Community · Curated</div>
+          <h1 className="inline-flex items-center gap-2"><ListChecks /> Lists</h1>
+          <p className="text-sm text-ink-600 mt-1">Themed collections from the community.</p>
         </div>
-        {isLoggedIn() && (
-          <Link to="/lists/new" className="btn-primary">
-            <Plus className="w-4 h-4" /> Create list
-          </Link>
-        )}
+        <div className="topbar-right">
+          {isLoggedIn() && (
+            <Link to="/lists/new" className="btn-primary">
+              <Plus className="w-4 h-4" /> Create list
+            </Link>
+          )}
+        </div>
       </div>
       {q.isLoading ? (
         <Loading />

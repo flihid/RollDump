@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flag, X, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -86,7 +87,7 @@ export default function ReportModal({
 
   const valid = !!reasonKey && (reasonKey !== 'other' || detail.trim().length >= 5);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
       <div
         className="card p-6 max-w-lg w-full relative"
@@ -204,6 +205,7 @@ export default function ReportModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

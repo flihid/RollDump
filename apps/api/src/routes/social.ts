@@ -213,10 +213,23 @@ r.get('/feed', authMiddleware, async (c) => {
     .where(eq(follows.followerId, me));
   let ids = followingRows.map((r: any) => r.id);
 
-  // Fallback: if user follows nobody, surface popular activity globally
+  // Fallback: if user follows nobody, surface activity globally.
+  // Pick users who actually have recent published content so the feed
+  // doesn't feel dead for a brand-new account.
   if (!ids.length) {
-    const recent = await db.select({ id: users.id }).from(users).limit(20);
-    ids = recent.map((r: any) => r.id);
+    const recentPosters = await db
+      .selectDistinct({ id: photos.userId })
+      .from(photos)
+      .where(eq(photos.status, 'published'))
+      .orderBy(desc(photos.createdAt))
+      .limit(20);
+    ids = recentPosters.map((r: any) => r.id);
+    // If even that's empty (truly fresh db), grab any 20 users so we at least
+    // probe reviews/lists from them
+    if (!ids.length) {
+      const recent = await db.select({ id: users.id }).from(users).limit(20);
+      ids = recent.map((r: any) => r.id);
+    }
   }
   // Strip hidden (blocked) users from the candidate set
   const hidden = await getHiddenUserIds(c);

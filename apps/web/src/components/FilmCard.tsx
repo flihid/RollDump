@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clsx } from 'clsx';
-import { Heart } from 'lucide-react';
 import { api } from '../lib/api';
 import { isLoggedIn } from '../store/auth';
 import { FormatBadge } from './common';
@@ -126,21 +125,16 @@ export default function FilmCard({ film, className, delay = 0 }: FilmCardProps) 
           ))}
         </div>
 
-        {/* Save heart top-right — only visible when logged in + variant available */}
+        {/* Save heart top-right — only visible when logged in + variant available.
+            Uses the unicode heart glyph (♡ / ♥) to match the design system. */}
         {isLoggedIn() && primaryVariantId && (
           <button
             type="button"
             onClick={toggleWishlist}
-            className="save-btn"
+            className={clsx('save-btn', visualSaved && 'is-saved')}
             aria-label={visualSaved ? 'Remove from wishlist' : 'Add to wishlist'}
-            style={visualSaved ? { background: '#e6a519' } : undefined}
           >
-            <Heart
-              className="w-4 h-4"
-              fill={visualSaved ? '#1a1a1a' : 'none'}
-              stroke={visualSaved ? '#1a1a1a' : '#1a1a1a'}
-              strokeWidth={2}
-            />
+            <span aria-hidden="true">{visualSaved ? '♥' : '♡'}</span>
           </button>
         )}
 

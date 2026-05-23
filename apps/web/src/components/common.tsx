@@ -77,7 +77,7 @@ export function FormatBadge({ format }: { format: string }) {
     all:            { label: 'All',          cls: 'badge' },
   };
   const { label, cls } = map[format] ?? { label: format, cls: 'badge' };
-  return <span className={cls}>{label}</span>;
+  return <span className={`badge ${cls}`}>{label}</span>;
 }
 
 export function ColorTypeBadge({ value }: { value?: string | null }) {
@@ -89,5 +89,5 @@ export function ColorTypeBadge({ value }: { value?: string | null }) {
     slide_e6:       ['Slide E6',   'badge-instant'],
   };
   const [label, cls] = m[value] || [value, 'badge'];
-  return <span className={cls}>{label}</span>;
+  return <span className={`badge ${cls}`}>{label}</span>;
 }

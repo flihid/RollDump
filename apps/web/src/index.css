@@ -286,8 +286,26 @@
     z-index: 2;
     border: none;
     cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    color: #1a1a1a;
   }
-  .film-cover .save-btn:hover { background: #e6a519; }
+  .film-cover .save-btn:hover {
+    background: #e6a519;
+    transform: scale(1.08);
+  }
+  .film-cover .save-btn.is-saved {
+    background: #e6a519;
+    color: #1a1a1a;
+  }
+  .film-cover .save-btn.is-saved:hover {
+    background: #ffd56b;
+  }
+  .film-cover .save-btn span {
+    display: inline-block;
+    transform: translateY(-1px);
+    font-family: "Segoe UI Symbol", "Apple Color Emoji", sans-serif;
+  }
   .film-meta {
     padding: 16px;
     display: flex;
@@ -397,12 +415,12 @@
   .film-cover-art[style*="80px"] .film-cover-art__iso { font-size: 16px; }
   .film-cover-art[style*="80px"] .film-cover-art__brand { font-size: 8px; }
 
-  /* Topbar pattern (used on every page) */
+  /* Topbar pattern — design system: align-center, h1 32px, padding-bottom 24px */
   .topbar {
     display: flex;
-    align-items: end;
+    align-items: center;
     justify-content: space-between;
-    padding-bottom: 22px;
+    padding-bottom: 24px;
     margin-bottom: 24px;
     border-bottom: 1px solid #dcd5bf;
     gap: 16px;
@@ -410,20 +428,59 @@
   }
   .topbar .crumbs {
     font-family: "JetBrains Mono", monospace;
-    font-size: 11px;
+    font-size: 12px;
     color: #7a7a7a;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
   .topbar h1 {
     font-family: "Archivo Black", "Syne", sans-serif;
-    font-size: clamp(24px, 3.4vw, 32px);
+    font-size: 32px;
     letter-spacing: -0.02em;
     color: #1a1a1a;
     margin-top: 4px;
     line-height: 1.05;
   }
+  @media (max-width: 640px) {
+    .topbar h1 { font-size: 24px; }
+  }
   .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  /* Search trigger pill (Home topbar) — design system .search-trigger */
+  .search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #fbf8ef;
+    border: 1px solid #dcd5bf;
+    border-radius: 999px;
+    color: #7a7a7a;
+    min-width: 280px;
+    font-size: 14px;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+  .search-trigger:hover { border-color: #e6a519; color: #2d2d2d; }
+  .search-trigger .kbd {
+    background: #e8e1cb;
+    color: #2d2d2d;
+    border: 1px solid #dcd5bf;
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+  }
+
+  /* Slot inside .topbar-right that the global TopbarActionsPortal injects
+     bell + avatar into. Just an inline-flex container — visuals come from
+     the bell/avatar components themselves. */
+  .topbar-user-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
 
   /* Stat cards (4-up grid on home/profile/moderation) */
   .stat-grid {
@@ -468,13 +525,197 @@
   .stat-card.is-accent .lbl { color: #ffd56b; }
   .stat-card.is-accent .val { color: #e6a519; }
 
-  /* Feed grid (main + side) */
+  /* Feed grid (main + side) — design system: 2fr 1fr with 24px gap */
   .feed-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
   }
   @media (min-width: 1024px) { .feed-grid { grid-template-columns: 2fr 1fr; } }
+
+  /* Feed item — single post (photo / review / list) in the activity feed.
+     Matches the design system .feed-item spec exactly. */
+  .feed-item {
+    background: #fbf8ef;
+    border: 1px solid #dcd5bf;
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .feed-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .feed-header .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e6a519, #c68a0e);
+    color: #1a1a1a;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .feed-header .meta-text { flex: 1; min-width: 0; }
+  .feed-header .meta-text .name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1a1a1a;
+  }
+  .feed-header .meta-text .time {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #7a7a7a;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+  }
+
+  /* Photo frame inside feed item */
+  .photo-frame {
+    background: #1a1a1a;
+    aspect-ratio: 3 / 2;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-frame .photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 20px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: #f5f0e1;
+    z-index: 2;
+  }
+  .photo-frame .photo-overlay .tech {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #ffd56b;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Feed action row (like / comment / share / save) */
+  .feed-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+  .act-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #4a4a4a;
+    padding: 4px 8px;
+    border-radius: 10px;
+    transition: all 0.15s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  .act-btn:hover {
+    color: #2d2d2d;
+    background: #e8e1cb;
+  }
+  .act-btn.is-active { color: #c68a0e; }
+  .act-btn svg { width: 18px; height: 18px; }
+
+  /* Feed caption */
+  .feed-caption {
+    padding: 0 20px 20px;
+    font-size: 14px;
+    color: #2d2d2d;
+  }
+  .feed-caption strong { color: #1a1a1a; font-weight: 600; }
+
+  /* Side card (FOTD, Quick Actions, Suggested) */
+  .side-card {
+    background: #fbf8ef;
+    border: 1px solid #dcd5bf;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .side-card h4 {
+    font-family: "Syne", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 12px;
+    letter-spacing: -0.005em;
+    color: #1a1a1a;
+  }
+
+  /* Film of the Day cover */
+  .fotd-cover {
+    aspect-ratio: 16 / 10;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #b85c38, #e6a519);
+    position: relative;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .fotd-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .fotd-cover .label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    background: rgba(45,45,45,0.7);
+    color: #e6a519;
+    padding: 4px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.12em;
+  }
+
+  /* Suggested user row inside side-card */
+  .suggest-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid #dcd5bf;
+  }
+  .suggest-user:first-of-type { border-top: none; padding-top: 0; }
+  .suggest-user .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #e6a519, #c68a0e);
+    color: #1a1a1a;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .suggest-user .meta { flex: 1; min-width: 0; }
+  .suggest-user .name { font-weight: 600; font-size: 13px; color: #1a1a1a; }
+  .suggest-user .handle {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: #7a7a7a;
+  }
 
   /* Section title (cream underline + Syne) */
   .section-title-underlined {

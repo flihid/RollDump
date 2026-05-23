@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ZoomIn, ZoomOut, Heart, MessageCircle, Share2, Flag, Camera } from 'lucide-react';
@@ -73,7 +74,7 @@ export default function PhotoLightbox({ photoId, onClose }: { photoId: string; o
   const me = getUser();
   const isOwn = !!(me && p?.userId === me.id);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
       <div
         className="lightbox"
@@ -340,7 +341,8 @@ export default function PhotoLightbox({ photoId, onClose }: { photoId: string; o
           onClose={() => setReportOpen(false)}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 

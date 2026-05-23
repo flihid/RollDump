@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, ArrowLeft, ExternalLink, Search } from 'lucide-react';
@@ -18,14 +19,14 @@ export default function AdminFilms() {
       api.get(`/films?limit=60&sort=recent${search ? `&q=${encodeURIComponent(search)}` : ''}`),
   });
 
-  const setStatus = useMutation({
-    mutationFn: ({ id, status }: any) =>
-      api.patch(`/films/${id}/status`, { status }),
+  // Hard delete — the API removes the film row + cascades all variants/reviews/etc
+  const del = useMutation({
+    mutationFn: ({ id }: any) => api.delete(`/films/${id}`),
     onSuccess: () => {
-      toast.success('Film status updated');
+      toast.success('Film deleted');
       qc.invalidateQueries({ queryKey: ['admin-films'] });
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message || 'Failed to delete'),
   });
 
   return (
@@ -110,7 +111,7 @@ export default function AdminFilms() {
                   <td className="p-3 text-right">
                     <div className="inline-flex gap-1 justify-end">
                       <Link
-                        to={`/admin/films/${f.id}/edit`}
+                        to={`/admin/films/${f.slug}/edit`}
                         className="px-2 py-1 rounded inline-flex items-center gap-1 text-xs hover:bg-ink-200"
                         title="Edit film"
                         style={{ color: '#c68a0e' }}
@@ -121,11 +122,11 @@ export default function AdminFilms() {
                       <button
                         onClick={() => setConfirmDelete(f)}
                         className="px-2 py-1 rounded inline-flex items-center gap-1 text-xs hover:bg-red-50"
-                        title="Retire film"
+                        title="Delete film"
                         style={{ color: '#c8443a' }}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Retire
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -136,53 +137,57 @@ export default function AdminFilms() {
         </div>
       )}
 
-      {/* Retire / discontinue confirmation modal */}
-      {confirmDelete && (
-        <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setConfirmDelete(null)}>
-          <div
-            className="card p-6 max-w-md w-full"
-            style={{ background: '#fbf8ef' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-12 h-12 rounded-full grid place-items-center"
-                style={{ background: 'rgba(200,68,58,0.15)', color: '#c8443a' }}
-              >
-                <Trash2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-heading text-lg text-ink-900">
-                  Retire "{confirmDelete.name}"?
-                </h3>
-                <div className="text-xs text-ink-500 font-mono-tech uppercase tracking-wider">
-                  Marks as DISCONTINUED · reversible
+      {/* Hard-delete confirmation modal — portaled to body to escape sidebar */}
+      {confirmDelete &&
+        createPortal(
+          <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setConfirmDelete(null)}>
+            <div
+              className="card p-6 max-w-md w-full"
+              style={{ background: '#fbf8ef' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-full grid place-items-center"
+                  style={{ background: 'rgba(200,68,58,0.15)', color: '#c8443a' }}
+                >
+                  <Trash2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg text-ink-900">
+                    Delete "{confirmDelete.name}"?
+                  </h3>
+                  <div className="text-xs text-ink-500 font-mono-tech uppercase tracking-wider">
+                    Permanent · NOT reversible
+                  </div>
                 </div>
               </div>
+              <p className="text-sm text-ink-700 mb-5">
+                This permanently deletes the film, all its variants, reviews,
+                tips, and wishlist entries. Photos that referenced this film
+                will keep existing but lose their film tag. This action cannot
+                be undone — consider using the EDIT page if you only want to
+                fix info.
+              </p>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setConfirmDelete(null)} className="btn-ghost">
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    del.mutate({ id: confirmDelete.id });
+                    setConfirmDelete(null);
+                  }}
+                  disabled={del.isPending}
+                  className="btn-danger"
+                >
+                  {del.isPending ? 'Deleting…' : 'Delete Permanently'}
+                </button>
+              </div>
             </div>
-            <p className="text-sm text-ink-700 mb-5">
-              The film will be marked discontinued. Existing reviews + photos
-              remain visible, but it will be flagged across the catalog. You can
-              reactivate it later by changing the status back to ACTIVE.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setConfirmDelete(null)} className="btn-ghost">
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setStatus.mutate({ id: confirmDelete.id, status: 'discontinued' });
-                  setConfirmDelete(null);
-                }}
-                disabled={setStatus.isPending}
-                className="btn-danger"
-              >
-                {setStatus.isPending ? 'Retiring…' : 'Retire Film'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

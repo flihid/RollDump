@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Globe, Shield, ShieldOff, X } from 'lucide-react';
@@ -371,7 +372,7 @@ export default function Profile() {
       )}
 
       {/* === BLOCK / UNBLOCK CONFIRMATION MODAL === */}
-      {blockConfirm && (
+      {blockConfirm && createPortal(
         <div className="modal-overlay" style={{ display: 'flex' }} onClick={() => setBlockConfirm(null)}>
           <div className="card p-6 max-w-md w-full" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
@@ -411,7 +412,8 @@ export default function Profile() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* === ACHIEVEMENT DETAIL MODAL === */}
@@ -458,7 +460,7 @@ function FollowersModal({
     queryFn: () => api.get(`/users/by-username/${username}/${kind}`),
   });
 
-  return (
+  return createPortal(
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
       <div className="card p-0 max-w-md w-full overflow-hidden" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
         {/* Header with tabs */}
@@ -498,7 +500,7 @@ function FollowersModal({
               <div className="text-xs text-ink-500">
                 {kind === 'followers'
                   ? 'Share your roll and people will start following.'
-                  : 'Explore /discover to find photographers to follow.'}
+                  : 'Explore the Home feed to find photographers to follow.'}
               </div>
             </div>
           ) : (
@@ -527,7 +529,8 @@ function FollowersModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -560,7 +563,7 @@ function AchievementModal({
     ? new Date(unlockedRecord.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
       <div className="card p-7 max-w-md w-full relative" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
         <button
@@ -634,7 +637,8 @@ function AchievementModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

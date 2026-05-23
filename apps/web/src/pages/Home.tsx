@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Bell, Heart, MessageCircle, Share2, BookmarkPlus, ArrowUpToLine, Star } from 'lucide-react';
+import { Search, Bell, Heart, MessageCircle, Share2, BookmarkPlus, ArrowUpToLine, Star, Flame, ListChecks, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 import { isLoggedIn, getUser } from '../store/auth';
+import FilmCard from '../components/FilmCard';
+import { Loading } from '../components/common';
 
 export default function Home() {
   const trending = useQuery({ queryKey: ['trending'], queryFn: () => api.get('/films/trending') });
@@ -18,6 +20,16 @@ export default function Home() {
     queryKey: ['suggested'],
     queryFn: () => api.get('/users/suggested'),
     enabled: isLoggedIn(),
+  });
+  // Discover content — merged from the old /discover page so Home is the
+  // single source of truth for "what's happening + what to explore"
+  const featuredLists = useQuery({
+    queryKey: ['discover-lists'],
+    queryFn: () => api.get('/lists?tab=trending'),
+  });
+  const brands = useQuery({
+    queryKey: ['discover-brands'],
+    queryFn: () => api.get('/brands'),
   });
   // Live stats from API — getUser() snapshot from localStorage doesn't have them
   const me = useQuery({
@@ -49,17 +61,11 @@ export default function Home() {
         <div className="topbar-right">
           <button
             onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-            className="hidden md:flex items-center gap-2 px-4 py-2.5 text-sm rounded-full transition hover:border-ink-400"
-            style={{ background: '#fbf8ef', border: '1px solid #dcd5bf', color: '#7a7a7a', minWidth: 320, cursor: 'pointer' }}
+            className="search-trigger hidden md:flex"
           >
             <Search className="w-4 h-4" />
             <span>Search films, photographers, lists…</span>
-            <span
-              className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded"
-              style={{ background: '#e8e1cb', color: '#2d2d2d', border: '1px solid #dcd5bf' }}
-            >
-              ⌘K
-            </span>
+            <span className="kbd">⌘K</span>
           </button>
         </div>
       </div>
@@ -106,11 +112,14 @@ export default function Home() {
       <div className="feed-grid">
         {/* MAIN COLUMN */}
         <div>
-          {/* Activity feed */}
+          {/* Activity feed — photos, reviews, and lists from photographers
+              you follow (or recent posters if you follow nobody yet). Always
+              rendered ABOVE the trending films section so the feed feels
+              social-first, per the design system Home Feed layout. */}
           {loggedIn && feed.data?.items?.length ? (
             <>
               <div className="section-title-underlined mb-3 flex items-center justify-between">
-                <span>Community Activity</span>
+                <span>Latest from the community</span>
                 <span className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider normal-case">
                   Auto-refreshing
                 </span>
@@ -142,8 +151,8 @@ export default function Home() {
                 </p>
                 <div className="flex gap-2 justify-center flex-wrap">
                   <Link to="/upload" className="btn-secondary">📷 Upload Your First Roll</Link>
-                  <Link to="/discover" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
-                    Find Photographers
+                  <Link to="/films" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
+                    Browse Catalog
                   </Link>
                 </div>
               </div>
@@ -178,38 +187,124 @@ export default function Home() {
                 You're all caught up
               </div>
               <p className="text-sm text-ink-600 mb-3">
-                That's everything new from your network. Discover more films or follow more shooters.
+                That's everything new from your network. Keep scrolling to discover more films and lists.
               </p>
               <div className="flex gap-2 justify-center flex-wrap">
                 <Link to="/films" className="btn-secondary">Browse Catalog</Link>
-                <Link to="/discover" className="btn-ghost">Discover Photographers</Link>
               </div>
             </div>
           )}
+
+          {/* ===== MERGED DISCOVER SECTIONS =====
+              Used to live on /discover. Pulled inline so Home is the single
+              feed-of-everything: who's posting, what's trending, and what to
+              explore next. */}
+
+          {/* Trending films */}
+          <section className="mt-10">
+            <div className="section-title-underlined mb-4 flex items-center justify-between">
+              <span className="inline-flex items-center gap-2">
+                <Flame className="w-4 h-4" style={{ color: '#e6a519' }} />
+                Trending Films
+              </span>
+              <Link to="/films?sort=trending" className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider hover:text-ink-900">
+                See all →
+              </Link>
+            </div>
+            {trending.isLoading ? (
+              <Loading />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {(trending.data?.items || []).slice(0, 8).map((f: any, i: number) => (
+                  <FilmCard key={f.id} film={f} delay={i * 40} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Featured lists */}
+          <section className="mt-10">
+            <div className="section-title-underlined mb-4 flex items-center justify-between">
+              <span className="inline-flex items-center gap-2">
+                <ListChecks className="w-4 h-4" style={{ color: '#e6a519' }} />
+                Featured Lists
+              </span>
+              <Link to="/lists" className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider hover:text-ink-900">
+                See all →
+              </Link>
+            </div>
+            {featuredLists.isLoading ? (
+              <Loading />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(featuredLists.data?.items || []).slice(0, 4).map((row: any) => (
+                  <Link
+                    key={row.list.id}
+                    to={`/lists/${row.list.id}`}
+                    className="card p-4 hover:border-primary-500/50 transition-all"
+                  >
+                    <div className="font-heading font-bold text-ink-900">{row.list.title}</div>
+                    <div className="text-xs text-ink-500 mt-0.5 font-mono-tech uppercase tracking-wider">
+                      by @{row.author?.username} · {row.list.itemCount || 0} films
+                    </div>
+                    {row.list.description && (
+                      <p className="text-sm text-ink-600 mt-2 line-clamp-2">{row.list.description}</p>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Brands */}
+          <section className="mt-10 mb-4">
+            <div className="section-title-underlined mb-4 flex items-center justify-between">
+              <span className="inline-flex items-center gap-2">
+                <Sparkles className="w-4 h-4" style={{ color: '#e6a519' }} />
+                Brands
+              </span>
+              <Link to="/films" className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider hover:text-ink-900">
+                Browse catalog →
+              </Link>
+            </div>
+            {brands.isLoading ? (
+              <Loading />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {(brands.data?.items || []).slice(0, 8).map((b: any) => (
+                  <Link
+                    key={b.id}
+                    to={`/films?brand=${b.slug}`}
+                    className="card p-3 text-center hover:border-primary-500/50 hover:bg-ink-200/40 transition-all"
+                  >
+                    <div className="font-semibold text-sm text-ink-900 truncate">{b.name}</div>
+                    <div className="text-[11px] text-ink-500 font-mono-tech mt-0.5">
+                      {b.filmCount || 0} films
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
 
         {/* SIDEBAR */}
-        <aside className="space-y-5">
-          {/* Film of the Day */}
+        <aside>
+          {/* Film of the Day — design system .side-card + .fotd-cover */}
           {fotd && (
-            <div className="card p-5">
-              <h4 className="font-heading font-bold text-sm mb-3">🎞️ Film of the Day</h4>
+            <div className="side-card">
+              <h4>🎞️ Film of the Day</h4>
               <Link to={`/films/${fotd.slug}`} className="block">
-                <div
-                  className="aspect-[16/10] rounded-[10px] relative mb-3 overflow-hidden"
-                  style={{ background: 'linear-gradient(135deg, #b85c38, #e6a519)' }}
-                >
-                  <span
-                    className="absolute top-3 left-3 font-mono-tech text-[10px] px-2 py-1 rounded-full"
-                    style={{ background: 'rgba(45,45,45,0.7)', color: '#e6a519', letterSpacing: '0.12em' }}
-                  >
-                    FOTD · ISO {fotd.iso}
-                  </span>
+                <div className="fotd-cover">
+                  {fotd.coverUrl && <img src={fotd.coverUrl} alt={fotd.name} />}
+                  <span className="label">FOTD · ISO {fotd.iso}</span>
                 </div>
                 <div className="film-brand">{fotd.brand?.name}</div>
-                <div className="font-heading font-bold text-base text-ink-900 mt-1">{fotd.name}</div>
-                <p className="text-sm text-ink-600 mt-3 line-clamp-3">{fotd.description}</p>
-                <button className="btn-ghost btn-sm w-full justify-center mt-4 !text-xs">
+                <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: 16, color: '#1a1a1a', marginTop: 2 }}>
+                  {fotd.name}
+                </div>
+                <p className="text-sm mt-3 line-clamp-3" style={{ color: '#4a4a4a' }}>{fotd.description}</p>
+                <button className="btn-ghost btn-sm mt-4 w-full justify-center !text-xs">
                   View Detail
                 </button>
               </Link>
@@ -218,34 +313,34 @@ export default function Home() {
 
           {/* Quick Actions */}
           {loggedIn && (
-            <div className="card p-5">
-              <h4 className="font-heading font-bold text-sm mb-3">⚡ Quick Actions</h4>
-              <Link to="/upload" className="btn-primary w-full mb-2 !justify-start">
+            <div className="side-card">
+              <h4>⚡ Quick Actions</h4>
+              <Link to="/upload" className="btn-primary w-full mb-3 !justify-start">
                 <ArrowUpToLine className="w-4 h-4" /> Start Bulk Upload
               </Link>
-              <Link to="/films" className="btn-ghost w-full mb-2 !justify-start">
+              <Link to="/films" className="btn-ghost w-full mb-3 !justify-start">
                 <Star className="w-4 h-4" /> Write Review
               </Link>
-              <Link to="/discover" className="btn-ghost w-full !justify-start">
+              <Link to="/films" className="btn-ghost w-full !justify-start">
                 <Search className="w-4 h-4" /> Browse Catalog
               </Link>
             </div>
           )}
 
-          {/* Suggested */}
+          {/* Suggested users — design system .suggest-user rows */}
           {loggedIn && suggested.data?.items?.length > 0 && (
-            <div className="card p-5">
-              <h4 className="font-heading font-bold text-sm mb-1">✨ Photographers to Follow</h4>
-              <div className="mt-2">
-                {suggested.data.items.slice(0, 5).map((u: any) => <SuggestUser key={u.id} u={u} />)}
-              </div>
+            <div className="side-card">
+              <h4>✨ Photographers to Follow</h4>
+              {suggested.data.items.slice(0, 5).map((u: any) => <SuggestUser key={u.id} u={u} />)}
             </div>
           )}
 
           {!loggedIn && (
-            <div className="card p-5 text-center">
-              <h4 className="font-heading font-bold text-base mb-2">Join RollDump</h4>
-              <p className="text-sm text-ink-600 mb-4">Free forever. Track unlimited rolls, write reviews, follow other shooters.</p>
+            <div className="side-card text-center">
+              <h4>Join RollDump</h4>
+              <p className="text-sm mb-4" style={{ color: '#4a4a4a' }}>
+                Free forever. Track unlimited rolls, write reviews, follow other shooters.
+              </p>
               <Link to="/register" className="btn-primary w-full !justify-center">Get Started</Link>
             </div>
           )}
@@ -264,54 +359,64 @@ function FeedItem({ item }: { item: any }) {
   };
   const verb = verbMap[item.type] || 'shared an update';
   return (
-    <div className="card mb-5 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4">
-        <Link to={`/u/${actor}`} className="avatar-circle" style={{ width: 36, height: 36, fontSize: 13 }}>
+    <div className="feed-item">
+      {/* Header — design system .feed-header */}
+      <div className="feed-header">
+        <Link to={`/u/${actor}`} className="avatar">
           {item.author?.avatarUrl ? (
-            <img src={item.author.avatarUrl} className="w-full h-full object-cover" />
+            <img src={item.author.avatarUrl} className="w-full h-full object-cover" alt="" />
           ) : (
             actor[0]?.toUpperCase()
           )}
         </Link>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm">
-            <Link to={`/u/${actor}`} className="font-semibold text-ink-900 hover:underline">@{actor}</Link>
-            {' '}<span className="text-ink-600">{verb}</span>
+        <div className="meta-text">
+          <div className="name">
+            <Link to={`/u/${actor}`} className="hover:underline">@{actor}</Link>
+            {' '}
+            <span style={{ color: '#7a7a7a', fontWeight: 400 }}>{verb}</span>
           </div>
-          <div className="font-mono-tech text-[11px] text-ink-500 uppercase tracking-wider mt-0.5">
-            {item.relativeTime || relTime(item.createdAt)} {item.filmName && `· ${item.filmName}`}
+          <div className="time">
+            {item.relativeTime || relTime(item.createdAt)}
+            {item.filmName && ` · ${item.filmName.toUpperCase()}`}
           </div>
         </div>
       </div>
 
-      {/* Image / content */}
+      {/* Photo (if any) — design system .photo-frame with EXIF overlay */}
       {item.imageUrl && (
-        <Link to={`/photos/${item.id}`} className="block relative aspect-[3/2] bg-ink-900 overflow-hidden">
-          <img src={item.imageUrl} className="w-full h-full object-cover" />
+        <Link to={`/photos/${item.id}`} className="photo-frame block">
+          <img src={item.imageUrl} alt={item.caption || ''} />
+          {(item.filmName || item.iso) && (
+            <div className="photo-overlay">
+              <div className="tech">
+                {item.iso ? `ISO ${item.iso}` : ''}
+                {item.filmName ? `${item.iso ? ' · ' : ''}${item.filmName}` : ''}
+              </div>
+            </div>
+          )}
         </Link>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center gap-4 px-5 py-3">
-        <button className="flex items-center gap-1.5 text-sm text-ink-600 hover:text-ink-900">
-          <Heart className="w-4 h-4" /> {item.likeCount || 0}
+      {/* Actions — design system .feed-actions / .act-btn */}
+      <div className="feed-actions">
+        <button className="act-btn" aria-label="Like">
+          <Heart /> {item.likeCount || 0}
         </button>
-        <button className="flex items-center gap-1.5 text-sm text-ink-600 hover:text-ink-900">
-          <MessageCircle className="w-4 h-4" /> {item.commentCount || 0}
+        <button className="act-btn" aria-label="Comment">
+          <MessageCircle /> {item.commentCount || 0}
         </button>
-        <button className="flex items-center gap-1.5 text-sm text-ink-600 hover:text-ink-900">
-          <Share2 className="w-4 h-4" />
+        <button className="act-btn" aria-label="Share">
+          <Share2 />
         </button>
-        <button className="ml-auto flex items-center gap-1.5 text-sm text-ink-600 hover:text-ink-900">
-          <BookmarkPlus className="w-4 h-4" /> Save
+        <button className="act-btn" style={{ marginLeft: 'auto' }} aria-label="Save">
+          <BookmarkPlus /> Save
         </button>
       </div>
 
-      {/* Caption */}
+      {/* Caption — design system .feed-caption */}
       {item.caption && (
-        <div className="px-5 pb-5 text-sm text-ink-700">
-          <strong className="text-ink-900">@{actor}</strong> {item.caption}
+        <div className="feed-caption">
+          <strong>@{actor}</strong> {item.caption}
         </div>
       )}
     </div>
@@ -320,13 +425,17 @@ function FeedItem({ item }: { item: any }) {
 
 function SuggestUser({ u }: { u: any }) {
   return (
-    <div className="flex items-center gap-2.5 py-2 border-t border-ink-300 first:border-t-0">
-      <Link to={`/u/${u.username}`} className="avatar-circle" style={{ width: 36, height: 36, fontSize: 13 }}>
-        {u.avatarUrl ? <img src={u.avatarUrl} className="w-full h-full object-cover" /> : u.username[0]?.toUpperCase()}
+    <div className="suggest-user">
+      <Link to={`/u/${u.username}`} className="avatar">
+        {u.avatarUrl ? (
+          <img src={u.avatarUrl} className="w-full h-full object-cover" alt="" />
+        ) : (
+          u.username[0]?.toUpperCase()
+        )}
       </Link>
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm text-ink-900 truncate">{u.fullName || u.username}</div>
-        <div className="font-mono-tech text-[11px] text-ink-500 truncate">
+      <div className="meta">
+        <div className="name truncate">{u.fullName || u.username}</div>
+        <div className="handle truncate">
           @{u.username}{u.specialty && ` · ${u.specialty}`}
         </div>
       </div>

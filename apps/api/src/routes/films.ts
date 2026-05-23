@@ -7,6 +7,7 @@ import {
   photos,
   wishlists,
   filmTips,
+  rolls,
 } from '@rolldump/db';
 import { authMiddleware, createApp, optionalAuth, requireRole, slugify } from '../lib/context';
 
@@ -256,6 +257,28 @@ r.put('/:id', authMiddleware, requireRole('admin', 'editor', 'super_admin'), asy
 r.patch('/:id/status', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
   const { status } = await c.req.json();
   await c.get('db').update(films).set({ status }).where(eq(films.id, c.req.param('id')));
+  return c.json({ ok: true });
+});
+
+// Hard delete a film. Cascades remove variants/reviews/tips/wishlists/list-items.
+// We have to NULL out the non-cascade refs in `photos` and `rolls` first so the
+// FK constraints don't block the delete.
+r.delete('/:id', authMiddleware, requireRole('admin', 'super_admin'), async (c) => {
+  const id = c.req.param('id');
+  const db = c.get('db');
+  // Find variant IDs to also null in photos/rolls
+  const vars = await db.select({ id: filmVariants.id }).from(filmVariants).where(eq(filmVariants.filmId, id));
+  const variantIds = vars.map((v: any) => v.id);
+  // Detach photos referencing film or its variants (no cascade on these FKs)
+  await db.update(photos).set({ filmId: null, filmVariantId: null }).where(eq(photos.filmId, id));
+  if (variantIds.length) {
+    await db.update(photos).set({ filmVariantId: null }).where(inArray(photos.filmVariantId, variantIds));
+  }
+  // Detach rolls (rolls.filmVariantId is nullable, no cascade)
+  if (variantIds.length) {
+    await db.update(rolls).set({ filmVariantId: null }).where(inArray(rolls.filmVariantId, variantIds));
+  }
+  await db.delete(films).where(eq(films.id, id));
   return c.json({ ok: true });
 });
 

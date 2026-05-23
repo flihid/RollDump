@@ -1,6 +1,5 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Compass,
   Film,
   Image as ImageIcon,
   ListChecks,
@@ -12,12 +11,12 @@ import {
   LogOut,
   Settings,
   Shield,
-  Plus,
   Menu,
   X,
 } from 'lucide-react';
 import { clearAuth, getUser, isAdmin, isLoggedIn } from '../store/auth';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import GlobalSearch from './GlobalSearch';
 import NotificationBell from './NotificationBell';
 import Logo from './Logo';
@@ -26,7 +25,6 @@ type NavItem = { to: string; icon: any; label: string };
 const NAV: { section: string; items: NavItem[] }[] = [
   { section: 'Discover', items: [
     { to: '/', icon: HomeIcon, label: 'Home' },
-    { to: '/discover', icon: Compass, label: 'Discover' },
     { to: '/films', icon: Film, label: 'Catalog' },
   ]},
   { section: 'Community', items: [
@@ -132,46 +130,6 @@ export default function Layout() {
 
       {/* ============ MAIN ============ */}
       <div className="flex flex-col min-w-0">
-        {/* Topbar */}
-        <header className="sticky top-0 z-20 bg-[#f5f0e1]/85 backdrop-blur border-b border-[#dcd5bf]">
-          <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
-            {/* Mobile brand */}
-            <Link to="/" className="lg:hidden">
-              <Logo size={36} showWordmark={false} />
-            </Link>
-
-            <div className="flex-1" />
-
-            <div className="ml-auto flex items-center gap-2">
-              {loggedIn ? (
-                <>
-                  <NotificationBell />
-                  <Link
-                    to="/upload"
-                    className="btn-primary !py-2 !px-4 hidden sm:inline-flex"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Log</span>
-                  </Link>
-                  <UserMenu user={user!} onLogout={handleLogout} isAdmin={!!isAdmin()} />
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="btn-ghost !py-2 hidden sm:inline-flex">Sign in</Link>
-                  <Link to="/register" className="btn-primary !py-2">Join</Link>
-                </>
-              )}
-              <button
-                onClick={() => setMobileNavOpen(true)}
-                className="lg:hidden p-2 text-[#2d2d2d]"
-                aria-label="Menu"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </header>
-
         <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
           <Outlet />
         </main>
@@ -183,8 +141,8 @@ export default function Layout() {
               <span className="font-display-italic" style={{ color: '#7a7a7a' }}>— shoot more film.</span>
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-2 font-mono-tech uppercase tracking-wider">
+              <Link to="/" className="hover:text-[#c68a0e]">Home</Link>
               <Link to="/films" className="hover:text-[#c68a0e]">Catalog</Link>
-              <Link to="/discover" className="hover:text-[#c68a0e]">Discover</Link>
               <Link to="/tips" className="hover:text-[#c68a0e]">Tips</Link>
               <Link to="/lists" className="hover:text-[#c68a0e]">Lists</Link>
             </div>
@@ -231,7 +189,109 @@ export default function Layout() {
       )}
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Bell + profile avatar — portaled into each page's .topbar-right
+          so they sit inline with the page's h1 (no separate sticky bar
+          that could cover page action buttons). */}
+      <TopbarActionsPortal
+        loggedIn={loggedIn}
+        user={user}
+        isAdmin={!!isAdmin()}
+        onLogout={handleLogout}
+        onOpenMobileNav={() => setMobileNavOpen(true)}
+      />
     </div>
+  );
+}
+
+/**
+ * Portals the bell + avatar into the active page's `.topbar-right` element.
+ * If the page topbar has no `.topbar-right` div yet, it's created. If the
+ * page doesn't use the `.topbar` pattern at all, this gracefully renders nothing.
+ *
+ * Uses a MutationObserver on <main> so we re-attach on every route change
+ * (since each page mounts a fresh DOM subtree).
+ */
+function TopbarActionsPortal({
+  loggedIn,
+  user,
+  isAdmin,
+  onLogout,
+  onOpenMobileNav,
+}: {
+  loggedIn: boolean;
+  user: ReturnType<typeof getUser>;
+  isAdmin: boolean;
+  onLogout: () => void;
+  onOpenMobileNav: () => void;
+}) {
+  const location = useLocation();
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const attach = () => {
+      if (cancelled) return false;
+      const topbar = document.querySelector('main .topbar') as HTMLElement | null;
+      if (!topbar) return false;
+      let right = topbar.querySelector(':scope > .topbar-right') as HTMLElement | null;
+      if (!right) {
+        right = document.createElement('div');
+        right.className = 'topbar-right';
+        topbar.appendChild(right);
+      }
+      let s = right.querySelector(':scope > .topbar-user-slot') as HTMLElement | null;
+      if (!s) {
+        s = document.createElement('div');
+        s.className = 'topbar-user-slot';
+        // ensure it always renders LAST inside .topbar-right
+        right.appendChild(s);
+      }
+      setSlot(s);
+      return true;
+    };
+
+    // Try immediately; if the page hasn't rendered its .topbar yet, watch the DOM
+    if (!attach()) {
+      const main = document.querySelector('main');
+      if (!main) return;
+      const obs = new MutationObserver(() => {
+        if (attach()) obs.disconnect();
+      });
+      obs.observe(main, { childList: true, subtree: true });
+      // Safety: clear the previous slot reference so stale portals don't render
+      setSlot(null);
+      return () => {
+        cancelled = true;
+        obs.disconnect();
+      };
+    }
+  }, [location.pathname]);
+
+  if (!slot) return null;
+  return createPortal(
+    <>
+      {loggedIn ? (
+        <>
+          <NotificationBell />
+          {user && <UserMenu user={user} onLogout={onLogout} isAdmin={isAdmin} />}
+        </>
+      ) : (
+        <>
+          <Link to="/login" className="btn-ghost !py-2 hidden sm:inline-flex">Sign in</Link>
+          <Link to="/register" className="btn-primary !py-2">Join</Link>
+        </>
+      )}
+      <button
+        onClick={onOpenMobileNav}
+        className="lg:hidden p-2 text-[#2d2d2d]"
+        aria-label="Menu"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+    </>,
+    slot
   );
 }
 

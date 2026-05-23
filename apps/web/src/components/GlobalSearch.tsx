@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Film, User, ListChecks, Camera, Plus, BookOpen, Star } from 'lucide-react';
 import { api } from '../lib/api';
@@ -170,7 +171,7 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay flex items-start justify-center px-4"
       style={{ paddingTop: '10vh', display: 'flex' }}
@@ -291,7 +292,8 @@ export default function GlobalSearch({ open, onClose }: { open: boolean; onClose
           </span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
