@@ -70,7 +70,12 @@ export default function AdminReports() {
     <div className="page-enter">
       <div className="topbar">
         <div>
-          <div className="crumbs">Admin · Moderation</div>
+          <Link
+            to="/admin"
+            className="font-mono-tech text-xs uppercase tracking-wider text-ink-500 hover:text-ink-900 inline-flex items-center gap-1 mb-1"
+          >
+            ← Admin Dashboard
+          </Link>
           <h1>Moderation Queue</h1>
         </div>
         <div className="topbar-right">

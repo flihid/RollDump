@@ -1244,25 +1244,18 @@
     color: #7a7a7a;
   }
 
-  /* Modal overlay — constrained to the main content area on desktop so the
-     sidebar (240px) + topbar (64px) stay visible behind the modal. */
+  /* Modal overlay — covers entire viewport including sidebar + topbar */
   .modal-overlay {
     position: fixed;
-    top: 64px;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: rgba(26,26,26,0.7);
-    backdrop-filter: blur(6px);
+    inset: 0;
+    background: rgba(26,26,26,0.78);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px;
-    z-index: 30;       /* below sidebar z-index, above main content */
+    z-index: 200;     /* above everything */
     animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  @media (min-width: 1024px) {
-    .modal-overlay { left: 240px; }
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .lightbox {

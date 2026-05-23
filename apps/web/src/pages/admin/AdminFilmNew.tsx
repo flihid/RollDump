@@ -32,8 +32,18 @@ export default function AdminFilmNew() {
   });
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Add a new film</h1>
+    <div className="max-w-2xl mx-auto page-enter">
+      <div className="topbar">
+        <div>
+          <button
+            onClick={() => nav('/admin/films')}
+            className="font-mono-tech text-xs uppercase tracking-wider text-ink-500 hover:text-ink-900 inline-flex items-center gap-1 mb-1"
+          >
+            ← Manage Films
+          </button>
+          <h1>Add a New Film</h1>
+        </div>
+      </div>
       <div className="card p-6 space-y-4">
         <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Film name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />

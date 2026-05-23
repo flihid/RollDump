@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
@@ -12,23 +13,38 @@ export default function AdminUsers() {
   const setStatus = useMutation({
     mutationFn: ({ id, status, reason }: any) => api.patch(`/admin/users/${id}/status`, { status, reason }),
     onSuccess: () => {
-      toast.success('Status diubah');
+      toast.success('Status updated');
       qc.invalidateQueries({ queryKey: ['admin-users'] });
     },
   });
   const setRole = useMutation({
     mutationFn: ({ id, role }: any) => api.patch(`/admin/users/${id}/role`, { role }),
     onSuccess: () => {
-      toast.success('Role diubah');
+      toast.success('Role updated');
       qc.invalidateQueries({ queryKey: ['admin-users'] });
     },
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-end justify-between">
-        <h1 className="text-2xl font-bold">Kelola pengguna</h1>
-        <input className="input w-64" placeholder="Cari username/email" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="page-enter">
+      <div className="topbar">
+        <div>
+          <Link
+            to="/admin"
+            className="font-mono-tech text-xs uppercase tracking-wider text-ink-500 hover:text-ink-900 inline-flex items-center gap-1 mb-1"
+          >
+            ← Admin Dashboard
+          </Link>
+          <h1>User Management</h1>
+        </div>
+        <div className="topbar-right">
+          <input
+            className="input w-64"
+            placeholder="Search username/email"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
       </div>
       {list.isLoading ? (
         <Loading />

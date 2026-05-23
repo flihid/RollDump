@@ -3,13 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, Bell, Heart, MessageCircle, Share2, BookmarkPlus, ArrowUpToLine, Star } from 'lucide-react';
 import { api } from '../lib/api';
 import { isLoggedIn, getUser } from '../store/auth';
-import { Loading, EmptyState } from '../components/common';
-import FilmCard from '../components/FilmCard';
-import RevealSection from '../components/RevealSection';
 
 export default function Home() {
   const trending = useQuery({ queryKey: ['trending'], queryFn: () => api.get('/films/trending') });
-  const recent = useQuery({ queryKey: ['films-recent'], queryFn: () => api.get('/films?sort=recent&limit=10') });
   // Feed polls every 30s + refetches on tab focus, so new posts appear without manual reload
   const feed = useQuery({
     queryKey: ['feed'],
@@ -119,7 +115,7 @@ export default function Home() {
                   Auto-refreshing
                 </span>
               </div>
-              {feed.data.items.slice(0, 8).map((it: any) => (
+              {feed.data.items.map((it: any) => (
                 <FeedItem key={`${it.type}-${it.id}`} item={it} />
               ))}
             </>
@@ -175,45 +171,21 @@ export default function Home() {
             )
           )}
 
-          {/* Trending */}
-          <RevealSection>
-            <div className="flex items-end justify-between mb-4">
-              <div className="section-title-underlined">Trending This Week</div>
-              <Link to="/films" className="font-mono-tech text-[11px] uppercase tracking-wider" style={{ color: '#c68a0e' }}>
-                All Films →
-              </Link>
-            </div>
-            {trending.isLoading ? (
-              <Loading />
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-                {(trending.data?.items || []).slice(0, 8).map((f: any, i: number) => (
-                  <FilmCard key={f.id} film={f} delay={i * 60} />
-                ))}
+          {/* End-of-feed cue */}
+          {loggedIn && feed.data?.items?.length > 0 && (
+            <div className="card p-6 text-center mt-2">
+              <div className="font-mono-tech text-[11px] uppercase tracking-wider text-ink-500 mb-2">
+                You're all caught up
               </div>
-            )}
-          </RevealSection>
-
-          {/* Recent */}
-          <RevealSection className="mt-10">
-            <div className="flex items-end justify-between mb-4">
-              <div className="section-title-underlined">New in the Catalog</div>
-              <Link to="/films" className="font-mono-tech text-[11px] uppercase tracking-wider" style={{ color: '#c68a0e' }}>
-                All Films →
-              </Link>
-            </div>
-            {recent.isLoading ? (
-              <Loading />
-            ) : recent.data?.items?.length === 0 ? (
-              <EmptyState title="No films yet" description="Add the first film to get started." />
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-                {(recent.data?.items || []).slice(0, 8).map((f: any, i: number) => (
-                  <FilmCard key={f.id} film={f} delay={i * 60} />
-                ))}
+              <p className="text-sm text-ink-600 mb-3">
+                That's everything new from your network. Discover more films or follow more shooters.
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Link to="/films" className="btn-secondary">Browse Catalog</Link>
+                <Link to="/discover" className="btn-ghost">Discover Photographers</Link>
               </div>
-            )}
-          </RevealSection>
+            </div>
+          )}
         </div>
 
         {/* SIDEBAR */}
