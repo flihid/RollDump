@@ -52,7 +52,7 @@ export default function GalleryAll() {
       ) : q.data?.items?.length === 0 ? (
         <EmptyState title="Gallery is empty" description="No photos for this filter yet." />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {q.data!.items.map((row: any) => (
             <button
               key={row.photo.id}

@@ -10,7 +10,7 @@ import {
   likes,
   comments,
 } from '@rolldump/db';
-import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, getReportedIds, optionalAuth } from '../lib/context';
 import { notInArray } from 'drizzle-orm';
 
 const r = createApp();
@@ -27,6 +27,9 @@ r.get('/', optionalAuth, async (c) => {
   // Hide content from users blocked by / blocking the viewer
   const hidden = await getHiddenUserIds(c);
   if (hidden.length) conds.push(notInArray(photos.userId, hidden));
+  // Also hide content this viewer reported (soft mute)
+  const reportedPhotos = await getReportedIds(c, 'photo');
+  if (reportedPhotos.length) conds.push(notInArray(photos.id, reportedPhotos));
   if (format) {
     const variants = await db
       .select()
@@ -100,6 +103,8 @@ r.get('/:id', optionalAuth, async (c) => {
   if (!row) return c.json({ error: 'Photo not found' }, 404);
   const hidden = await getHiddenUserIds(c);
   if (hidden.includes(row.author?.id)) return c.json({ error: 'Photo not found' }, 404);
+  const reportedPhotos = await getReportedIds(c, 'photo');
+  if (reportedPhotos.includes(row.photo.id)) return c.json({ error: 'Photo not found' }, 404);
 
   // Like & comment counts so the FE doesn't need extra round-trips
   // Both filter out interactions from users blocked-by-or-blocking the viewer

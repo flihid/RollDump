@@ -492,6 +492,26 @@
     max-width: 720px;
   }
 
+  /* Format filter chip — colored pill per format with active fill */
+  .format-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.2, 0.8, 0.3, 1);
+    white-space: nowrap;
+  }
+  .format-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45,45,45,0.12);
+  }
+
   /* Catalog filter chip row */
   .filter-row {
     display: flex;

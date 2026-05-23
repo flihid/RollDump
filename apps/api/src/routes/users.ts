@@ -267,28 +267,98 @@ r.post('/by-username/:username/block', authMiddleware, async (c) => {
   const db = c.get('db');
   const me = c.get('user')!.id;
   const [target] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
-  if (!target) return c.json({ error: 'User tidak ditemukan' }, 404);
-  if (target.id === me) return c.json({ error: 'Tidak bisa blokir diri sendiri' }, 400);
+  if (!target) return c.json({ error: 'User not found' }, 404);
+  if (target.id === me) return c.json({ error: "Can't block yourself" }, 400);
+
   const existing = await db
     .select()
     .from(userBlocks)
     .where(and(eq(userBlocks.blockerId, me), eq(userBlocks.blockedId, target.id)));
+
   if (existing.length) {
+    // Unblock
     await db
       .delete(userBlocks)
       .where(and(eq(userBlocks.blockerId, me), eq(userBlocks.blockedId, target.id)));
     return c.json({ blocked: false });
   } else {
     await db.insert(userBlocks).values({ blockerId: me, blockedId: target.id });
-    // also drop follow relations
-    await db
-      .delete(follows)
+
+    // If "me" was following "target", drop that follow AND decrement target's followers
+    const meFollowingTarget = await db
+      .select()
+      .from(follows)
       .where(and(eq(follows.followerId, me), eq(follows.followingId, target.id)));
-    await db
-      .delete(follows)
+    if (meFollowingTarget.length) {
+      await db
+        .delete(follows)
+        .where(and(eq(follows.followerId, me), eq(follows.followingId, target.id)));
+      await db
+        .update(users)
+        .set({ followersCount: sql`greatest(${users.followersCount} - 1, 0)` })
+        .where(eq(users.id, target.id));
+      await db
+        .update(users)
+        .set({ followingCount: sql`greatest(${users.followingCount} - 1, 0)` })
+        .where(eq(users.id, me));
+    }
+    // If "target" was following "me", drop that follow AND decrement my followers
+    const targetFollowingMe = await db
+      .select()
+      .from(follows)
       .where(and(eq(follows.followerId, target.id), eq(follows.followingId, me)));
+    if (targetFollowingMe.length) {
+      await db
+        .delete(follows)
+        .where(and(eq(follows.followerId, target.id), eq(follows.followingId, me)));
+      await db
+        .update(users)
+        .set({ followersCount: sql`greatest(${users.followersCount} - 1, 0)` })
+        .where(eq(users.id, me));
+      await db
+        .update(users)
+        .set({ followingCount: sql`greatest(${users.followingCount} - 1, 0)` })
+        .where(eq(users.id, target.id));
+    }
     return c.json({ blocked: true });
   }
+});
+
+// Followers + following lists (own profile uses /me/* shortcuts)
+r.get('/by-username/:username/followers', optionalAuth, async (c) => {
+  const db = c.get('db');
+  const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
+  if (!u) return c.json({ error: 'User not found' }, 404);
+  const list = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      avatarUrl: users.avatarUrl,
+      fullName: users.fullName,
+      bio: users.bio,
+    })
+    .from(follows)
+    .innerJoin(users, eq(users.id, follows.followerId))
+    .where(eq(follows.followingId, u.id));
+  return c.json({ items: list });
+});
+
+r.get('/by-username/:username/following', optionalAuth, async (c) => {
+  const db = c.get('db');
+  const [u] = await db.select().from(users).where(eq(users.username, c.req.param('username')));
+  if (!u) return c.json({ error: 'User not found' }, 404);
+  const list = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      avatarUrl: users.avatarUrl,
+      fullName: users.fullName,
+      bio: users.bio,
+    })
+    .from(follows)
+    .innerJoin(users, eq(users.id, follows.followingId))
+    .where(eq(follows.followerId, u.id));
+  return c.json({ items: list });
 });
 
 r.get('/me/blocked', authMiddleware, async (c) => {

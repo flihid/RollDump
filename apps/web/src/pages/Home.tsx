@@ -10,10 +10,13 @@ import RevealSection from '../components/RevealSection';
 export default function Home() {
   const trending = useQuery({ queryKey: ['trending'], queryFn: () => api.get('/films/trending') });
   const recent = useQuery({ queryKey: ['films-recent'], queryFn: () => api.get('/films?sort=recent&limit=10') });
+  // Feed polls every 30s + refetches on tab focus, so new posts appear without manual reload
   const feed = useQuery({
     queryKey: ['feed'],
     queryFn: () => api.get('/feed'),
     enabled: isLoggedIn(),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
   const suggested = useQuery({
     queryKey: ['suggested'],
@@ -85,11 +88,32 @@ export default function Home() {
           {/* Activity feed */}
           {loggedIn && feed.data?.items?.length ? (
             <>
-              <div className="section-title-underlined mb-3">Community Activity</div>
-              {feed.data.items.slice(0, 6).map((it: any) => (
+              <div className="section-title-underlined mb-3 flex items-center justify-between">
+                <span>Community Activity</span>
+                <span className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider normal-case">
+                  Auto-refreshing
+                </span>
+              </div>
+              {feed.data.items.slice(0, 8).map((it: any) => (
                 <FeedItem key={`${it.type}-${it.id}`} item={it} />
               ))}
             </>
+          ) : loggedIn && !feed.isLoading && feed.data?.items?.length === 0 ? (
+            <div className="card p-10 text-center mb-7">
+              <div className="text-5xl mb-3">🎞️</div>
+              <h3 className="font-heading text-xl text-ink-900 mb-2">
+                Be the first to post on RollDump
+              </h3>
+              <p className="text-sm text-ink-600 max-w-md mx-auto mb-5">
+                Nothing in your feed yet. Upload your first roll, write a review,
+                or follow more photographers to see fresh content here.
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Link to="/upload" className="btn-primary">Upload a Roll</Link>
+                <Link to="/films" className="btn-ghost">Find a Film to Review</Link>
+                <Link to="/discover" className="btn-ghost">Discover Photographers</Link>
+              </div>
+            </div>
           ) : (
             !loggedIn && (
               <section className="hero-split px-6 sm:px-10 py-12 sm:py-14 mb-7">

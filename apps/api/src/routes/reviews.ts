@@ -6,7 +6,7 @@ import {
   users,
   filmVariants,
 } from '@rolldump/db';
-import { authMiddleware, createApp, getHiddenUserIds, optionalAuth } from '../lib/context';
+import { authMiddleware, createApp, getHiddenUserIds, getReportedIds, optionalAuth } from '../lib/context';
 
 /** Extract a derived title from the first markdown H1 in review content. */
 function deriveTitle(content?: string | null): string | null {
@@ -38,6 +38,8 @@ r.get('/by-film/:filmId', optionalAuth, async (c) => {
   const conds: any[] = [eq(reviews.filmId, filmId), eq(reviews.status, 'published')];
   const hidden = await getHiddenUserIds(c);
   if (hidden.length) conds.push(notInArray(reviews.userId, hidden));
+  const reportedReviews = await getReportedIds(c, 'review');
+  if (reportedReviews.length) conds.push(notInArray(reviews.id, reportedReviews));
   if (format) {
     const variants = await db.select().from(filmVariants).where(eq(filmVariants.filmId, filmId));
     const ids = variants.filter((v) => v.format === format).map((v) => v.id);

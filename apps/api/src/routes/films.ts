@@ -86,11 +86,20 @@ r.get('/', optionalAuth, async (c) => {
     : [];
   const brandMap = new Map(brandRows.map((b) => [b.id, b]));
 
+  // Group variants per film so FilmCard's wishlist heart can target a real ID
+  const variantsByFilm = new Map<string, any[]>();
+  for (const v of variants) {
+    const arr = variantsByFilm.get(v.filmId) || [];
+    arr.push(v);
+    variantsByFilm.set(v.filmId, arr);
+  }
+
   return c.json({
     items: rows.slice(0, limit).map((f) => ({
       ...f,
       brand: f.brandId ? brandMap.get(f.brandId) : null,
       availableFormats: formatsByFilm.get(f.id) || [],
+      variants: variantsByFilm.get(f.id) || [],
     })),
     hasMore: rows.length > limit,
   });
@@ -122,11 +131,19 @@ r.get('/trending', async (c) => {
     : [];
   const brandMap = new Map(brandRows.map((b) => [b.id, b]));
 
+  const variantsByFilm = new Map<string, any[]>();
+  for (const v of variants) {
+    const arr = variantsByFilm.get(v.filmId) || [];
+    arr.push(v);
+    variantsByFilm.set(v.filmId, arr);
+  }
+
   return c.json({
     items: list.map((f) => ({
       ...f,
       brand: f.brandId ? brandMap.get(f.brandId) : null,
       availableFormats: formatsByFilm.get(f.id) || [],
+      variants: variantsByFilm.get(f.id) || [],
     })),
     period,
   });

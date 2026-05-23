@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ZoomIn, ZoomOut, Heart, MessageCircle, Share2, Flag, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
-import { isLoggedIn } from '../store/auth';
+import { getUser, isLoggedIn } from '../store/auth';
 import { FormatBadge, Spinner } from './common';
 import ReportModal from './ReportModal';
 
@@ -70,47 +70,89 @@ export default function PhotoLightbox({ photoId, onClose }: { photoId: string; o
   const film = photo.data?.film;
   const variant = photo.data?.variant;
   const exif = (p?.exif as any) || {};
+  const me = getUser();
+  const isOwn = !!(me && p?.userId === me.id);
 
   return (
     <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
-      <div className="lightbox" onClick={(e) => e.stopPropagation()}>
-        {/* === IMAGE PANE === */}
-        <div className="lightbox-img">
+      <div
+        className="lightbox"
+        onClick={(e) => e.stopPropagation()}
+        style={{ height: 'min(86vh, 760px)' }}
+      >
+        {/* === IMAGE PANE — fixed-size container, image clipped + zoom controls floating above === */}
+        <div className="lightbox-img relative overflow-hidden">
           {photo.isLoading ? (
             <div className="text-ink-300"><Spinner /></div>
           ) : p?.imageUrl ? (
-            <img
-              src={p.imageUrl}
-              alt={p.caption || 'Photo'}
-              className="max-w-full max-h-full object-contain transition-transform"
-              style={{ transform: `scale(${zoom})`, transformOrigin: 'center' }}
-            />
+            <div
+              className="w-full h-full overflow-auto flex items-center justify-center"
+              style={{ scrollbarWidth: 'thin' }}
+            >
+              <img
+                src={p.imageUrl}
+                alt={p.caption || 'Photo'}
+                className="object-contain transition-transform select-none pointer-events-none"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'center',
+                }}
+                draggable={false}
+              />
+            </div>
           ) : (
             <div className="text-ink-300">Photo unavailable</div>
           )}
-          {/* Controls */}
-          <div className="absolute top-4 right-4 flex gap-1.5 z-10">
+          {/* Zoom controls — top-right, sticky above image regardless of zoom */}
+          <div className="absolute top-4 right-4 flex gap-1.5" style={{ zIndex: 50 }}>
             <button
-              onClick={() => setZoom((z) => Math.min(3, z + 0.2))}
-              className="w-9 h-9 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm"
-              style={{ background: 'rgba(245,240,225,0.15)' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom((z) => Math.min(3, z + 0.25));
+              }}
+              className="w-10 h-10 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm transition hover:scale-105"
+              style={{ background: 'rgba(26,26,26,0.65)', border: '1px solid rgba(245,240,225,0.2)' }}
               title="Zoom in"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setZoom((z) => Math.max(0.5, z - 0.2))}
-              className="w-9 h-9 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm"
-              style={{ background: 'rgba(245,240,225,0.15)' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoom((z) => Math.max(0.5, z - 0.25));
+              }}
+              disabled={zoom <= 0.5}
+              className="w-10 h-10 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm transition hover:scale-105 disabled:opacity-40"
+              style={{ background: 'rgba(26,26,26,0.65)', border: '1px solid rgba(245,240,225,0.2)' }}
               title="Zoom out"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
+            {zoom !== 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoom(1);
+                }}
+                className="px-3 h-10 rounded-full text-ink-50 backdrop-blur-sm transition hover:scale-105 text-xs font-mono-tech"
+                style={{ background: 'rgba(26,26,26,0.65)', border: '1px solid rgba(245,240,225,0.2)' }}
+                title="Reset zoom"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+            )}
             <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm"
-              style={{ background: 'rgba(245,240,225,0.15)' }}
-              title="Close"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="w-10 h-10 rounded-full grid place-items-center text-ink-50 backdrop-blur-sm transition hover:scale-105"
+              style={{ background: 'rgba(26,26,26,0.65)', border: '1px solid rgba(245,240,225,0.2)' }}
+              title="Close (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
@@ -174,57 +216,50 @@ export default function PhotoLightbox({ photoId, onClose }: { photoId: string; o
             {p?.location && <ExifItem k="Location" v={p.location} />}
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2 mb-4">
+          {/* Action buttons — equal-weight grid so they look balanced */}
+          <div
+            className={`grid gap-2 mb-4`}
+            style={{
+              gridTemplateColumns: `repeat(${isLoggedIn() && !isOwn ? 4 : 3}, minmax(0, 1fr))`,
+            }}
+          >
             {isLoggedIn() ? (
-              <button
+              <ActionBtn
                 onClick={() => like.mutate()}
                 disabled={like.isPending}
-                className="btn-sm flex-1 !justify-center"
-                style={{
-                  background: liked ? '#e6a519' : '#1a1a1a',
-                  color: liked ? '#1a1a1a' : '#f5f0e1',
-                  borderRadius: 999,
-                  padding: '8px 14px',
-                  fontWeight: 600,
-                  fontSize: 13,
-                }}
-              >
-                <Heart className="w-3.5 h-3.5" fill={liked ? '#1a1a1a' : 'none'} />
-                {' '}{likeCount}
-              </button>
+                active={liked}
+                icon={<Heart className="w-4 h-4" fill={liked ? '#1a1a1a' : 'none'} />}
+                label={String(likeCount)}
+              />
             ) : (
-              <div className="flex-1 text-center text-xs text-ink-500 py-2">
-                <Heart className="w-4 h-4 inline mr-1" /> {likeCount}
+              <div
+                className="rounded-full text-center text-xs flex items-center justify-center gap-1.5 py-2.5"
+                style={{ background: '#ede5cf', color: '#7a7a7a' }}
+              >
+                <Heart className="w-4 h-4" /> {likeCount}
               </div>
             )}
-            <button
+            <ActionBtn
               onClick={() => document.getElementById('lbx-comment-input')?.focus()}
-              className="btn-ghost btn-sm flex-1 !justify-center"
-              style={{ padding: '8px 14px', fontSize: 13 }}
-            >
-              <MessageCircle className="w-3.5 h-3.5" /> {comments.data?.items?.length || photo.data?.commentCount || 0}
-            </button>
-            <button
+              icon={<MessageCircle className="w-4 h-4" />}
+              label={String(comments.data?.items?.length || photo.data?.commentCount || 0)}
+            />
+            <ActionBtn
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/photos/${photoId}`);
                 toast.success('Link copied');
               }}
-              className="btn-ghost btn-sm flex-1 !justify-center"
-              style={{ padding: '8px 14px', fontSize: 13 }}
-              title="Copy link"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-            </button>
-            {isLoggedIn() && (
-              <button
+              icon={<Share2 className="w-4 h-4" />}
+              label="Share"
+            />
+            {/* You can't report your own photo */}
+            {isLoggedIn() && !isOwn && (
+              <ActionBtn
                 onClick={() => setReportOpen(true)}
-                className="btn-ghost btn-sm !justify-center"
-                style={{ padding: '8px 12px', fontSize: 13 }}
-                title="Report"
-              >
-                <Flag className="w-3.5 h-3.5" />
-              </button>
+                icon={<Flag className="w-4 h-4" />}
+                label="Report"
+                muted
+              />
             )}
           </div>
 
@@ -313,6 +348,40 @@ function ExifItem({ k, v }: { k: string; v: React.ReactNode }) {
       <div className="text-[10px] uppercase tracking-[0.1em] text-ink-500">{k}</div>
       <div className="font-semibold text-ink-900 mt-0.5">{v}</div>
     </div>
+  );
+}
+
+function ActionBtn({
+  icon,
+  label,
+  onClick,
+  disabled,
+  active,
+  muted,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  muted?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex items-center justify-center gap-1.5 rounded-full font-semibold text-xs py-2.5 transition disabled:opacity-50"
+      style={
+        active
+          ? { background: '#e6a519', color: '#1a1a1a' }
+          : muted
+          ? { background: '#ede5cf', color: '#4a4a4a', border: '1px solid #dcd5bf' }
+          : { background: '#1a1a1a', color: '#f5f0e1' }
+      }
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
 

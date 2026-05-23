@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { verify } from 'hono/jwt';
-import { or, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { AuthService } from '@rolldump/auth';
-import { createDatabase, userBlocks } from '@rolldump/db';
+import { createDatabase, userBlocks, reports } from '@rolldump/db';
 
 export type Bindings = {
   DATABASE_URL: string;
@@ -15,6 +15,7 @@ export type Variables = {
   authService: AuthService;
   db: ReturnType<typeof createDatabase>;
   hiddenUserIds?: string[];
+  reportedIds?: Record<string, string[]>; // type → array of reportableIds
 };
 
 export type AppEnv = { Bindings: Bindings; Variables: Variables };
@@ -104,4 +105,27 @@ export async function getHiddenUserIds(c: any): Promise<string[]> {
   const arr = Array.from(set);
   c.set('hiddenUserIds', arr);
   return arr;
+}
+
+/**
+ * Returns the list of reportable IDs (of the given type) the current viewer
+ * has reported. Reporting something is a soft mute — once reported, the user
+ * shouldn't see that content anywhere.
+ *
+ * Cached per request, by type.
+ */
+export async function getReportedIds(c: any, type: string): Promise<string[]> {
+  const me = c.get('user')?.id;
+  if (!me) return [];
+  const cache = c.get('reportedIds') || {};
+  if (cache[type]) return cache[type];
+  const db = c.get('db');
+  const rows = await db
+    .select({ id: reports.reportableId })
+    .from(reports)
+    .where(and(eq(reports.reporterId, me), eq(reports.reportableType, type)));
+  const ids: string[] = Array.from(new Set(rows.map((r: any) => String(r.id))));
+  cache[type] = ids;
+  c.set('reportedIds', cache);
+  return ids;
 }

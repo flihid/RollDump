@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Flag, X, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../lib/api';
@@ -58,6 +58,7 @@ export default function ReportModal({
 }) {
   const [reasonKey, setReasonKey] = useState<string | null>(null);
   const [detail, setDetail] = useState('');
+  const qc = useQueryClient();
 
   const submit = useMutation({
     mutationFn: () =>
@@ -67,6 +68,16 @@ export default function ReportModal({
       }),
     onSuccess: () => {
       toast.success("Report submitted. Thanks — we'll review it.");
+      // Hide the reported content from this user immediately by busting caches
+      qc.invalidateQueries({ queryKey: ['gallery'] });
+      qc.invalidateQueries({ queryKey: ['user-photos'] });
+      qc.invalidateQueries({ queryKey: ['film-photos'] });
+      qc.invalidateQueries({ queryKey: ['film-photos-preview'] });
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['photo'] });
+      qc.invalidateQueries({ queryKey: ['reviews'] });
+      qc.invalidateQueries({ queryKey: ['film-tips'] });
+      qc.invalidateQueries({ queryKey: ['lists'] });
       onClose();
     },
     onError: (e: any) => toast.error(e.message || 'Failed to submit report'),

@@ -18,6 +18,7 @@ export default function Profile() {
   const [blockConfirm, setBlockConfirm] = useState<null | 'block' | 'unblock'>(null);
   const [selectedAchv, setSelectedAchv] = useState<any | null>(null);
   const [lightboxId, setLightboxId] = useState<string | null>(null);
+  const [followersOpen, setFollowersOpen] = useState<null | 'followers' | 'following'>(null);
   const qc = useQueryClient();
 
   const profile = useQuery({
@@ -195,10 +196,16 @@ export default function Profile() {
               <div className="lbl">Published Photos</div>
               <div className="val">{(stats.photoCount ?? 0).toLocaleString()}</div>
             </div>
-            <div className="stat-card">
+            <button
+              type="button"
+              onClick={() => setFollowersOpen('followers')}
+              className="stat-card text-left cursor-pointer hover:border-ink-400 transition"
+              title="View followers"
+            >
               <div className="lbl">Followers</div>
               <div className="val">{(stats.followersCount ?? 0).toLocaleString()}</div>
-            </div>
+              <div className="delta text-ink-500">Click to view →</div>
+            </button>
             <div className="stat-card is-accent">
               <div className="lbl">Badges Earned</div>
               <div className="val">
@@ -413,6 +420,105 @@ export default function Profile() {
 
       {/* === PHOTO LIGHTBOX === */}
       {lightboxId && <PhotoLightbox photoId={lightboxId} onClose={() => setLightboxId(null)} />}
+
+      {/* === FOLLOWERS / FOLLOWING MODAL === */}
+      {followersOpen && (
+        <FollowersModal
+          username={u.username}
+          kind={followersOpen}
+          onClose={() => setFollowersOpen(null)}
+          onSwitch={(k) => setFollowersOpen(k)}
+        />
+      )}
+    </div>
+  );
+}
+
+function FollowersModal({
+  username,
+  kind,
+  onClose,
+  onSwitch,
+}: {
+  username: string;
+  kind: 'followers' | 'following';
+  onClose: () => void;
+  onSwitch: (k: 'followers' | 'following') => void;
+}) {
+  const q = useQuery({
+    queryKey: ['user-followers', username, kind],
+    queryFn: () => api.get(`/users/by-username/${username}/${kind}`),
+  });
+
+  return (
+    <div className="modal-overlay" style={{ display: 'flex' }} onClick={onClose}>
+      <div className="card p-0 max-w-md w-full overflow-hidden" style={{ background: '#fbf8ef' }} onClick={(e) => e.stopPropagation()}>
+        {/* Header with tabs */}
+        <div className="flex items-center border-b border-ink-300">
+          <button
+            onClick={() => onSwitch('followers')}
+            className="flex-1 py-3 font-heading text-sm font-bold transition"
+            style={{
+              background: kind === 'followers' ? '#1a1a1a' : 'transparent',
+              color: kind === 'followers' ? '#e6a519' : '#4a4a4a',
+            }}
+          >
+            Followers
+          </button>
+          <button
+            onClick={() => onSwitch('following')}
+            className="flex-1 py-3 font-heading text-sm font-bold transition"
+            style={{
+              background: kind === 'following' ? '#1a1a1a' : 'transparent',
+              color: kind === 'following' ? '#e6a519' : '#4a4a4a',
+            }}
+          >
+            Following
+          </button>
+          <button onClick={onClose} className="w-12 h-12 grid place-items-center text-ink-500 hover:text-ink-900">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="max-h-96 overflow-y-auto p-3">
+          {q.isLoading ? (
+            <div className="py-8 text-center text-sm text-ink-500">Loading…</div>
+          ) : (q.data?.items?.length ?? 0) === 0 ? (
+            <div className="py-10 text-center">
+              <div className="text-sm font-semibold text-ink-900 mb-1">
+                {kind === 'followers' ? 'No followers yet' : "Not following anyone"}
+              </div>
+              <div className="text-xs text-ink-500">
+                {kind === 'followers'
+                  ? 'Share your roll and people will start following.'
+                  : 'Explore /discover to find photographers to follow.'}
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-ink-300">
+              {q.data!.items.map((u: any) => (
+                <Link
+                  key={u.id}
+                  to={`/u/${u.username}`}
+                  onClick={onClose}
+                  className="flex items-center gap-3 py-3 px-2 hover:bg-ink-200 rounded transition"
+                >
+                  <div className="avatar-circle shrink-0">
+                    {u.avatarUrl ? (
+                      <img src={u.avatarUrl} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      (u.username[0] || '?').toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm text-ink-900 truncate">{u.fullName || u.username}</div>
+                    <div className="font-mono-tech text-[11px] text-ink-500 truncate">@{u.username}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -93,17 +93,6 @@ export default function Layout() {
         )}
 
         <div className="mt-auto pt-6">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="w-full p-3 rounded-[10px] text-xs text-left text-[#dcd5bf]"
-            style={{ background: 'rgba(255,255,255,0.04)' }}
-          >
-            <div className="font-semibold text-[#f5f0e1] mb-1">⚡ Quick search</div>
-            <div>
-              Press <kbd className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>⌘K</kbd>
-              {' '}any time.
-            </div>
-          </button>
           {loggedIn && (
             <button
               onClick={handleLogout}
