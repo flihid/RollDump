@@ -259,6 +259,10 @@ r.get('/feed', authMiddleware, async (c) => {
       createdAt: reviews.createdAt,
       content: reviews.content,
       filmId: reviews.filmId,
+      ratingOverall: reviews.ratingOverall,
+      ratingColor: reviews.ratingColor,
+      ratingGrain: reviews.ratingGrain,
+      ratingSharpness: reviews.ratingSharpness,
     })
     .from(reviews)
     .where(sql`${reviews.userId} = ANY(${ids}) and ${reviews.status} = 'published'`)

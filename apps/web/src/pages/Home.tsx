@@ -112,72 +112,77 @@ export default function Home() {
       <div className="feed-grid">
         {/* MAIN COLUMN */}
         <div>
-          {/* Activity feed — photos, reviews, and lists from photographers
-              you follow (or recent posters if you follow nobody yet). Always
-              rendered ABOVE the trending films section so the feed feels
-              social-first, per the design system Home Feed layout. */}
-          {loggedIn && feed.data?.items?.length ? (
+          {/* === COMMUNITY ACTIVITY ===
+              Photos + reviews + lists from photographers in the user's
+              network (or recent posters globally if they follow nobody).
+              Always rendered ABOVE the trending films section so the page
+              feels social-first, matching the design system Home Feed.
+              The section header is always visible — even when the feed
+              is empty — so the user knows where activity will appear. */}
+          {loggedIn && (
             <>
-              <div className="section-title-underlined mb-3 flex items-center justify-between">
-                <span>Latest from the community</span>
+              <div className="section-title mb-3 flex items-center justify-between">
+                <span>Community Activity</span>
                 <span className="font-mono-tech text-[10px] text-ink-500 uppercase tracking-wider normal-case">
                   Auto-refreshing
                 </span>
               </div>
-              {feed.data.items.map((it: any) => (
-                <FeedItem key={`${it.type}-${it.id}`} item={it} />
-              ))}
+              {feed.isLoading ? (
+                <Loading />
+              ) : feed.data?.items?.length ? (
+                feed.data.items.map((it: any) => (
+                  <FeedItem key={`${it.type}-${it.id}`} item={it} />
+                ))
+              ) : (
+                <div
+                  className="mb-7 px-6 sm:px-10 py-12 text-center rounded-[18px] relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #e6a519 0%, #c68a0e 100%)',
+                    color: '#1a1a1a',
+                  }}
+                >
+                  <div
+                    className="absolute right-[-40px] top-[-40px] w-[240px] h-[240px] rounded-full pointer-events-none"
+                    style={{ background: 'rgba(255,255,255,0.15)' }}
+                  />
+                  <div className="relative z-10">
+                    <div className="text-5xl mb-3">🎞️</div>
+                    <h2 className="text-2xl sm:text-3xl font-display mb-2">
+                      Your feed starts here.
+                    </h2>
+                    <p className="text-sm mb-5 max-w-lg mx-auto" style={{ color: 'rgba(26,26,26,0.78)' }}>
+                      Upload your first roll or follow more photographers to see fresh activity show up here.
+                    </p>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      <Link to="/upload" className="btn-secondary">📷 Upload Your First Roll</Link>
+                      <Link to="/films" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
+                        Browse Catalog
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
-          ) : loggedIn && !feed.isLoading && feed.data?.items?.length === 0 ? (
-            <div
-              className="mb-7 px-6 sm:px-10 py-14 text-center rounded-[26px] relative overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #e6a519 0%, #c68a0e 100%)',
-                color: '#1a1a1a',
-              }}
-            >
-              <div
-                className="absolute right-[-40px] top-[-40px] w-[240px] h-[240px] rounded-full pointer-events-none"
-                style={{ background: 'rgba(255,255,255,0.15)' }}
-              />
-              <div className="relative z-10">
-                <div className="text-6xl mb-4">🎞️</div>
-                <h2 className="text-3xl sm:text-4xl font-display mb-2">
-                  Your feed starts here.
-                </h2>
-                <p className="text-sm sm:text-base mb-6 max-w-lg mx-auto" style={{ color: 'rgba(26,26,26,0.78)' }}>
-                  Nothing in your feed yet. Upload your first roll, write a review,
-                  or follow more photographers to see fresh activity show up here.
-                </p>
-                <div className="flex gap-2 justify-center flex-wrap">
-                  <Link to="/upload" className="btn-secondary">📷 Upload Your First Roll</Link>
-                  <Link to="/films" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
-                    Browse Catalog
-                  </Link>
-                </div>
+          )}
+          {!loggedIn && (
+            <section className="hero-split px-6 sm:px-10 py-12 sm:py-14 mb-7">
+              <div className="meta font-mono-tech text-[11px] uppercase tracking-[0.18em] mb-3" style={{ color: '#1a1a1a' }}>
+                v0.1 · Modern Analog
               </div>
-            </div>
-          ) : (
-            !loggedIn && (
-              <section className="hero-split px-6 sm:px-10 py-12 sm:py-14 mb-7">
-                <div className="meta font-mono-tech text-[11px] uppercase tracking-[0.18em] mb-3" style={{ color: '#1a1a1a' }}>
-                  v0.1 · Modern Analog
-                </div>
-                <h2 className="text-4xl sm:text-5xl font-display mb-3" style={{ color: '#1a1a1a' }}>
-                  Modern Analog. Built for the next roll.
-                </h2>
-                <p className="text-base max-w-xl" style={{ color: 'rgba(26,26,26,0.78)' }}>
-                  The social home for analog photographers. Catalog film stocks, log
-                  your rolls, and discover what others are shooting on 35mm, 120, and sheet film.
-                </p>
-                <div className="mt-6 flex gap-3 flex-wrap">
-                  <Link to="/register" className="btn-primary">Get Started</Link>
-                  <Link to="/films" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
-                    Browse Catalog
-                  </Link>
-                </div>
-              </section>
-            )
+              <h2 className="text-4xl sm:text-5xl font-display mb-3" style={{ color: '#1a1a1a' }}>
+                Modern Analog. Built for the next roll.
+              </h2>
+              <p className="text-base max-w-xl" style={{ color: 'rgba(26,26,26,0.78)' }}>
+                The social home for analog photographers. Catalog film stocks, log
+                your rolls, and discover what others are shooting on 35mm, 120, and sheet film.
+              </p>
+              <div className="mt-6 flex gap-3 flex-wrap">
+                <Link to="/register" className="btn-primary">Get Started</Link>
+                <Link to="/films" className="btn-ghost" style={{ borderColor: 'rgba(26,26,26,0.25)', color: '#1a1a1a' }}>
+                  Browse Catalog
+                </Link>
+              </div>
+            </section>
           )}
 
           {/* End-of-feed cue */}
@@ -358,6 +363,7 @@ function FeedItem({ item }: { item: any }) {
     list: 'curated a list',
   };
   const verb = verbMap[item.type] || 'shared an update';
+
   return (
     <div className="feed-item">
       {/* Header — design system .feed-header */}
@@ -382,41 +388,129 @@ function FeedItem({ item }: { item: any }) {
         </div>
       </div>
 
-      {/* Photo (if any) — design system .photo-frame with EXIF overlay */}
-      {item.imageUrl && (
-        <Link to={`/photos/${item.id}`} className="photo-frame block">
-          <img src={item.imageUrl} alt={item.caption || ''} />
-          {(item.filmName || item.iso) && (
-            <div className="photo-overlay">
-              <div className="tech">
-                {item.iso ? `ISO ${item.iso}` : ''}
-                {item.filmName ? `${item.iso ? ' · ' : ''}${item.filmName}` : ''}
+      {/* === PHOTO POST === */}
+      {item.type === 'photo' && item.imageUrl && (
+        <>
+          <Link to={`/photos/${item.id}`} className="photo-frame block">
+            <img src={item.imageUrl} alt={item.caption || ''} />
+            {item.filmName && (
+              <div className="photo-overlay">
+                <div className="tech">
+                  {item.filmName}
+                </div>
               </div>
+            )}
+          </Link>
+          <div className="feed-actions">
+            <button className="act-btn" aria-label="Like">
+              <Heart /> {item.likeCount || 0}
+            </button>
+            <button className="act-btn" aria-label="Comment">
+              <MessageCircle /> {item.commentCount || 0}
+            </button>
+            <button className="act-btn" aria-label="Share">
+              <Share2 />
+            </button>
+            <button className="act-btn" style={{ marginLeft: 'auto' }} aria-label="Save">
+              <BookmarkPlus /> Save
+            </button>
+          </div>
+          {item.caption && (
+            <div className="feed-caption">
+              <strong>@{actor}</strong> {item.caption}
             </div>
           )}
-        </Link>
+        </>
       )}
 
-      {/* Actions — design system .feed-actions / .act-btn */}
-      <div className="feed-actions">
-        <button className="act-btn" aria-label="Like">
-          <Heart /> {item.likeCount || 0}
-        </button>
-        <button className="act-btn" aria-label="Comment">
-          <MessageCircle /> {item.commentCount || 0}
-        </button>
-        <button className="act-btn" aria-label="Share">
-          <Share2 />
-        </button>
-        <button className="act-btn" style={{ marginLeft: 'auto' }} aria-label="Save">
-          <BookmarkPlus /> Save
-        </button>
-      </div>
+      {/* === REVIEW POST ===
+          Design system: badges row (format + rating sub-scores) + title +
+          excerpt + "Read more" button. No photo-frame for reviews. */}
+      {item.type === 'review' && (
+        <div style={{ padding: '16px 20px 20px' }}>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            {item.ratingOverall != null && (
+              <span
+                className="badge"
+                style={{
+                  background: 'rgba(230,165,25,0.18)',
+                  color: '#c68a0e',
+                  border: '1px solid rgba(230,165,25,0.4)',
+                }}
+              >
+                ★ {Number(item.ratingOverall).toFixed(1)}
+              </span>
+            )}
+            {item.ratingColor != null && <span className="badge">★ {Number(item.ratingColor).toFixed(1)} · COLOR</span>}
+            {item.ratingGrain != null && <span className="badge">★ {Number(item.ratingGrain).toFixed(1)} · GRAIN</span>}
+            {item.ratingSharpness != null && <span className="badge">★ {Number(item.ratingSharpness).toFixed(1)} · SHARPNESS</span>}
+          </div>
+          <h3
+            style={{
+              fontFamily: 'Syne, sans-serif',
+              fontWeight: 700,
+              fontSize: 20,
+              color: '#1a1a1a',
+              marginBottom: 8,
+              lineHeight: 1.2,
+            }}
+          >
+            {item.filmName ? `${item.filmName}` : 'Film review'}
+          </h3>
+          {item.content && (
+            <p className="text-sm" style={{ color: '#4a4a4a', lineHeight: 1.55 }}>
+              {String(item.content).slice(0, 240)}
+              {String(item.content).length > 240 && '…'}
+            </p>
+          )}
+          <div className="flex gap-3 mt-4 items-center">
+            <Link to={`/reviews/${item.id}`} className="btn-ghost btn-sm">
+              Read more →
+            </Link>
+            <span className="ml-auto inline-flex gap-3">
+              <button className="act-btn" aria-label="Like">
+                <Heart /> {item.likeCount || 0}
+              </button>
+              <button className="act-btn" aria-label="Comment">
+                <MessageCircle /> {item.commentCount || 0}
+              </button>
+            </span>
+          </div>
+        </div>
+      )}
 
-      {/* Caption — design system .feed-caption */}
-      {item.caption && (
-        <div className="feed-caption">
-          <strong>@{actor}</strong> {item.caption}
+      {/* === LIST POST === */}
+      {item.type === 'list' && (
+        <div style={{ padding: '16px 20px 20px' }}>
+          <h3
+            style={{
+              fontFamily: 'Syne, sans-serif',
+              fontWeight: 700,
+              fontSize: 18,
+              color: '#1a1a1a',
+              marginBottom: 8,
+            }}
+          >
+            {item.title || 'A new list'}
+          </h3>
+          {item.imageUrl && (
+            <Link to={`/lists/${item.id}`} className="photo-frame block mb-3" style={{ aspectRatio: '16/9' }}>
+              <img src={item.imageUrl} alt={item.title || ''} />
+            </Link>
+          )}
+          <div className="flex gap-3 items-center">
+            <Link to={`/lists/${item.id}`} className="btn-ghost btn-sm">
+              Open list →
+            </Link>
+            <span className="ml-auto inline-flex gap-3">
+              <button className="act-btn" aria-label="Like">
+                <Heart /> {item.likeCount || 0}
+              </button>
+              <button className="act-btn" aria-label="Comment">
+                <MessageCircle /> {item.commentCount || 0}
+              </button>
+            </span>
+          </div>
         </div>
       )}
     </div>
