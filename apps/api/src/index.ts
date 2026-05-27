@@ -22,10 +22,13 @@ const app = new Hono<AppEnv>();
 
 app.use('*', cors());
 
+// AuthService is a thin wrapper around the cached DB connection, so we
+// only need ONE instance per process. Memoize it lazily on first request.
+let cachedAuth: AuthService | null = null;
 app.use('*', async (c, next) => {
-  const authService = new AuthService(c.env.DATABASE_URL);
-  c.set('authService', authService);
-  c.set('db', authService.db);
+  if (!cachedAuth) cachedAuth = new AuthService(c.env.DATABASE_URL);
+  c.set('authService', cachedAuth);
+  c.set('db', cachedAuth.db);
   await next();
 });
 
